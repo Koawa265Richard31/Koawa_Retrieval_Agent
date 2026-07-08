@@ -1,0 +1,79 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.koawa.agent.rag.service.impl;
+
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.StrUtil;
+import com.koawa.agent.framework.context.UserContext;
+import com.koawa.agent.infra.chat.StreamCallback;
+import com.koawa.agent.rag.service.ratelimit.ChatQueueLimiter;
+import com.koawa.agent.rag.service.RAGChatService;
+import com.koawa.agent.rag.service.handler.StreamCallbackFactory;
+import com.koawa.agent.rag.service.handler.StreamTaskManager;
+import com.koawa.agent.rag.service.pipeline.StreamChatContext;
+import com.koawa.agent.rag.service.pipeline.StreamChatPipeline;
+import com.koawa.agent.rag.trace.StreamChatTraceRunner;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+/**
+ * RAG 对话服务默认实现
+ * RAGChatServiceImpl 不负责具体 RAG 推理。
+ * 它负责启动一次聊天任务：创建 conversationId/taskId，创建 SSE callback，经过限流和 trace 包装，然后把 StreamChatContext 交给 StreamChatPipeline。
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class RAGChatServiceImpl implements RAGChatService {
+
+    private final StreamChatPipeline chatPipeline;
+    private final ChatQueueLimiter chatQueueLimiter;
+    private final StreamCallbackFactory callbackFactory;
+    private final StreamChatTraceRunner traceRunner;
+    private final StreamTaskManager taskManager;
+
+    @Override
+    public void streamChat(String question, String conversationId, Boolean deepThinking, SseEmitter emitter) {
+        // 生成会话 ID 和任务 ID
+        String actualConversationId = StrUtil.isBlank(conversationId) ? IdUtil.getSnowflakeNextIdStr() : conversationId;
+        String taskId = IdUtil.getSnowflakeNextIdStr();
+
+        //这里不是直接往前端写内容，而是创建一个 StreamCallback。后面 LLM 每吐出一段内容，都会通过这个 callback 推给前端。
+        StreamCallback callback = callbackFactory.createChatEventHandler(emitter, actualConversationId, taskId);
+
+        chatQueueLimiter.enqueue(question, actualConversationId, emitter,
+                () -> traceRunner.run(question, actualConversationId, taskId, callback, traceAware -> {
+                    StreamChatContext ctx = StreamChatContext.builder()
+                            .question(question)
+                            .conversationId(actualConversationId)
+                            .taskId(taskId)
+                            .deepThinking(Boolean.TRUE.equals(deepThinking))
+                            .userId(UserContext.getUserId())
+                            .callback(traceAware)
+                            .build();
+                    chatPipeline.execute(ctx);
+                }));
+    }
+
+    @Override
+    public void stopTask(String taskId) {
+        taskManager.cancel(taskId);
+    }
+}
