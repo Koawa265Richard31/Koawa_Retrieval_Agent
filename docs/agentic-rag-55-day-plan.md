@@ -1,669 +1,182 @@
-# Agentic RAG 55 Day Learning And Redevelopment Plan
+# KoawaAgent 55 天 Agentic RAG 学习与重开发规划书
 
-> Purpose: this document is the long-context recovery anchor for the `D:\koawa-agent` project. If the chat context is lost, reread this file first, then continue from the current day/checkpoint.
+> 用途：这是当前项目的长期上下文恢复锚点。后续如果聊天上下文丢失，先重新阅读本文件，再看当天开发日志，然后继续执行。
 
-## 1. Current Project Baseline
+## 0. 新策略
 
-This project is already more than a simple RAG demo. Without relying on README, the codebase currently has:
+原计划偏向“先读项目，再开发 agent loop”。实际学习效率不高，因为单看代码容易陷入细节。
 
-- Java/Spring Boot multi-module backend: `bootstrap`, `infra-ai`, `framework`, `mcp-server`.
-- React/Vite admin frontend under `frontend`.
-- RAG pipeline: query rewrite, query split, intent classification, retrieval, rerank, prompt assembly, streaming answer.
-- Vector stores: Milvus and pgvector.
-- Model infrastructure: chat, embedding, rerank clients, provider routing, fallback, model health.
-- MCP integration: MCP client executor plus a local `mcp-server` module with sample tools.
-- Knowledge ingestion: source fetch, parse, enhance, chunk, enrich, index pipeline.
-- Observability: RAG trace run/node tables and trace support.
-- Conversation memory: message history plus summary storage.
-- Admin capabilities: knowledge base, chunks, intent tree, ingestion, trace, model/settings pages.
-
-Main gap: the project is currently closer to "agentic routing RAG" than a full agentic RAG framework. The existing flow is mostly:
+新的策略改为：
 
 ```text
-query rewrite -> intent classify -> retrieve / call MCP once -> build context -> answer
+以 agent 工程化目标牵引阅读。
+每天只读当天要改的链路。
+每 1-2 天必须有一个小产出。
+不再为了读而读。
 ```
 
-The missing target flow is:
+核心原则：
+
+- 读代码是为了完成一个工程化改动。
+- 每次改动都必须尽量小，不能大范围重构。
+- 原有 RAG pipeline 不删除，先旁路新增 agent 能力。
+- 先实现最小可运行骨架，再逐步替换为真实能力。
+- 每天保留学习日志，记录“今天读了什么、改了什么、没懂什么”。
+
+## 1. 当前项目基线
+
+当前项目已经不是简单 RAG demo，已有能力包括：
+
+- Java/Spring Boot 多模块后端：`bootstrap`、`framework`、`infra-ai`、`mcp-server`
+- React/Vite 前端管理台：`frontend`
+- RAG 主链路：问题改写、子问题拆分、意图识别、检索、重排、prompt 组装、流式回答
+- 向量库支持：Milvus 与 pgvector
+- 模型基础设施：chat、embedding、rerank、provider routing、fallback、模型健康
+- MCP 能力：MCP client、工具注册、工具执行、本地 mcp-server 示例工具
+- 知识入库 pipeline：fetch、parse、chunk、enhance、enrich、index
+- Trace：RAG run/node 追踪
+- Memory：会话历史与摘要
+- Admin：知识库、文档、chunk、意图树、ingestion、trace、模型设置等页面
+
+当前主要不足：
 
 ```text
-plan/think -> choose action -> execute retrieval/tool -> observe -> decide continue or answer -> final answer
+已有系统更像“静态 RAG pipeline + 意图路由 + 一次性 MCP 调用”。
+还不是完整 agentic RAG。
 ```
 
-## 2. 55 Day Goal
-
-In 55 days, rebuild the project into a learning-grade and interview-ready agentic RAG system:
-
-1. Re-understand and refactor the existing RAG chain using this project, not a separate demo.
-2. Add a real agent loop layer without deleting the current RAG pipeline.
-3. Introduce framework-level concepts missing from the current implementation: agent state, step trace, planner, action schema, tool registry, observation, stop policy, retry, reflection/evaluation.
-4. Keep the Java/Spring version working as the primary implementation.
-5. Extract language-agnostic architecture so the same system can later be rebuilt in Python or TypeScript.
-6. Produce runnable checkpoints, tests, trace evidence, and learning notes.
-
-The end state should be explainable as:
+当前主链路更接近：
 
 ```text
-Enterprise Agentic RAG Platform
-= RAG retrieval engine
-+ MCP/tool execution
-+ agent loop
-+ ingestion pipeline
-+ observability
-+ model routing
-+ evaluation and safety
+query rewrite
+  -> intent classify
+  -> retrieve / call MCP once
+  -> build prompt
+  -> answer
 ```
 
-## 2.1 Learning Mode Rules
-
-This plan is for guided learning, not for fully delegated development.
-
-Default division of work:
-
-- The learner manually reads core production code.
-- The learner manually draws architecture diagrams.
-- The learner manually writes the first version of new core abstractions.
-- The assistant explains, reviews, asks questions, points out risks, and only patches code when explicitly asked.
-- The assistant may create or update planning/notes documents when asked.
-- The assistant should not silently implement the project roadmap.
-
-Use three labels for every task:
+目标链路是：
 
 ```text
-HAND-CODE: code the learner should type by hand.
-READ-ONLY: code/config the learner should inspect and explain.
-DRAW: architecture or sequence diagram the learner should draw.
+plan
+  -> choose action
+  -> execute retrieval/tool
+  -> observe
+  -> decide continue / clarify / answer
+  -> final answer
 ```
 
-Optional fourth label:
+## 2. 55 天最终目标
+
+55 天内，把当前项目改造成一个学习级、面试可讲、可演示的 Agentic RAG 系统。
+
+最终要能讲清楚：
 
 ```text
-ASSISTED-CODE: code the assistant may help implement after the learner has tried or explicitly asks.
+KoawaAgent
+= 原有企业级 RAG 平台
++ Agent loop
++ 工具调用策略
++ 可观测 step trace
++ 检索与工具观察结果
++ 评估与安全控制
 ```
 
-Learning cycle for each topic:
+最终保留两条模式：
 
 ```text
-1. READ-ONLY: inspect existing code.
-2. DRAW: draw the current flow.
-3. EXPLAIN: explain it in your own words.
-4. HAND-CODE: implement a small related piece.
-5. REVIEW: assistant reviews correctness and design.
-6. VERIFY: run targeted checks.
-7. RETROSPECT: write what changed in understanding.
+普通 RAG 模式：
+  沿用 StreamChatPipeline
+
+Agentic RAG 模式：
+  新增 AgentLoopRunner，复用 RetrievalEngine / MCP / Memory / Trace / SSE
 ```
 
-## 3. Target Architecture
+## 3. 学习与编码规则
 
-Add one new orchestration layer above the existing RAG/MCP capabilities.
+每天任务分四类：
+
+```text
+READ：只读当天要改的代码
+DRAW：画当前链路或目标链路
+HAND-CODE：自己手敲核心代码
+VERIFY：运行最小验证
+```
+
+助手职责：
+
+- 解释现有代码
+- 帮你拆小任务
+- 审查你写的代码
+- 在你明确要求时补代码
+- 维护规划书和开发日志
+
+你需要手敲的内容：
+
+- agent 核心 domain 类
+- action 类型
+- parser 逻辑
+- loop runner 第一版
+- 简单测试
+- 关键接口适配
+
+不建议你手敲的内容：
+
+- 大量样板 VO/DTO
+- 重复 mapper
+- 前端 UI 大面积调整
+- 复杂 Spring 配置细节
+
+## 4. 新的总路线
+
+不再先完整读完 RAG 项目，而是按功能切片推进。
+
+```text
+第 1 阶段：建立可启动/可开发环境 + 读主链路
+第 2 阶段：新增 agent domain 和 action schema
+第 3 阶段：做一个不接 LLM 的本地 agent loop 骨架
+第 4 阶段：接入 RetrievalEngine，完成 RETRIEVE_KB action
+第 5 阶段：接入 final answer，完成最小 Agentic RAG MVP
+第 6 阶段：接入 MCP tool action
+第 7 阶段：接入 trace、停止策略、错误策略
+第 8 阶段：做评估、整理文档、准备迁移方案
+```
+
+## 5. 目标架构
+
+新增 agent 层，不替换原有 RAG pipeline。
 
 ```text
 User Question
   |
   v
-Conversation Memory Loader
+AgentChatController
+  |
+  v
+AgentChatService
   |
   v
 AgentLoopRunner
   |
-  +-- AgentPlanner: asks LLM for next structured action
+  +-- AgentPlanner
+  |     输出结构化 AgentAction
   |
   +-- AgentActionExecutor
-        |
-        +-- RETRIEVE_KB -> existing RetrievalEngine / RetrieverService
-        +-- CALL_MCP_TOOL -> existing McpToolRegistry / McpToolExecutor
-        +-- ASK_CLARIFICATION -> stream clarification
-        +-- FINAL_ANSWER -> answer generation
+  |     |
+  |     +-- RETRIEVE_KB -> 复用 RetrievalEngine
+  |     +-- CALL_MCP_TOOL -> 复用 McpToolRegistry / McpToolExecutor
+  |     +-- ASK_CLARIFICATION -> 直接流式提示用户澄清
+  |     +-- FINAL_ANSWER -> 生成最终回答
   |
-  +-- AgentObservationStore / Trace
+  +-- AgentObservation
+  |
+  +-- AgentStep Trace
   |
   v
-Final Answer
+SSE Final Answer
 ```
 
-Keep the existing `RetrievalEngine` as a tool/capability. Do not rewrite it into the agent loop at first.
-
-## 4. Core New Concepts To Implement
-
-### 4.1 Agent State
-
-Create a state object that survives across loop steps.
-
-Suggested package:
-
-```text
-bootstrap/src/main/java/com/koawa/agent/agent
-```
-
-Suggested classes:
-
-- `AgentState`
-- `AgentStep`
-- `AgentAction`
-- `AgentActionType`
-- `AgentObservation`
-- `AgentLoopResult`
-- `AgentStopReason`
-
-Minimum fields:
-
-- original question
-- rewritten question
-- conversation id
-- user id
-- history
-- current step index
-- max steps
-- actions taken
-- observations
-- final answer
-- error
-- trace id
-
-### 4.2 Action Types
-
-Start with a small action vocabulary:
-
-```text
-RETRIEVE_KB
-CALL_MCP_TOOL
-FINAL_ANSWER
-ASK_CLARIFICATION
-```
-
-Add later if needed:
-
-```text
-REFLECT
-QUERY_REWRITE
-MEMORY_LOOKUP
-```
-
-### 4.3 Planner Output Contract
-
-The LLM planner must output structured JSON. Avoid free-form text.
-
-Example:
-
-```json
-{
-  "thought": "The user asks for HR policy details. Knowledge retrieval is needed.",
-  "action": "RETRIEVE_KB",
-  "arguments": {
-    "query": "员工薪资与福利政策",
-    "topK": 5
-  },
-  "finish": false
-}
-```
-
-Final answer action:
-
-```json
-{
-  "thought": "The retrieved evidence is enough.",
-  "action": "FINAL_ANSWER",
-  "arguments": {
-    "answerStyle": "concise"
-  },
-  "finish": true
-}
-```
-
-### 4.4 Loop Policy
-
-Use strict controls:
-
-- Max loop steps: 3 during development, 5 after stable.
-- Max tool calls per answer: 3 initially.
-- Stop if the same action repeats with materially same arguments.
-- Stop if planner JSON fails twice.
-- Stop if all observations are empty or errors.
-- Always allow `FINAL_ANSWER` if enough context exists.
-
-### 4.5 Trace Integration
-
-Every agent step should be visible in the existing trace system:
-
-- root: `agent-stream-chat`
-- nodes:
-  - `agent-plan`
-  - `agent-action-retrieve`
-  - `agent-action-mcp`
-  - `agent-observation`
-  - `agent-final-answer`
-
-This is important because trace will prove the agent loop is actually working.
-
-## 5. 55 Day Timeline
-
-The plan is split into 8 phases. Each phase has a concrete output.
-
-### Phase 1: Repo Reorientation And RAG Refresh, Days 1-5
-
-Goal: understand the current project deeply enough to change it safely.
-
-Tasks:
-
-- READ-ONLY: map the current chat path from controller to stream output.
-- READ-ONLY: map query rewrite, intent classification, retrieval, rerank, prompt build.
-- READ-ONLY: map model routing and provider fallback.
-- READ-ONLY: map MCP client/server integration.
-- READ-ONLY: map ingestion pipeline nodes.
-- DRAW: draw one sequence diagram for the chat pipeline.
-- DRAW: draw one module dependency diagram for RAG, infra-ai, framework, mcp-server.
-- EXPLAIN: write a short explanation of each stage in your own words.
-- VERIFY: run only necessary lightweight tests or targeted compile checks.
-
-Deliverables:
-
-- `docs/current-rag-chain-notes.md`
-- A sequence diagram of current RAG flow.
-- A list of current extension points.
-
-Acceptance:
-
-- You can explain how a user question becomes a streamed answer.
-- You can explain where to insert agent loop without breaking current RAG.
-
-### Phase 2: Agent Loop Design And Contracts, Days 6-10
-
-Goal: design the new agent layer before coding.
-
-Tasks:
-
-- DRAW: current static RAG pipeline vs target agent loop.
-- READ-ONLY: inspect `RetrievalEngine`, MCP executor, trace classes before designing.
-- HAND-CODE: define `AgentState`, `AgentStep`, `AgentAction`, `AgentObservation`.
-- HAND-CODE: define `AgentActionType`.
-- HAND-CODE: write planner JSON schema classes or DTOs.
-- HAND-CODE: write parser tests for valid/invalid planner JSON.
-- EXPLAIN: define stop policy and error policy in notes before coding the runner.
-- DRAW: trace node naming and parent-child relation.
-
-Deliverables:
-
-- `docs/agent-loop-design.md`
-- Empty or skeleton Java package for `agent`.
-- Unit tests for JSON parsing of planner output.
-
-Acceptance:
-
-- The design can answer: "What happens if the planner emits invalid JSON?"
-- The design can answer: "How do we prevent infinite loops?"
-
-### Phase 3: Minimal Agent Loop MVP, Days 11-18
-
-Goal: make a real loop run end to end with one retrieval action and final answer.
-
-Tasks:
-
-- HAND-CODE: implement `AgentPlanner` interface and one LLM-backed implementation.
-- HAND-CODE: implement `AgentLoopRunner` with max step policy.
-- HAND-CODE: implement `AgentActionExecutor`.
-- HAND-CODE: implement `RETRIEVE_KB`.
-- HAND-CODE: implement `FINAL_ANSWER`.
-- ASSISTED-CODE: endpoint/feature flag wiring if Spring details slow progress.
-- READ-ONLY: compare behavior with original `/rag/v3/chat`.
-- VERIFY: keep the original `/rag/v3/chat` behavior intact unless explicitly switched.
-
-Deliverables:
-
-- Agent mode can answer a KB question using loop steps.
-- Trace shows plan -> retrieve -> final answer.
-- At least 3 focused tests.
-
-Acceptance:
-
-- A single question produces at least one persisted/visible agent step.
-- The loop stops correctly.
-- Existing normal RAG still works.
-
-### Phase 4: MCP Tool Loop, Days 19-25
-
-Goal: make the agent choose and call MCP tools dynamically.
-
-Tasks:
-
-- READ-ONLY: inspect `McpToolRegistry`, `McpToolExecutor`, `McpClientToolExecutor`, and `mcp-server` tools.
-- DRAW: MCP client/server/tool call sequence.
-- HAND-CODE: add `CALL_MCP_TOOL` action.
-- HAND-CODE: expose available tools to planner with names, descriptions, schemas.
-- HAND-CODE: convert tool results/errors into `AgentObservation`.
-- ASSISTED-CODE: timeout/cancellation details if needed.
-
-Deliverables:
-
-- Agent can choose between KB retrieval and MCP tool call.
-- Agent can combine MCP result with KB result before final answer.
-- Trace shows tool action and observation.
-
-Acceptance:
-
-- Example: weather/ticket/sales tool call works through agent loop.
-- Tool failure does not crash the whole answer.
-
-### Phase 5: Reflection, Clarification, And Answer Quality, Days 26-32
-
-Goal: add practical agentic behavior beyond one-pass tool use.
-
-Tasks:
-
-- DRAW: decision tree for answer/continue/clarify.
-- HAND-CODE: add `ASK_CLARIFICATION` action.
-- HAND-CODE: add optional `REFLECT` action or internal answer sufficiency checker.
-- HAND-CODE: add evidence sufficiency rule:
-  - answer if context is enough
-  - retrieve again if context is partial
-  - clarify if user intent is ambiguous
-- HAND-CODE: add final answer grounding prompt.
-- ASSISTED-CODE: citation/evidence formatting if current UI support is unclear.
-
-Deliverables:
-
-- Agent asks clarification for ambiguous questions.
-- Agent can do second retrieval when first retrieval is insufficient.
-- Agent avoids unsupported final answers when evidence is weak.
-
-Acceptance:
-
-- At least 5 scenario tests:
-  - pure KB
-  - pure MCP
-  - KB + MCP
-  - ambiguous question
-  - no useful evidence
-
-### Phase 6: Ingestion And Knowledge Quality, Days 33-39
-
-Goal: connect agentic RAG quality to ingestion quality.
-
-Tasks:
-
-- READ-ONLY: review ingestion pipeline nodes: fetcher, parser, enhancer, chunker, enricher, indexer.
-- DRAW: ingestion pipeline from source to vector store.
-- EXPLAIN: how chunk quality affects retrieval and agent decisions.
-- HAND-CODE: improve one weak area only after inspection:
-  - chunk metadata
-  - parent-child chunk relation
-  - heading-aware chunking
-  - document-level summary
-  - generated questions per chunk
-- VERIFY: ensure ingestion output improves retrieval.
-- ASSISTED-CODE: trace/log evidence if the current trace hooks are complex.
-
-Deliverables:
-
-- One concrete ingestion quality improvement.
-- Before/after retrieval example.
-- Notes explaining why retrieval improved.
-
-Acceptance:
-
-- Same question retrieves better chunks after ingestion change.
-
-### Phase 7: Evaluation, Observability, And Safety, Days 40-47
-
-Goal: make the system measurable and safer.
-
-Tasks:
-
-- HAND-WRITE: create a small golden dataset of 20-30 questions.
-- HAND-CODE: add evaluation endpoint or test runner.
-- HAND-CODE: track:
-  - retrieval hit quality
-  - answer groundedness
-  - tool success/failure
-  - latency
-  - loop step count
-- HAND-CODE: add tool allowlist.
-- HAND-CODE: add max tool calls and timeout.
-- EXPLAIN: write sensitive argument logging policy before implementation.
-
-Deliverables:
-
-- `docs/evaluation-plan.md`
-- A runnable eval script/test/controller.
-- Safety rules for tool execution.
-
-Acceptance:
-
-- You can compare normal RAG vs agentic RAG on the same questions.
-- You can show where agent mode improves or worsens results.
-
-### Phase 8: Packaging, Review, And Migration Readiness, Days 48-55
-
-Goal: finish with an interview-ready and migration-ready project.
-
-Tasks:
-
-- READ-ONLY: review all touched package boundaries.
-- HAND-WRITE: write architecture notes.
-- DRAW: final diagrams.
-- HAND-WRITE: record known limitations.
-- HAND-WRITE: prepare migration guide for Python/TypeScript ecosystems.
-- VERIFY: run final targeted verification.
-
-Deliverables:
-
-- `docs/final-agentic-rag-architecture.md`
-- `docs/language-ecosystem-migration-guide.md`
-- Final demo script.
-- Final limitations and future roadmap.
-
-Acceptance:
-
-- You can demo:
-  - normal RAG
-  - agentic RAG
-  - MCP tool call
-  - multi-step loop
-  - trace view
-  - evaluation result
-- You can explain how to rebuild the same design in another language.
-
-## 6. Weekly Learning Focus
-
-### Week 1
-
-Focus: current RAG system.
-
-Questions to answer:
-
-- What is the exact runtime chain?
-- Which parts are deterministic and which parts are LLM-driven?
-- Where is retrieval quality decided?
-- Where is context assembled?
-
-### Week 2
-
-Focus: agent state and structured planner.
-
-Questions to answer:
-
-- Why must planner output be structured?
-- Why does agent loop need max steps?
-- What is an observation?
-- What should be persisted?
-
-### Week 3
-
-Focus: tool use and MCP.
-
-Questions to answer:
-
-- What is the difference between MCP server, MCP client, and tool registry?
-- How does a tool schema affect planner reliability?
-- How should tool errors be converted into observations?
-
-### Week 4
-
-Focus: multi-step reasoning.
-
-Questions to answer:
-
-- When should the agent retrieve again?
-- When should it ask clarification?
-- How do we prevent hallucinated final answers?
-
-### Week 5
-
-Focus: ingestion and retrieval quality.
-
-Questions to answer:
-
-- Does chunking match user questions?
-- Is metadata useful for filtering?
-- Does rerank fix bad retrieval, or only reorder already-good candidates?
-
-### Week 6
-
-Focus: evaluation and safety.
-
-Questions to answer:
-
-- How do we know agentic mode is better?
-- Which tool calls are risky?
-- Which trace fields are needed for debugging?
-
-### Week 7-8
-
-Focus: polish, migration, and explanation.
-
-Questions to answer:
-
-- What is language-specific and what is architecture-specific?
-- How would this look in LangGraph?
-- How would this look in TypeScript?
-
-## 7. Future Language Ecosystem Migration Plan
-
-The goal is not to rewrite immediately. First extract architecture boundaries that survive language changes.
-
-### 7.1 Language-Agnostic Contracts
-
-Keep these concepts stable:
-
-- `ChatModel`
-- `EmbeddingModel`
-- `RerankModel`
-- `VectorStore`
-- `Retriever`
-- `ToolRegistry`
-- `ToolExecutor`
-- `AgentPlanner`
-- `AgentState`
-- `AgentLoopRunner`
-- `TraceStore`
-- `IngestionPipeline`
-
-If these contracts are clear, the implementation language can change.
-
-### 7.2 Python Migration
-
-Best when the target is fast agent framework experimentation.
-
-Candidate stack:
-
-- FastAPI for API.
-- LangGraph for agent loop/state graph.
-- LangChain or LlamaIndex for retrievers/tools if useful.
-- Pydantic for structured planner output.
-- SQLAlchemy/Alembic for DB.
-- Celery/RQ/Arq for background ingestion.
-- Milvus/pgvector clients.
-
-Migration route:
-
-1. Keep Java backend running.
-2. Build a Python agent service as a sidecar.
-3. Expose Java retrieval/MCP functions as HTTP APIs or MCP tools.
-4. Let Python LangGraph orchestrate first.
-5. Gradually move retrieval/indexing only if needed.
-
-Recommended first Python target:
-
-```text
-Python Agent Orchestrator
-  calls Java RAG retrieval API
-  calls Java MCP registry API
-  writes trace back to Java or shared DB
-```
-
-Do not rewrite ingestion first. It is expensive and not needed for proving agent loop.
-
-### 7.3 TypeScript Migration
-
-Best when the target is full-stack product, Node ecosystem, or Vercel/Next.js deployment.
-
-Candidate stack:
-
-- NestJS or Hono/Fastify for backend.
-- LangGraph.js for agent loop.
-- Zod for planner/action schema validation.
-- Prisma/Drizzle for DB.
-- pgvector or Milvus SDK.
-- OpenTelemetry for tracing.
-
-Migration route:
-
-1. Extract API contracts from Java.
-2. Build a TypeScript agent orchestration service.
-3. Reuse Java retrieval/MCP through HTTP/MCP.
-4. Move frontend integration gradually.
-
-Recommended first TypeScript target:
-
-```text
-TypeScript Agent Gateway
-  validates action schemas with Zod
-  calls existing Java services
-  streams SSE to frontend
-```
-
-### 7.4 Keep Java When
-
-Stay with Java/Spring if:
-
-- You want enterprise backend credibility.
-- You care about transactionality, existing DB mappings, and admin APIs.
-- You need to explain production engineering.
-- You do not need LangGraph-native features immediately.
-
-### 7.5 Switch Or Add Sidecar When
-
-Add Python/TypeScript sidecar if:
-
-- You want faster agent loop experimentation.
-- You need LangGraph state graph semantics.
-- You want richer tool ecosystem integrations.
-- You want to compare ecosystems for interviews or future work.
-
-Preferred strategy:
-
-```text
-Do not big-bang rewrite.
-First build sidecar orchestrator.
-Then decide whether to migrate capabilities.
-```
-
-## 8. Daily Execution Template
-
-Use this template each day:
-
-```text
-Day N:
-Goal:
-Files to inspect:
-Files to change:
-Expected behavior:
-Verification:
-Notes:
-Next day:
-```
-
-Keep each day small. Prefer one useful commit-sized change over broad partial rewrites.
-
-## 9. Suggested File/Package Layout For Agent Layer
+## 6. 建议新增包结构
 
 ```text
 bootstrap/src/main/java/com/koawa/agent/agent/
@@ -682,23 +195,22 @@ bootstrap/src/main/java/com/koawa/agent/agent/
     AgentObservation.java
     AgentLoopResult.java
     AgentStopReason.java
+  parser/
+    AgentActionParser.java
   prompt/
     AgentPromptBuilder.java
   trace/
     AgentTraceSupport.java
-  parser/
-    AgentActionParser.java
 ```
 
-Prompt resources:
+Prompt 文件：
 
 ```text
 bootstrap/src/main/resources/prompt/agent-planner.st
 bootstrap/src/main/resources/prompt/agent-final-answer.st
-bootstrap/src/main/resources/prompt/agent-reflection.st
 ```
 
-Tests:
+测试：
 
 ```text
 bootstrap/src/test/java/com/koawa/agent/agent/
@@ -707,77 +219,516 @@ bootstrap/src/test/java/com/koawa/agent/agent/
   AgentActionExecutorTest.java
 ```
 
-## 10. Minimal MVP Sequence
+## 7. 55 天重规划
 
-The first implementation should be intentionally narrow:
+### 第 1 阶段：开发环境与主链路定位，Day 1-3
 
-1. User calls agent endpoint.
-2. Load conversation history.
-3. Planner emits `RETRIEVE_KB`.
-4. Executor calls existing retrieval.
-5. Observation stores retrieved context summary.
-6. Planner emits `FINAL_ANSWER`.
-7. Final answer streams to frontend.
-8. Trace records both steps.
+目标：不再泛读，只定位 agent 要复用的旧能力。
 
-Only after this works, add MCP.
+Day 1 已完成：
 
-## 11. What Not To Do Early
+- READ：`RAGChatServiceImpl`
+- READ：`StreamChatPipeline`
+- READ：`RetrievalEngine.retrieve`
+- READ：`formatKbContext`
+- VERIFY：尝试启动项目，确认当前阻塞在 RocketMQ
+- DOC：整理 2026-07-08 日志
 
-Avoid these during the first 25 days:
+Day 2：
 
-- Do not rewrite `RetrievalEngine` from scratch.
-- Do not replace all prompts at once.
-- Do not migrate language ecosystem before Java MVP works.
-- Do not add LangGraph sidecar before understanding the current pipeline.
-- Do not start with multi-agent collaboration.
-- Do not optimize UI before backend trace proves the loop.
-- Do not make evaluation too large before the agent loop is stable.
+- READ：`MultiChannelRetrievalEngine`
+- READ：`SearchChannel`
+- READ：`VectorGlobalSearchChannel`
+- READ：`IntentDirectedSearchChannel`
+- DRAW：画“当前 KB 检索链路”
+- HAND-CODE：不写业务代码，只写一份 `docs/retrieval-chain-notes.md`
+- VERIFY：`mvnw -q -DskipTests compile`
 
-## 12. Interview Explanation Frame
+Day 3：
 
-Use this frame to explain the project:
+- READ：`McpToolRegistry`
+- READ：`McpToolExecutor`
+- READ：`McpClientToolExecutor`
+- READ：`mcp-server` 示例工具
+- DRAW：画“MCP 工具注册与调用链路”
+- HAND-CODE：写 `docs/mcp-tool-chain-notes.md`
+
+阶段产出：
+
+- `docs/retrieval-chain-notes.md`
+- `docs/mcp-tool-chain-notes.md`
+- 你能说清楚：agent 的 `RETRIEVE_KB` 和 `CALL_MCP_TOOL` 应该复用哪些类
+
+### 第 2 阶段：Agent Domain 骨架，Day 4-7
+
+目标：开始工程化，不再只读。
+
+Day 4：
+
+- READ：回看 `RetrievalContext`、`SubQuestionIntent`、`ChatRequest`
+- HAND-CODE：创建 `AgentActionType`
+- HAND-CODE：创建 `AgentAction`
+- HAND-CODE：创建 `AgentObservation`
+- VERIFY：编译通过
+
+Day 5：
+
+- HAND-CODE：创建 `AgentState`
+- HAND-CODE：创建 `AgentStep`
+- HAND-CODE：创建 `AgentLoopResult`
+- HAND-CODE：创建 `AgentStopReason`
+- DRAW：画 agent state 生命周期
+
+Day 6：
+
+- HAND-CODE：创建 `AgentActionParser`
+- HAND-CODE：写 JSON 解析测试
+- VERIFY：测试覆盖合法 JSON、非法 JSON、未知 action
+
+Day 7：
+
+- REVIEW：回顾 domain 是否过度设计
+- ASSISTED-CODE：必要时调整字段和命名
+- DOC：写 `docs/agent-loop-design.md` 第一版
+
+阶段产出：
+
+- agent domain 包
+- parser 测试
+- `docs/agent-loop-design.md`
+
+### 第 3 阶段：无 LLM 的本地 Agent Loop，Day 8-12
+
+目标：先做 loop 结构，不接真实模型。
+
+Day 8：
+
+- HAND-CODE：定义 `AgentPlanner` 接口
+- HAND-CODE：实现 `ScriptedAgentPlanner`
+- 说明：先用固定脚本模拟 planner 输出
+
+Day 9：
+
+- HAND-CODE：实现 `AgentLoopRunner` 第一版
+- 支持：
+  - maxSteps
+  - 保存 steps
+  - 遇到 FINAL_ANSWER 停止
+  - 超步数停止
+
+Day 10：
+
+- HAND-CODE：实现 `AgentActionExecutor` 空壳
+- 支持两个假 action：
+  - `RETRIEVE_KB` 返回 mock observation
+  - `FINAL_ANSWER` 返回 mock final answer
+
+Day 11：
+
+- HAND-CODE：写 `AgentLoopRunnerTest`
+- 验证：
+  - retrieve -> final answer
+  - 超过 maxSteps 停止
+  - planner 输出非法 action 时停止
+
+Day 12：
+
+- READ：回看 `RAGChatServiceImpl` 如何创建 SSE callback
+- DRAW：画 agent endpoint 如何接入
+- 暂不接真实接口
+
+阶段产出：
 
 ```text
-The original system was an enterprise RAG platform with query rewrite,
-intent routing, multi-channel vector retrieval, rerank, MCP tool calling,
-ingestion pipeline, model routing, and trace.
-
-The limitation was that orchestration was mostly static. I added an agent
-loop above the existing capabilities. The agent maintains state, asks an LLM
-planner for structured actions, executes retrieval or tools, observes results,
-and decides whether to continue, clarify, or answer. Existing RAG and MCP
-modules became tools rather than being rewritten.
-
-This keeps production stability while adding agentic behavior.
+一个完全不依赖 LLM、不依赖 Redis/RocketMQ/DB 的 agent loop 单元测试。
 ```
 
-## 13. Recovery Instructions For Future Sessions
+这是最重要的加速点：先证明 loop 结构对，再接项目能力。
 
-When context is lost, do this:
+### 第 4 阶段：接入 RetrievalEngine，Day 13-18
 
-1. Reread this file.
-2. Inspect current git status.
-3. Check which phase/day has files already created.
-4. Continue from the next unfinished deliverable.
-5. Keep changes narrow.
-6. Before implementing, inspect the existing code path being touched.
+目标：让 `RETRIEVE_KB` action 调用真实项目检索能力。
 
-Useful commands:
+Day 13：
+
+- READ：`RetrievalEngine.retrieve`
+- READ：`SubQuestionIntent`
+- READ：`IntentResolver`
+- DRAW：agent action query 如何转成当前检索入参
+
+Day 14：
+
+- HAND-CODE：实现 `RetrieveKbActionHandler`
+- 输入：
+  - query
+  - topK
+- 输出：
+  - AgentObservation
+  - kbContext 摘要
+  - intentChunks 数量
+
+Day 15：
+
+- HAND-CODE：补测试
+- ASSISTED-CODE：如果构造 `SubQuestionIntent` 太复杂，可先做 adapter 或 fake intent
+
+Day 16：
+
+- READ：`MultiChannelRetrievalEngine`
+- 修正 `RetrieveKbActionHandler` 的调用边界
+
+Day 17：
+
+- VERIFY：在无完整外部依赖时跑单元测试
+- DOC：记录 `RETRIEVE_KB` action 如何复用旧系统
+
+Day 18：
+
+- REVIEW：检查是否破坏原有 `StreamChatPipeline`
+
+阶段产出：
+
+- `RETRIEVE_KB` action handler
+- 测试
+- 文档说明
+
+### 第 5 阶段：Agentic RAG MVP，Day 19-25
+
+目标：做出最小 agent 问答模式。
+
+Day 19：
+
+- HAND-CODE：定义 `AgentChatService`
+- HAND-CODE：定义 `AgentChatController`
+- 先不接前端，只提供后端接口
+
+Day 20：
+
+- HAND-CODE：接入 `AgentLoopRunner`
+- 支持普通 HTTP 或 SSE 最小返回
+
+Day 21：
+
+- HAND-CODE：实现 `FINAL_ANSWER` handler
+- 初版可以复用 `LLMService.streamChat`
+
+Day 22：
+
+- READ：`RAGPromptService`
+- READ：`PromptContext`
+- HAND-CODE：做 agent final answer prompt
+
+Day 23：
+
+- VERIFY：用 mock planner 跑完整 retrieve -> answer
+
+Day 24：
+
+- ASSISTED-CODE：如果 Spring wiring 卡住，让助手协助接 bean
+
+Day 25：
+
+- DOC：写 `docs/agent-mvp-notes.md`
+
+阶段产出：
+
+```text
+Agentic RAG MVP：
+一个问题可以经过 agent loop，
+产生至少一个 action 和一个 final answer。
+```
+
+### 第 6 阶段：接入 MCP 工具，Day 26-32
+
+目标：让 agent 可以选择工具。
+
+Day 26：
+
+- READ：`McpToolRegistry`
+- READ：`DefaultMcpToolRegistry`
+- READ：`McpClientToolExecutor`
+
+Day 27：
+
+- HAND-CODE：实现 `CallMcpToolActionHandler`
+
+Day 28：
+
+- HAND-CODE：将 MCP tool result 转成 `AgentObservation`
+
+Day 29：
+
+- HAND-CODE：工具失败不让整个 loop 崩溃
+
+Day 30：
+
+- VERIFY：用本地 `mcp-server` 示例工具测试
+
+Day 31：
+
+- DRAW：KB + MCP 混合回答链路
+
+Day 32：
+
+- DOC：写 `docs/agent-mcp-notes.md`
+
+阶段产出：
+
+- `CALL_MCP_TOOL` action
+- 工具 observation
+- 错误降级
+
+### 第 7 阶段：真实 LLM Planner，Day 33-39
+
+目标：把脚本 planner 替换为 LLM 结构化 planner。
+
+Day 33：
+
+- HAND-CODE：`LlmAgentPlanner`
+- 使用 `LLMService`
+- 输出 JSON
+
+Day 34：
+
+- HAND-CODE：planner prompt
+- 要求固定 action schema
+
+Day 35：
+
+- HAND-CODE：planner JSON 解析失败重试
+
+Day 36：
+
+- HAND-CODE：重复 action 检测
+
+Day 37：
+
+- HAND-CODE：最大 tool call 限制
+
+Day 38：
+
+- VERIFY：mock LLM / fake planner 测试
+
+Day 39：
+
+- DOC：写 planner 设计说明
+
+阶段产出：
+
+- 真实 planner 实现
+- 结构化输出解析
+- 停止策略
+
+### 第 8 阶段：Trace、评估与演示，Day 40-47
+
+目标：证明 agent loop 真的在运行，并能比较效果。
+
+Day 40：
+
+- READ：`RagTraceRecordService`
+- READ：`RagStreamTraceSupport`
+- DRAW：agent step trace 结构
+
+Day 41：
+
+- HAND-CODE：agent step trace 记录
+
+Day 42：
+
+- HAND-CODE：记录 action、observation、stopReason
+
+Day 43：
+
+- HAND-WRITE：整理 20 个评估问题
+
+Day 44：
+
+- HAND-CODE：简单 eval runner
+
+Day 45：
+
+- VERIFY：比较普通 RAG vs agentic RAG
+
+Day 46：
+
+- DOC：写 `docs/evaluation-plan.md`
+
+Day 47：
+
+- REVIEW：整理缺陷和下一步
+
+阶段产出：
+
+- trace 可见 agent steps
+- 小型评估集
+- 对比结论
+
+### 第 9 阶段：收尾、迁移方案、面试表达，Day 48-55
+
+目标：形成最终可讲项目。
+
+Day 48-49：
+
+- DOC：写最终架构说明
+- DRAW：最终架构图
+
+Day 50-51：
+
+- DOC：写 Python / TypeScript 迁移方案
+
+Day 52：
+
+- VERIFY：最终编译和核心测试
+
+Day 53：
+
+- HAND-WRITE：整理 demo 脚本
+
+Day 54：
+
+- HAND-WRITE：整理项目亮点和不足
+
+Day 55：
+
+- REVIEW：最终复盘
+
+阶段产出：
+
+- `docs/final-agentic-rag-architecture.md`
+- `docs/language-ecosystem-migration-guide.md`
+- demo 脚本
+- 面试讲解稿
+
+## 8. 每日执行模板
+
+每天只写这几个字段：
+
+```text
+日期：
+今日目标：
+READ：
+HAND-CODE：
+DRAW：
+VERIFY：
+今日结论：
+明日下一步：
+```
+
+每晚必须更新：
+
+```text
+docs/dev-log-YYYY-MM-DD.md
+```
+
+## 9. 当前最新进度
+
+截至 2026-07-09：
+
+已完成：
+
+- 项目重命名为 KoawaAgent
+- 新仓库干净历史推送
+- 初步阅读 `RAGChatServiceImpl`
+- 初步阅读 `StreamChatPipeline`
+- 初步阅读 `RetrievalEngine`
+- 理解 `formatKbContext`
+- 本地启动排查到 RocketMQ 阻塞
+
+当前应该继续：
+
+```text
+Day 2：
+以实现 RETRIEVE_KB action 为目标，
+阅读 MultiChannelRetrievalEngine 和 SearchChannel 系列。
+```
+
+今天不要再泛读整个项目。
+
+今天的学习目标：
+
+```text
+搞清楚 retrieveKnowledgeChannels 如何把全局向量检索和意图定向检索合并。
+```
+
+今天的工程目标：
+
+```text
+为后续 AgentActionExecutor.RETRIEVE_KB 设计最小入参和出参。
+```
+
+## 10. 近期不要做的事
+
+短期内不要做：
+
+- 不要重写 `RetrievalEngine`
+- 不要迁移 Python/TypeScript
+- 不要大改前端
+- 不要一上来做多 agent
+- 不要直接接真实 LLM planner
+- 不要为了启动项目改一堆配置
+
+短期内应该做：
+
+- 小步创建 agent domain
+- 小步创建 parser
+- 小步创建 fake planner
+- 小步创建 loop runner
+- 用测试先跑通 agent loop
+
+## 11. 未来语言生态迁移
+
+迁移不是现在做，而是在 Java MVP 跑通之后做。
+
+语言无关边界：
+
+- `AgentState`
+- `AgentAction`
+- `AgentObservation`
+- `AgentPlanner`
+- `AgentLoopRunner`
+- `ToolRegistry`
+- `Retriever`
+- `TraceStore`
+
+Python 方向：
+
+```text
+FastAPI + LangGraph + Pydantic
+先做 sidecar agent orchestrator，
+调用 Java retrieval/MCP API。
+```
+
+TypeScript 方向：
+
+```text
+NestJS/Hono + LangGraph.js + Zod
+先做 agent gateway，
+复用 Java 后端能力。
+```
+
+原则：
+
+```text
+不要大爆炸重写。
+先让 Java 版本 agent loop 成型，
+再考虑 sidecar。
+```
+
+## 12. 恢复上下文说明
+
+如果后续上下文丢失：
+
+1. 先读本文件。
+2. 再读最近一天的 `docs/dev-log-YYYY-MM-DD.md`。
+3. 执行 `git status --short`。
+4. 搜索 agent 包是否已经存在。
+5. 从当前阶段的下一个小任务继续。
+
+常用命令：
 
 ```powershell
 git status --short
 rg "AgentLoopRunner|AgentState|AgentAction" bootstrap/src/main/java
+rg "retrieveKnowledgeChannels" bootstrap/src/main/java
 rg "agent-planner|agent-final-answer" bootstrap/src/main/resources/prompt
-rg "agent" bootstrap/src/test/java
-```
-
-## 14. Current Priority
-
-Immediate next step after writing this plan:
-
-```text
-Phase 1, Day 1:
-Map the current chat flow from RAGChatController to StreamChatPipeline,
-then write docs/current-rag-chain-notes.md.
 ```
