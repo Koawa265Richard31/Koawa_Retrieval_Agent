@@ -545,6 +545,42 @@ AgentPlanner 输出 CALL_MCP_TOOL action
 但不必完全沿用当前基于意图节点的触发方式。
 ```
 
+### 6. Agent 指导方式沉淀
+
+今日将当前会话中形成的项目指导方式沉淀为可复用提示词：
+
+```text
+docs/agent/Agent.md
+```
+
+该文件用于后续上下文恢复和继续学习开发，核心内容包括：
+
+- 继续以当前项目代码为依据，不直接套通用 Agent 框架概念。
+- 使用小步节奏推进：定位文件、读一个方法、解释主线、回答少量问题、再进入下一步。
+- 区分 `READ`、`DRAW`、`HAND-CODE`、`VERIFY` 四类任务。
+- 新增 Agent 层时优先复用旧能力：
+  - `RETRIEVE_KB` 复用 `RetrievalEngine`。
+  - `CALL_MCP_TOOL` 复用 `McpToolRegistry` / `McpToolExecutor`。
+  - `AgentPlanner` 复用 `ChatRequest` / `ChatMessage` / `LLMService`。
+- 文档统一写入 `docs/learning-notes.md`，不再新建分散的 `dev-log-YYYY-MM-DD.md`。
+- 提交前必须检查 `git status --short`，只提交当前任务相关文件。
+
+同时将以下工程思维扩展层合并进 `Agent.md`：
+
+```text
+docs/agent/AGENT_ENGINEERING_THINKING_EXTENSION..md
+```
+
+合并方式：
+
+```text
+Agent.md 前半部分为当前指导方式；
+后半部分保留工程思维培养扩展层内容；
+原扩展文件语义不改变。
+```
+
+本次沉淀的目的不是把协作变成固定教学模板，而是让后续 Agent 在继续完成任务的同时，保持当前这种“小步读项目 + 小步做工程 + 关键处培养判断”的指导方式。
+
 ## RAG 主链路与检索链路总图
 
 ```text
