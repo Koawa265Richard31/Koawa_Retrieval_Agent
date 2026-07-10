@@ -4,6 +4,7 @@
 
 - [2026-07-08：RAG 主链路、Pipeline 与项目重构](#2026-07-08rag-主链路pipeline-与项目重构)
 - [2026-07-09：多通道检索与并行检索模板](#2026-07-09多通道检索与并行检索模板)
+- [2026-07-10：MCP 工具注册、调用与参数提取](#2026-07-10mcp-工具注册调用与参数提取)
 - [RAG 主链路与检索链路总图](#rag-主链路与检索链路总图)
 - [后续记录规则](#后续记录规则)
 
@@ -350,6 +351,199 @@ retrieveKnowledgeChannels 如何决定跑哪些检索通道？
   - 等待任务完成。
   - 合并所有 `RetrievedChunk`。
   - 统计成功、失败和 chunk 数量。
+
+## 2026-07-10：MCP 工具注册、调用与参数提取
+
+### 今日主题
+
+- 阅读当前项目里的 MCP 工具注册与调用链路。
+- 明确当前 MCP 分支和未来 Agent `CALL_MCP_TOOL` action 的差别。
+- 将 MCP 注册阶段、请求调用阶段画成 Mermaid 图，后续继续追加到本学习笔记中。
+
+### 1. MCP 意图筛选
+
+MCP 意图不是在工具注册阶段产生的，而是在 `RetrievalEngine.buildSubQuestionContext(...)` 中从当前子问题的 `nodeScores` 里过滤出来：
+
+```java
+List<NodeScore> kbIntents = NodeScoreFilters.kb(intent.nodeScores());
+List<NodeScore> mcpIntents = NodeScoreFilters.mcp(intent.nodeScores());
+```
+
+`NodeScoreFilters.mcp(...)` 的过滤条件是：
+
+```text
+node 不为空
+node.isMCP()
+node.mcpToolId 不为空
+```
+
+也就是说，当前项目的 MCP 调用不是由 agent 自主选择工具，而是由意图节点绑定的 `mcpToolId` 决定。
+
+### 2. MCP 启动注册阶段
+
+阅读入口：
+
+- `McpClientAutoConfiguration`
+- `DefaultMcpToolRegistry`
+- `McpClientToolExecutor`
+
+核心理解：
+
+- `McpClientAutoConfiguration` 是启动时的远程工具发现器。
+- 它读取配置中的 MCP Server 地址，拼接 `/mcp` 后创建 `McpSyncClient`。
+- `client.initialize()` 是 MCP 协议初始化握手。
+- `client.listTools()` 用来向 MCP Server 查询当前暴露了哪些工具。
+- 每个远程 `Tool` 会被包装成一个 `McpClientToolExecutor`。
+- `toolRegistry.register(executor)` 将执行器放入注册表。
+- `DefaultMcpToolRegistry` 内部用 `Map<String, McpToolExecutor>` 维护 `toolId -> executor`。
+
+```mermaid
+flowchart TD
+    A["应用启动"] --> B["读取 McpClientProperties.servers"]
+    B --> C{"是否配置 MCP Server"}
+    C -- "否" --> D["跳过远程工具注册"]
+    C -- "是" --> E["遍历每个 ServerConfig"]
+    E --> F["拼接 /mcp 地址"]
+    F --> G["创建 HttpClientStreamableHttpTransport"]
+    G --> H["创建 McpSyncClient"]
+    H --> I["client.initialize() 协议握手"]
+    I --> J["client.listTools()"]
+    J --> K["返回 Tool 列表"]
+    K --> L{"是否有可用工具"}
+    L -- "否" --> M["跳过该 Server 工具注册"]
+    L -- "是" --> N["遍历 Tool"]
+    N --> O["new McpClientToolExecutor(client, tool)"]
+    O --> P["toolRegistry.register(executor)"]
+    P --> Q["executorMap[toolId] = executor"]
+```
+
+### 3. MCP 请求调用阶段
+
+请求时，MCP 分支从 `RetrievalEngine` 开始：
+
+```text
+buildSubQuestionContext
+  -> NodeScoreFilters.mcp
+  -> executeMcpAndMerge
+  -> executeMcpTools
+  -> executeSingleMcpTool
+```
+
+核心理解：
+
+- `executeMcpTools(...)` 负责把多个 MCP 意图并发执行。
+- `executeSingleMcpTool(...)` 负责执行单个 MCP 意图节点。
+- `mcpToolRegistry.getExecutor(toolId)` 根据意图节点上的 `mcpToolId` 找执行器。
+- `executor.getToolDefinition()` 拿到工具定义，也就是 MCP Server 启动时返回的 `Tool`。
+- `mcpParameterExtractor.extractParameters(...)` 使用用户问题、工具定义和可选的自定义参数 prompt 提取参数。
+- `executor.execute(params)` 最终调用远程 MCP 工具。
+- `contextFormatter.formatMcpContext(...)` 将工具结果整理成可放入 prompt 的 `mcpContext`。
+
+```mermaid
+flowchart TD
+    A["用户问题"] --> B["rewriteQuery / resolveIntents"]
+    B --> C["SubQuestionIntent.nodeScores"]
+    C --> D["buildSubQuestionContext"]
+    D --> E["NodeScoreFilters.mcp()"]
+    E --> F["mcpIntents"]
+    F --> G{"是否有 MCP 意图"}
+    G -- "否" --> H["mcpContext = 空字符串"]
+    G -- "是" --> I["executeMcpAndMerge(question, mcpIntents)"]
+    I --> J["executeMcpTools()"]
+    J --> K["CompletableFuture 并发执行"]
+    K --> L["executeSingleMcpTool(question, intentNode)"]
+    L --> M["读取 intentNode.mcpToolId"]
+    M --> N["mcpToolRegistry.getExecutor(toolId)"]
+    N --> O{"executor 是否存在"}
+    O -- "否" --> P["返回 null / 跳过该工具"]
+    O -- "是" --> Q["executor.getToolDefinition()"]
+    Q --> R["读取 intentNode.paramPromptTemplate"]
+    R --> S["mcpParameterExtractor.extractParameters()"]
+    S --> T["executor.execute(params)"]
+    T --> U["mcpClient.callTool(toolName, params)"]
+    U --> V["CallToolResult"]
+    V --> W["按 toolId 分组"]
+    W --> X["formatMcpContext(toolResults, mcpIntents)"]
+    X --> Y["mcpContext"]
+    Y --> Z["SubQuestionContext / RetrievalContext"]
+```
+
+### 4. MCP 参数提取
+
+阅读入口：
+
+- `McpParameterExtractor`
+- `LLMMcpParameterExtractor`
+- `IntentNode.paramPromptTemplate`
+
+核心理解：
+
+- `Tool.inputSchema` 描述工具需要哪些参数、参数类型、必填项、默认值和枚举值。
+- 参数提取器会把 `Tool.inputSchema` 和用户问题一起放进 prompt，让 LLM 按工具参数结构抽取参数。
+- 当前实现会清理 LLM 返回内容，解析 JSON。
+- `parseJsonResponse(...)` 只保留 `inputSchema` 中声明过的参数，避免 LLM 输出多余字段。
+- `fillDefaults(...)` 会补充工具 schema 中声明的默认值。
+- 如果 JSON 解析失败或调用异常，则返回默认参数。
+
+准确说法：
+
+```text
+不是把参数放入 inputSchema。
+而是 inputSchema 描述参数结构，LLM 按这个结构从用户问题中提取 params，
+然后 params 被传给 callTool 执行远程工具。
+```
+
+参数提取链路：
+
+```mermaid
+flowchart TD
+    A["Tool.inputSchema"] --> B["buildToolDefinition(tool)"]
+    C["用户问题 userQuestion"] --> D["构建 user prompt"]
+    E["IntentNode.paramPromptTemplate 可选"] --> F["选择 system prompt"]
+    F --> G["messages = system + user"]
+    B --> D
+    D --> G
+    G --> H["llmService.chat(request)"]
+    H --> I["LLM 返回 JSON 文本"]
+    I --> J["stripMarkdownCodeFence"]
+    J --> K["JsonParser.parseString"]
+    K --> L["只保留 inputSchema 中声明的字段"]
+    L --> M["fillDefaults 补默认值"]
+    M --> N["Map<String,Object> params"]
+    N --> O["mcpClient.callTool(toolName, params)"]
+```
+
+### 5. 当前 MCP 分支和未来 Agent Action 的差别
+
+当前项目：
+
+```text
+意图节点命中 MCP 类型
+  -> 读取节点绑定的 mcpToolId
+  -> 自动提取参数
+  -> 调用对应 MCP 工具
+  -> 结果合并进 mcpContext
+```
+
+未来 Agentic RAG：
+
+```text
+AgentPlanner 输出 CALL_MCP_TOOL action
+  -> action 中包含 toolId 和 arguments
+  -> AgentActionExecutor 根据 toolId 找 executor
+  -> 执行工具
+  -> 将结果包装成 AgentObservation
+  -> AgentLoop 决定继续检索、继续调用工具，还是最终回答
+```
+
+今日结论：
+
+```text
+当前 MCP 是“意图路由驱动的工具调用”。
+目标 Agent MCP 是“planner 驱动的工具调用”。
+后续实现 CALL_MCP_TOOL action 时，应复用 McpToolRegistry 和 McpToolExecutor，
+但不必完全沿用当前基于意图节点的触发方式。
+```
 
 ## RAG 主链路与检索链路总图
 
