@@ -674,7 +674,73 @@ StreamChatPipeline.execute(ctx)
   |       |       +--> MCP 分支：executeMcpAndMerge
   |       |               |
   |       |               v
-  |       |             MCP tool results
+  |       |             executeMcpAndMerge(question, mcpIntents)
+  |       |               |
+  |       |               +--> mcpIntents 为空
+  |       |               |       |
+  |       |               |       v
+  |       |               |     返回空 mcpContext
+  |       |               |
+  |       |               +--> mcpIntents 不为空
+  |       |                       |
+  |       |                       v
+  |       |                     executeMcpTools(question, mcpIntents)
+  |       |                       |
+  |       |                       | 为每个 MCP 意图创建 CompletableFuture
+  |       |                       | 使用 mcpBatchExecutor 并发执行
+  |       |                       v
+  |       |                     executeSingleMcpTool(question, intentNode)
+  |       |                       |
+  |       |                       +--> intentNode.mcpToolId
+  |       |                       |       |
+  |       |                       |       v
+  |       |                       |     mcpToolRegistry.getExecutor(toolId)
+  |       |                       |       |
+  |       |                       |       +--> 找不到 executor
+  |       |                       |       |       |
+  |       |                       |       |       v
+  |       |                       |       |     返回 null，跳过该工具
+  |       |                       |       |
+  |       |                       |       +--> 找到 executor
+  |       |                       |               |
+  |       |                       |               v
+  |       |                       |             executor.getToolDefinition()
+  |       |                       |               |
+  |       |                       |               v
+  |       |                       |             Tool
+  |       |                       |             - name
+  |       |                       |             - description
+  |       |                       |             - inputSchema
+  |       |                       |               |
+  |       |                       |               v
+  |       |                       |             intentNode.paramPromptTemplate
+  |       |                       |               |
+  |       |                       |               v
+  |       |                       |             mcpParameterExtractor.extractParameters()
+  |       |                       |               |
+  |       |                       |               | 使用用户问题 + Tool.inputSchema
+  |       |                       |               | 调 LLM 提取 Map<String,Object> params
+  |       |                       |               v
+  |       |                       |             executor.execute(params)
+  |       |                       |               |
+  |       |                       |               v
+  |       |                       |             McpClientToolExecutor
+  |       |                       |               |
+  |       |                       |               v
+  |       |                       |             mcpClient.callTool(toolName, params)
+  |       |                       |               |
+  |       |                       |               v
+  |       |                       |             CallToolResult
+  |       |                       |
+  |       |                       v
+  |       |                     按 toolId 分组
+  |       |                     Map<String, List<CallToolResult>>
+  |       |                       |
+  |       |                       v
+  |       |                     contextFormatter.formatMcpContext(toolResults, mcpIntents)
+  |       |                       |
+  |       |                       v
+  |       |                     mcpContext
   |       |
   |       +--> 合并所有 SubQuestionContext
   |       |
