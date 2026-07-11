@@ -5,6 +5,7 @@
 - [2026-07-08：RAG 主链路、Pipeline 与项目重构](#2026-07-08rag-主链路pipeline-与项目重构)
 - [2026-07-09：多通道检索与并行检索模板](#2026-07-09多通道检索与并行检索模板)
 - [2026-07-10：MCP 工具注册、调用与参数提取](#2026-07-10mcp-工具注册调用与参数提取)
+- [2026-07-11：Agent Domain、Action Parser 与 Loop 设计](#2026-07-11agent-domainaction-parser-与-loop-设计)
 - [RAG 主链路与检索链路总图](#rag-主链路与检索链路总图)
 - [后续记录规则](#后续记录规则)
 
@@ -580,6 +581,286 @@ Agent.md 前半部分为当前指导方式；
 ```
 
 本次沉淀的目的不是把协作变成固定教学模板，而是让后续 Agent 在继续完成任务的同时，保持当前这种“小步读项目 + 小步做工程 + 关键处培养判断”的指导方式。
+
+## 2026-07-11：Agent Domain、Action Parser 与 Loop 设计
+
+### 今日目标
+
+- 完成 Agent Domain 第一版。
+- 完成 `AgentActionParser` 和定向单元测试。
+- 回顾 domain 中重复状态和过早抽象。
+- 设计固定 RAG Pipeline 与 Agent Loop 的渐进式取舍。
+- 定义 `AgentPlanner` 第一版契约和 Scripted Planner 的状态方案。
+
+### 1. Agent Domain
+
+新增目录：
+
+```text
+bootstrap/src/main/java/com/koawa/agent/agent/domain/
+```
+
+当前保留对象：
+
+```text
+AgentActionType
+AgentAction
+AgentObservation
+AgentStep
+AgentState
+AgentStopReason
+```
+
+`AgentActionType` 第一版包含：
+
+```text
+RETRIEVE_KB
+CALL_MCP_TOOL
+ASK_CLARIFICATION
+FINAL_ANSWER
+```
+
+终止性只由 action type 决定：
+
+```java
+public boolean isTerminal() {
+    return this == FINAL_ANSWER || this == ASK_CLARIFICATION;
+}
+```
+
+删除了 `AgentAction.finish`，因为它可能和 `type` 产生矛盾：
+
+```text
+type = RETRIEVE_KB
+finish = true
+```
+
+本次确认的原则：
+
+```text
+同一个状态只保留一个事实来源。
+```
+
+### 2. Action 与 Observation
+
+`AgentAction`：
+
+```text
+type
+thought
+arguments
+```
+
+Planner 只输出下一步动作，不直接产出知识内容。
+
+`AgentObservation`：
+
+```text
+actionType
+content
+metadata
+success
+errorMessage
+```
+
+`content` 给下一轮 Planner 和最终回答使用，`metadata` 用于 trace、调试和溯源。
+
+### 3. AgentStep 与 AgentState
+
+`AgentStep` 只绑定：
+
+```text
+stepIndex
+action
+observation
+```
+
+删除了 `AgentStep.success` 和 `AgentStep.errorMessage`，因为执行结果已经属于 `AgentObservation`。
+
+`AgentState` 保存：
+
+```text
+conversationId
+userId
+originalQuestion
+currentStep
+maxSteps
+steps
+finalAnswer
+stopReason
+errorMessage
+```
+
+其中：
+
+- `currentStep` 从 0 开始；
+- 每记录一个完整 `AgentStep` 后加 1；
+- action 执行失败写入 observation；
+- planner/parser 等循环级错误写入 state；
+- `steps` 使用默认空列表，避免后续 `.add()` 空指针。
+
+原计划中的 `AgentLoopResult` 被删除。原因是 Runner 接口尚未设计完成，提前创建结果对象会和 `AgentState` 重复保存 `finalAnswer`、`stopReason` 等字段。等实现 Runner 时再根据真实返回边界决定是否需要该对象。
+
+### 4. AgentActionParser
+
+新增：
+
+```text
+bootstrap/src/main/java/com/koawa/agent/agent/parser/AgentActionParser.java
+```
+
+解析链路：
+
+```text
+LLM raw text
+  -> 校验空输入
+  -> stripMarkdownCodeFence
+  -> JsonParser.parseString
+  -> 校验 JSON object
+  -> 校验并转换 AgentActionType
+  -> 解析 thought / arguments
+  -> 构建 AgentAction
+```
+
+关键理解：
+
+- `arguments` 是 JSON object，不是 JSON array；
+- `AgentActionType.valueOf()` 非法时会抛异常，不会返回 null；
+- `trim()` 去掉字符串首尾空格；
+- `toUpperCase(Locale.ROOT)` 将 action 名称规范化为枚举格式；
+- parser 对外统一抛 `IllegalArgumentException`，不暴露 Gson 异常类型。
+
+### 5. Parser 测试
+
+新增：
+
+```text
+bootstrap/src/test/java/com/koawa/agent/agent/parser/AgentActionParserTest.java
+```
+
+覆盖场景：
+
+```text
+合法 RETRIEVE_KB JSON
+空字符串
+未知 action type
+非法 JSON
+Markdown JSON 代码块
+```
+
+使用 `Map.class` 解析 JSON number 时，Gson 默认将 `5` 转成 `5.0D`，因此测试中使用：
+
+```java
+assertEquals(5.0D, action.getArguments().get("topK"));
+```
+
+测试过程中发现根 POM 的 Surefire 配置使用：
+
+```xml
+@{argLine}
+```
+
+当没有插件为它赋值时，它会原样传给 Java。根 POM 增加空默认值：
+
+```xml
+<argLine></argLine>
+```
+
+验证结果：
+
+```text
+AgentActionParserTest：5 个测试全部通过
+bootstrap 及依赖模块：编译通过
+```
+
+验证命令：
+
+```powershell
+.\mvnw -q -pl bootstrap -Dtest=AgentActionParserTest test
+.\mvnw -q -pl bootstrap -am -DskipTests compile
+```
+
+### 6. Pipeline 与 Loop 的取舍
+
+新增设计文档：
+
+```text
+docs/agent-loop-design.md
+```
+
+当前决定保留双路径：
+
+```text
+普通 RAG -> StreamChatPipeline
+Agent 模式 -> AgentLoopRunner
+```
+
+推荐切入点：
+
+```text
+RAGChatServiceImpl 创建 SSE、限流、task 和 trace 公共外壳之后，
+进入 StreamChatPipeline 之前。
+```
+
+主要取舍：
+
+- `loadMemory` 在 loop 前只执行一次；
+- `rewriteQuery` 不再是每个请求必走步骤，Planner 可以为检索生成 query；
+- `resolveIntents` 第一版放入 `RETRIEVE_KB` adapter 内复用；
+- `retrieve` 变为可重复的 `RETRIEVE_KB` action；
+- MCP 变为 `CALL_MCP_TOOL` action；
+- 空检索转换为 observation，不立即终止；
+- 最终流式回答变为 `FINAL_ANSWER`；
+- 简单知识问答仍应优先使用固定 RAG，避免无意义增加 Planner 成本。
+
+### 7. Planner 第一版设计
+
+Planner 契约：
+
+```java
+public interface AgentPlanner {
+    AgentAction plan(AgentState state);
+}
+```
+
+Planner 只读取 state 并返回下一步 action，不修改 state，不执行 action，也不负责 maxSteps。
+
+`ScriptedAgentPlanner` 选择无内部可变游标的方案：
+
+```text
+保存不可变 List<AgentAction>
+  -> 使用 state.currentStep 作为索引
+  -> 返回 actions.get(currentStep)
+```
+
+不使用内部 Queue 的原因：
+
+- Planner 保持无状态；
+- 同一个 state 重试结果稳定；
+- 不会在并发请求间串扰；
+- step 推进只由 `AgentLoopRunner` 负责。
+
+当前 `AgentPlanner.java` 仅为空 class，尚未完成，因此不计入今日完成内容，也不进入本次提交。
+
+### 8. 今日结论
+
+今天完成了 Agent Domain 和 Parser 的第一个可验证闭环：
+
+```text
+LLM JSON
+  -> AgentActionParser
+  -> AgentAction
+```
+
+同时明确了 Agent Loop 不应整体替换原 RAG Pipeline，而应先作为独立模式验证复杂多步场景的收益。
+
+下一步：
+
+```text
+将 AgentPlanner 空 class 改为接口；
+实现基于 List + state.currentStep 的 ScriptedAgentPlanner；
+为 ScriptedAgentPlanner 编写无外部依赖单元测试。
+```
 
 ## RAG 主链路与检索链路总图
 
