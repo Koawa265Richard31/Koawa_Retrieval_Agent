@@ -6,6 +6,7 @@
 - [2026-07-09：多通道检索与并行检索模板](#2026-07-09多通道检索与并行检索模板)
 - [2026-07-10：MCP 工具注册、调用与参数提取](#2026-07-10mcp-工具注册调用与参数提取)
 - [2026-07-11：Agent Domain、Action Parser 与 Loop 设计](#2026-07-11agent-domainaction-parser-与-loop-设计)
+- [2026-07-14：Agent Loop、动作路由与 KB/MCP Adapter](#2026-07-14agent-loop动作路由与-kbmcp-adapter)
 - [RAG 主链路与检索链路总图](#rag-主链路与检索链路总图)
 - [后续记录规则](#后续记录规则)
 
@@ -861,6 +862,272 @@ LLM JSON
 实现基于 List + state.currentStep 的 ScriptedAgentPlanner；
 为 ScriptedAgentPlanner 编写无外部依赖单元测试。
 ```
+
+## 2026-07-14：Agent Loop、动作路由与 KB/MCP Adapter
+
+### 今日目标
+
+- 完成可脱离 LLM 验证的 Agent Loop 最小闭环。
+- 将不同 `AgentActionType` 路由到独立 Handler。
+- 将旧 RAG 的 KB 检索能力适配为 `RETRIEVE_KB`。
+- 将底层 MCP 注册表和执行器适配为 `CALL_MCP_TOOL`。
+- 重新核对固定 RAG Pipeline、Agent 双链路与未来降级边界。
+
+### 1. Planner 与 Runner
+
+新增并完成：
+
+```text
+AgentPlanner
+ScriptedAgentPlanner
+AgentLoopRunner
+```
+
+`AgentPlanner` 的契约保持为：
+
+```java
+AgentAction plan(AgentState state);
+```
+
+`ScriptedAgentPlanner` 不调用 LLM，而是根据 `state.currentStep` 从不可变 Action 列表中取出当前动作。它的用途是排除模型不确定性，单独验证 Loop 的状态推进。
+
+`AgentLoopRunner` 当前执行链路：
+
+```text
+检查 currentStep / maxSteps
+  -> planner.plan(state)
+  -> executor.execute(action, state)
+  -> 记录 AgentStep(action + observation)
+  -> currentStep + 1
+  -> 终止 Action 则结束，否则进入下一轮
+```
+
+当前已实现的确定性停止条件：
+
+```text
+FINAL_ANSWER
+ASK_CLARIFICATION
+MAX_STEPS
+Runner 运行时 ERROR
+```
+
+异常边界：
+
+```text
+运行前参数非法
+  -> 抛 IllegalArgumentException
+
+Planner / Executor 在 Loop 中抛出异常
+  -> state.stopReason = ERROR
+  -> state.errorMessage 保存错误
+
+单次 Action 的可恢复失败
+  -> observation.success = false
+  -> 交给下一轮 Planner 决策
+```
+
+### 2. Action 路由
+
+新增：
+
+```text
+AgentActionExecutor
+AgentActionHandler
+RoutingAgentActionExecutor
+```
+
+路由结构：
+
+```text
+AgentLoopRunner
+  -> AgentActionExecutor.execute(action, state)
+  -> RoutingAgentActionExecutor
+  -> handlers[action.type]
+  -> 对应 AgentActionHandler
+```
+
+`RoutingAgentActionExecutor` 使用：
+
+```text
+Map<AgentActionType, AgentActionHandler>
+```
+
+保存 Action 类型与 Handler 的对应关系，并拒绝同一 Action 类型重复注册。
+
+当前代码还没有接入正式 Controller 或 Spring 业务入口。新 Agent 链路目前是可测试的内部组件，线上请求仍然只走旧 `StreamChatPipeline`。
+
+### 3. RETRIEVE_KB Adapter
+
+新增：
+
+```text
+RetrieveKbActionHandler
+```
+
+执行链路：
+
+```text
+AgentAction.arguments.query / topK
+  -> 构造单问题 RewriteResult
+  -> IntentResolver.resolve()
+  -> NodeScoreFilters.kb() 只保留 KB 意图
+  -> RetrievalEngine.retrieve()
+  -> RetrievalContext.kbContext
+  -> AgentObservation.content
+```
+
+这里复用旧 `RetrievalEngine`，不重新实现向量检索、多通道召回、去重、Rerank 和上下文格式化。
+
+`IntentResolver` 是旧系统的通用分类器，可能同时返回 KB、MCP 和 SYSTEM 候选。`RetrieveKbActionHandler` 作为 Adapter，必须先过滤为 KB-only，再调用旧引擎。这样旧 `RetrievalEngine` 内部的 MCP 分支收到空 MCP 意图，不会执行工具。
+
+KB Observation 第一版包装规则：
+
+```text
+actionType = RETRIEVE_KB
+success    = true
+content    = RetrievalContext.kbContext
+metadata   = query + topK + empty
+```
+
+空检索不等于执行失败：
+
+```text
+success = true
+metadata.empty = true
+```
+
+下一轮 Planner 可以换 query 重试、调用工具、澄清或结束。当前旧 `RetrievalEngine` 会把部分内部异常降级为空上下文，因此“真实空结果”和“内部异常后降级为空”暂时不能完全区分，这是后续可观测性改造项。
+
+### 4. CALL_MCP_TOOL Adapter
+
+新增：
+
+```text
+CallMcpToolActionHandler
+```
+
+目标 Action 参数：
+
+```json
+{
+  "type": "CALL_MCP_TOOL",
+  "arguments": {
+    "toolId": "query-sales",
+    "params": {
+      "region": "华东"
+    }
+  }
+}
+```
+
+执行链路：
+
+```text
+读取 toolId / params
+  -> McpToolRegistry.getExecutor(toolId)
+  -> McpToolExecutor.execute(params)
+  -> CallToolResult
+  -> 提取 TextContent
+  -> AgentObservation
+```
+
+与旧 MCP 意图链路的区别：
+
+```text
+旧 Pipeline：
+LLM 给意图节点打分
+  -> IntentNode 预先绑定 mcpToolId
+  -> McpParameterExtractor 再抽取参数
+  -> 调用工具
+
+目标 Agent：
+Planner 根据问题 + 历史 Step + Observation + 工具列表
+  -> 直接输出 CALL_MCP_TOOL
+  -> 直接给出 toolId + params
+  -> Handler 调用 Registry / Executor
+```
+
+工具不存在、工具返回 `isError=true` 或执行器异常时，Handler 返回失败 Observation，而不是终止整个 Runner：
+
+```text
+success = false
+errorMessage = 失败原因
+metadata.toolId = 工具 ID
+```
+
+第一版只提取 `TextContent`。图片、资源等非文本 MCP 内容尚未进入 `AgentObservation`，属于后续扩展范围。
+
+### 5. 双链路与 RAG 降级
+
+当前双链路设计仍然是：
+
+```text
+普通 RAG 模式
+  -> StreamChatPipeline
+
+Agent 模式
+  -> AgentLoopRunner
+```
+
+Agent 并不是重写旧能力，而是把旧 Pipeline 中一次性绑定的能力拆成可以分步决策的 Action：
+
+```text
+RETRIEVE_KB
+  -> 只复用旧 RetrievalEngine 的 KB 分支
+
+CALL_MCP_TOOL
+  -> 绕过 RetrievalEngine
+  -> 直接复用 McpToolRegistry / McpToolExecutor
+```
+
+未来运行时降级预计只在 Planner/Parser 异常、缺少 Handler、`MAX_STEPS` 等系统失败下触发。空检索和工具业务失败应先成为 Observation，不立即降级。
+
+自动 RAG fallback 尚未实现。直接在 Agent 失败后调用 `StreamChatPipeline.execute()` 会重复执行 `loadMemory`，还可能在 SSE 已输出或有副作用工具已执行后产生不一致。因此要等公共 Memory、SSE、Trace 外壳抽取后再实现。
+
+### 6. 测试验证
+
+当前定向测试：
+
+```text
+AgentActionParserTest
+ScriptedAgentPlannerTest
+AgentLoopRunnerTest
+RoutingAgentActionExecutorTest
+RetrieveKbActionHandlerTest
+CallMcpToolActionHandlerTest
+```
+
+覆盖：
+
+- Action JSON 解析与错误输入；
+- Scripted Planner 按 `currentStep` 选择动作且不修改状态；
+- Runner 正常终止、最大步数和运行时错误；
+- Action 类型到 Handler 的路由；
+- KB Handler 过滤 MCP 意图并把 `kbContext` 写入 Observation；
+- MCP Handler 正常结果、工具不存在和工具错误结果。
+
+验证命令：
+
+```powershell
+.\mvnw -q -pl bootstrap '-Dtest=AgentActionParserTest,ScriptedAgentPlannerTest,AgentLoopRunnerTest,RoutingAgentActionExecutorTest,RetrieveKbActionHandlerTest,CallMcpToolActionHandlerTest' test
+```
+
+结果：全部通过。
+
+### 7. 当前限制与下一步
+
+当前尚未完成：
+
+```text
+LlmAgentPlanner
+FINAL_ANSWER / ASK_CLARIFICATION 的真实执行方式
+Spring Bean 装配
+Agent Controller / Service
+Memory / SSE / Trace 接入
+RAG 自动降级策略
+```
+
+当前 Runner 会先执行 Action，再判断它是否为终止 Action。因此在接入真实 `LlmAgentPlanner` 前，需要先明确 `FINAL_ANSWER` 和 `ASK_CLARIFICATION` 由 Handler 生成 Observation，还是由 Runner 直接处理，避免 Planner 输出终止 Action 后因找不到 Handler 而进入 `ERROR`。
 
 ## RAG 主链路与检索链路总图
 
