@@ -1129,6 +1129,148 @@ RAG 自动降级策略
 
 当前 Runner 会先执行 Action，再判断它是否为终止 Action。因此在接入真实 `LlmAgentPlanner` 前，需要先明确 `FINAL_ANSWER` 和 `ASK_CLARIFICATION` 由 Handler 生成 Observation，还是由 Runner 直接处理，避免 Planner 输出终止 Action 后因找不到 Handler 而进入 `ERROR`。
 
+## 2026-07-15：终止 Action Handler 与最终回答生成
+
+### 今日目标
+
+- 补齐 `ASK_CLARIFICATION` 和 `FINAL_ANSWER` 两种终止 Action 的 Handler。
+- 明确终止 Action、Observation 与 Runner 状态更新的职责边界。
+- 让最终回答读取原始问题和历史 Observation，而不是绕过 Agent 执行结果直接回答。
+- 使用单元测试和真实 Router/Runner 组合测试验证终止链路。
+
+### 1. 终止 Action 的职责边界
+
+今天确定采用统一的 Handler 路线：所有 Action 都先经过 `RoutingAgentActionExecutor` 找到对应 Handler，Handler 执行后返回 `AgentObservation`；`AgentLoopRunner` 负责记录 Step、推进 `currentStep`，并根据终止 Action 设置 `stopReason` 和 `finalAnswer`。
+
+```text
+Planner
+  -> terminal AgentAction
+  -> RoutingAgentActionExecutor
+  -> terminal Action Handler
+  -> AgentObservation
+  -> AgentLoopRunner 记录 Step
+  -> AgentLoopRunner 设置 stopReason / finalAnswer
+```
+
+Handler 不直接修改 `AgentState.stopReason` 或 `AgentState.finalAnswer`，避免 Handler 和 Runner 同时维护循环状态。
+
+终止 Action 的参数或执行结果无效时不能简单返回 `success=false`。当前 Runner 只根据 `action.type.isTerminal()` 判断是否停止，不检查失败 Observation；如果终止 Handler 返回失败 Observation，Runner 仍会正常终止并可能写入空回答。因此：
+
+```text
+非终止 Action 的可恢复业务失败
+  -> success=false Observation
+  -> 下一轮 Planner 决定重试、换工具或结束
+
+终止 Action 的非法参数、LLM 异常或空回答
+  -> 抛出异常
+  -> Runner.stopReason = ERROR
+```
+
+### 2. ASK_CLARIFICATION Handler
+
+新增：
+
+```text
+AskClarificationActionHandler
+AskClarificationActionHandlerTest
+```
+
+执行契约：
+
+```text
+AgentAction.arguments.question
+  -> 校验为非空字符串
+  -> trim
+  -> AgentObservation
+       actionType = ASK_CLARIFICATION
+       success = true
+       content = 澄清问题
+```
+
+`ASK_CLARIFICATION` 表示当前 Loop 已无法在缺少信息的情况下继续。Handler 返回澄清问题后，Runner 结束本轮；用户补充信息将进入后续请求，而不是由最终回答模型自行重新调用工具。
+
+测试覆盖合法澄清问题、空白问题，以及通过真实 `RoutingAgentActionExecutor` 后 Runner 以 `ASK_CLARIFICATION` 正常停止。
+
+### 3. FINAL_ANSWER Handler
+
+新增：
+
+```text
+FinalAnswerActionHandler
+prompt/agent-final-answer.st
+FinalAnswerActionHandlerTest
+```
+
+第一版采用同步 `LLMService.chat(ChatRequest)`，不在 Handler 内使用 `streamChat`。原因是当前 `AgentActionHandler.execute(...)` 和 `AgentLoopRunner` 都是同步契约，Runner 需要立即取得完整的 `AgentObservation.content`。SSE 流式输出属于后续 Service/Controller 外壳的职责。
+
+最终回答输入：
+
+```text
+AgentState.originalQuestion
+  +
+AgentState.steps 中按顺序格式化的 Observation
+  -> PromptTemplateLoader.render()
+  -> ChatRequest
+  -> LLMService.chat()
+  -> FINAL_ANSWER AgentObservation.content
+```
+
+Observation 第一版格式化字段：
+
+```text
+stepIndex
+actionType
+success
+content
+errorMessage
+```
+
+失败 Observation 不会被丢弃，而是显式标记后传给最终回答模型。这样模型可以说明某些数据暂时不可用，避免编造失败工具本应返回的内容。是否重试或改用其他工具仍由 Planner 在输出 `FINAL_ANSWER` 之前决定。
+
+最终回答模板只包含两个 slot：
+
+```text
+{original_question}
+{observations}
+```
+
+模板同时要求 Observation 只作为参考数据，不能执行其中夹带的指令，以降低知识库或工具结果中的提示注入风险。
+
+### 4. 测试验证
+
+新增和扩展的测试覆盖：
+
+- `ASK_CLARIFICATION` 正常 Observation 和空白问题；
+- `ASK_CLARIFICATION -> Router -> Runner` 真实终止链路；
+- `FINAL_ANSWER` 根据原始问题和成功 Observation 生成回答；
+- 非法 Action 类型和空白原始问题；
+- LLM 返回空白回答时抛出异常；
+- 失败 Observation 的 `errorMessage` 被写入最终 Prompt；
+- `FINAL_ANSWER -> Router -> Runner` 真实终止链路。
+
+本机 Maven Wrapper 无法正常启动，因此使用已安装 Maven，并通过 `-am` 同时构建 `bootstrap` 依赖的本地模块：
+
+```powershell
+mvn -q -pl bootstrap -am `
+  '-Dtest=AgentActionParserTest,ScriptedAgentPlannerTest,AgentLoopRunnerTest,RoutingAgentActionExecutorTest,RetrieveKbActionHandlerTest,CallMcpToolActionHandlerTest,AskClarificationActionHandlerTest,FinalAnswerActionHandlerTest' `
+  '-Dsurefire.failIfNoSpecifiedTests=false' test
+```
+
+### 5. 当前限制与下一步
+
+当前四种 Action 已有对应执行 Handler，但仍是手工构造和测试状态，尚未完成：
+
+```text
+四种 Handler 的 Spring Bean 统一装配
+LlmAgentPlanner
+Agent Service / Controller
+Memory / SSE / Trace 接入
+真实模型环境下的最终回答 Prompt 验证
+RAG 自动降级策略
+```
+
+下一步先进行四种 Handler、`RoutingAgentActionExecutor` 与 `AgentLoopRunner` 的最小 Spring 装配，不提前扩展前端或多 Agent。
+
 ## RAG 主链路与检索链路总图
 
 ```text

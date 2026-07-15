@@ -19,12 +19,20 @@ package com.koawa.agent.agent.runner;
 
 import com.koawa.agent.agent.domain.*;
 import com.koawa.agent.agent.executor.AgentActionExecutor;
+import com.koawa.agent.agent.executor.RoutingAgentActionExecutor;
+import com.koawa.agent.agent.executor.handler.AskClarificationActionHandler;
+import com.koawa.agent.agent.executor.handler.FinalAnswerActionHandler;
+import com.koawa.agent.framework.convention.ChatRequest;
+import com.koawa.agent.infra.chat.LLMService;
 import com.koawa.agent.agent.planner.ScriptedAgentPlanner;
+import com.koawa.agent.rag.core.prompt.PromptTemplateLoader;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class AgentLoopRunnerTest {
     private AgentAction action(AgentActionType type) {
@@ -111,5 +119,97 @@ class AgentLoopRunnerTest {
         assertTrue(result.getSteps().isEmpty());
         assertEquals(AgentStopReason.ERROR, result.getStopReason());
         assertEquals("executor failed", result.getErrorMessage());
+    }
+
+    @Test
+    void shouldStopForClarificationThroughRoutingExecutor() {
+
+        List<AgentAction> actions = List.of(
+                AgentAction.builder()
+                        .type(AgentActionType.ASK_CLARIFICATION)
+                        .arguments(Map.of(
+                                "question", "澄清问题"
+                        ))
+                        .build()
+        );
+
+        ScriptedAgentPlanner planner = new ScriptedAgentPlanner(actions);
+
+        AskClarificationActionHandler handler = new AskClarificationActionHandler();
+
+        RoutingAgentActionExecutor executor = new RoutingAgentActionExecutor(
+                List.of(handler)
+        );
+
+        AgentLoopRunner runner = new AgentLoopRunner(planner, executor);
+
+        AgentState state = AgentState.builder()
+                .currentStep(0)
+                .maxSteps(2)
+                .build();
+
+        AgentState resultState = runner.run(state);
+
+        assertEquals(1, resultState.getCurrentStep());
+        assertEquals(1, resultState.getSteps().size());
+        assertEquals(AgentStopReason.ASK_CLARIFICATION, resultState.getStopReason());
+        assertEquals("澄清问题", resultState.getFinalAnswer());
+
+    }
+
+    @Test
+    void shouldStopForFinalAnswerThroughRoutingExecutor() {
+        LLMService llmService = mock(LLMService.class);
+        PromptTemplateLoader promptTemplateLoader =
+                mock(PromptTemplateLoader.class);
+
+        Map<String, String> expectedSlots = Map.of(
+                "original_question", "用户问题",
+                "observations", "无历史 Observation"
+        );
+
+        when(promptTemplateLoader.render(
+                "prompt/agent-final-answer.st",
+                expectedSlots
+        )).thenReturn("渲染后的 Prompt");
+
+        when(llmService.chat(any(ChatRequest.class)))
+                .thenReturn("最终回答");
+
+        AgentAction finalAnswer = AgentAction.builder()
+                .type(AgentActionType.FINAL_ANSWER)
+                .build();
+
+        ScriptedAgentPlanner planner =
+                new ScriptedAgentPlanner(List.of(finalAnswer));
+
+        RoutingAgentActionExecutor executor =
+                new RoutingAgentActionExecutor(List.of(
+                        new FinalAnswerActionHandler(
+                                llmService,
+                                promptTemplateLoader
+                        )
+                ));
+
+        AgentState state = AgentState.builder()
+                .originalQuestion("用户问题")
+                .currentStep(0)
+                .maxSteps(2)
+                .build();
+
+        AgentState result =
+                new AgentLoopRunner(planner, executor).run(state);
+
+        assertEquals(1, result.getCurrentStep());
+        assertEquals(1, result.getSteps().size());
+        assertEquals(AgentStopReason.FINAL_ANSWER, result.getStopReason());
+        assertEquals("最终回答", result.getFinalAnswer());
+        assertNull(result.getErrorMessage());
+
+        verify(promptTemplateLoader).render(
+                "prompt/agent-final-answer.st",
+                expectedSlots
+        );
+        verify(llmService).chat(any(ChatRequest.class));
     }
 }
