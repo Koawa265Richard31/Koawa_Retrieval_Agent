@@ -1,0 +1,109 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.koawa.agent.agent.config;
+
+import com.koawa.agent.agent.executor.AgentActionExecutor;
+import com.koawa.agent.agent.executor.AgentActionHandler;
+import com.koawa.agent.agent.executor.RoutingAgentActionExecutor;
+import com.koawa.agent.agent.executor.handler.AskClarificationActionHandler;
+import com.koawa.agent.agent.executor.handler.CallMcpToolActionHandler;
+import com.koawa.agent.agent.executor.handler.FinalAnswerActionHandler;
+import com.koawa.agent.agent.executor.handler.RetrieveKbActionHandler;
+import com.koawa.agent.agent.parser.AgentActionParser;
+import com.koawa.agent.agent.planner.AgentPlanner;
+import com.koawa.agent.agent.planner.LlmAgentPlanner;
+import com.koawa.agent.agent.runner.AgentLoopRunner;
+import com.koawa.agent.infra.chat.LLMService;
+import com.koawa.agent.rag.config.SearchChannelProperties;
+import com.koawa.agent.rag.core.intent.IntentResolver;
+import com.koawa.agent.rag.core.mcp.McpToolRegistry;
+import com.koawa.agent.rag.core.prompt.PromptTemplateLoader;
+import com.koawa.agent.rag.core.retrieve.RetrievalEngine;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
+
+@Configuration
+public class AgentConfiguration {
+    @Bean
+    public RetrieveKbActionHandler retrieveKbActionHandler(
+            IntentResolver intentResolver,
+            RetrievalEngine retrievalEngine,
+            SearchChannelProperties searchChannelProperties
+    ) {
+        return new RetrieveKbActionHandler(
+                intentResolver,
+                retrievalEngine,
+                searchChannelProperties
+        );
+    }
+
+    @Bean
+    public CallMcpToolActionHandler callMcpToolActionHandler(
+            McpToolRegistry mcpToolRegistry
+    ) {
+        return new CallMcpToolActionHandler(mcpToolRegistry);
+    }
+
+    @Bean
+    public AskClarificationActionHandler askClarificationActionHandler() {
+        return new AskClarificationActionHandler();
+    }
+
+    @Bean
+    public FinalAnswerActionHandler finalAnswerActionHandler(
+            LLMService llmService,
+            PromptTemplateLoader promptTemplateLoader
+    ) {
+        return new FinalAnswerActionHandler(
+                llmService,
+                promptTemplateLoader
+        );
+    }
+
+    @Bean
+    public AgentActionExecutor agentActionExecutor(
+            List<AgentActionHandler> handlers
+    ) {
+        return new RoutingAgentActionExecutor(handlers);
+    }
+
+    @Bean
+    public AgentPlanner agentPlanner(
+            LLMService llmService,
+            PromptTemplateLoader promptTemplateLoader,
+            AgentActionParser actionParser,
+            McpToolRegistry mcpToolRegistry
+    ) {
+        return new LlmAgentPlanner(
+                llmService,
+                promptTemplateLoader,
+                actionParser,
+                mcpToolRegistry
+        );
+    }
+
+    @Bean
+    public AgentLoopRunner agentLoopRunner(
+            AgentPlanner planner,
+            AgentActionExecutor executor
+    ) {
+        return new AgentLoopRunner(planner, executor);
+    }
+}

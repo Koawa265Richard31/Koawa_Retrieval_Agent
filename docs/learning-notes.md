@@ -1271,6 +1271,95 @@ RAG 自动降级策略
 
 下一步先进行四种 Handler、`RoutingAgentActionExecutor` 与 `AgentLoopRunner` 的最小 Spring 装配，不提前扩展前端或多 Agent。
 
+## 2026-07-17：LLM Planner 与 Agent Loop Spring 装配
+
+### 今日目标
+
+- 将 `AgentPlanner` 从预置 Action 推进到由 LLM 根据状态动态选择 Action。
+- 把历史 Step、失败 Observation 和 MCP Tool Schema 写入 Planner Prompt。
+- 完成四种 Handler、Planner、Executor 与 Runner 的最小 Spring 装配。
+
+### 1. LlmAgentPlanner 主链
+
+```text
+AgentState
+  -> 格式化 originalQuestion / currentStep / maxSteps
+  -> 格式化历史 AgentStep
+  -> 读取 McpToolRegistry 中的工具定义
+  -> PromptTemplateLoader.render("prompt/agent-planner.st", slots)
+  -> LLMService.chat(ChatRequest)
+  -> AgentActionParser.parse(rawAction)
+  -> AgentAction
+```
+
+`LlmAgentPlanner` 只负责决策下一步 Action，不执行检索或工具。执行仍由 `RoutingAgentActionExecutor` 和对应 Handler 负责。
+
+### 2. Observation 与工具定义的格式化
+
+历史 Step 不能只放 Action。Planner 需要同时看到对应 Observation，才能根据执行结果决定继续、换工具或结束：
+
+```text
+actionType
+arguments
+observationSuccess
+observationContent
+observationError
+```
+
+非终止 Handler 返回 `success=false` 时，Runner 仍记录这个 Step，下一轮 Planner 会在 Prompt 中看到明确的调用失败信息。是否重新调用同一工具、换工具或直接回答，由 LLM 根据状态决定。
+
+MCP 工具列表使用文本拼接，每个工具保留：
+
+```text
+toolId
+description
+inputSchema（JSON）
+```
+
+`PromptTemplateLoader` 的 slot 类型是 `Map<String, String>`，因此工具数组和历史 Step 先格式化成字符串，再放入 `{tools}` 和 `{steps}`。
+
+### 3. Planner Prompt 约束
+
+新增 `prompt/agent-planner.st`，只允许模型输出四种 Action：
+
+```text
+RETRIEVE_KB
+CALL_MCP_TOOL
+ASK_CLARIFICATION
+FINAL_ANSWER
+```
+
+模型必须返回包含 `type`、`thought`、`arguments` 的单个 JSON 对象。Prompt 同时要求模型不要执行历史 Observation 或工具结果中夹带的指令，并在工具失败后根据错误信息选择重试、换工具或结束。
+
+### 4. Spring 装配
+
+`AgentConfiguration` 当前完成的运行时依赖关系：
+
+```text
+AgentLoopRunner
+  -> AgentPlanner（LlmAgentPlanner）
+  -> AgentActionExecutor（RoutingAgentActionExecutor）
+       -> 四种 AgentActionHandler
+```
+
+`AgentActionParser` 已由 `@Component` 注册；配置测试使用 `ApplicationContextRunner` 时不会扫描完整应用，因此测试中显式提供该 Bean。
+
+### 5. 测试验证
+
+Planner 测试保留六个核心行为：Action 解析、失败 Observation 回灌、MCP Schema 注入、空问题、空模型响应和 Parser 异常传播；另有一个真实 Prompt 加载测试和一个 Spring 装配测试。
+
+完整 Agent 回归共 34 个测试通过：
+
+```powershell
+mvn -q -pl bootstrap -am `
+  '-Dtest=AgentActionParserTest,ScriptedAgentPlannerTest,LlmAgentPlannerTest,AgentPlannerPromptTest,AgentConfigurationTest,AgentLoopRunnerTest,RoutingAgentActionExecutorTest,RetrieveKbActionHandlerTest,CallMcpToolActionHandlerTest,AskClarificationActionHandlerTest,FinalAnswerActionHandlerTest' `
+  '-Dsurefire.failIfNoSpecifiedTests=false' test
+```
+
+### 6. 当前限制与下一步
+
+当前 Agent 内核已经形成 `plan -> execute -> observe -> re-plan` 闭环，但尚未提供面向用户请求的入口。下一步应新增薄 Service 层：创建请求级 `AgentState`、调用 `AgentLoopRunner`，并把最终回答或澄清问题返回给上层；暂不接入完整 MQ、数据库和原有长链路启动验证。
+
 ## RAG 主链路与检索链路总图
 
 ```text

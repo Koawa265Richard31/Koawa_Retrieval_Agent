@@ -1,0 +1,216 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.koawa.agent.agent.planner;
+
+import com.google.gson.Gson;
+import com.koawa.agent.agent.domain.AgentAction;
+import com.koawa.agent.agent.domain.AgentObservation;
+import com.koawa.agent.agent.domain.AgentState;
+import com.koawa.agent.agent.domain.AgentStep;
+import com.koawa.agent.agent.parser.AgentActionParser;
+import com.koawa.agent.framework.convention.ChatMessage;
+import com.koawa.agent.framework.convention.ChatRequest;
+import com.koawa.agent.infra.chat.LLMService;
+import com.koawa.agent.rag.core.mcp.McpToolRegistry;
+import com.koawa.agent.rag.core.prompt.PromptTemplateLoader;
+import io.modelcontextprotocol.spec.McpSchema;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+public class LlmAgentPlanner implements AgentPlanner {
+
+    private final LLMService llmService;
+    private final PromptTemplateLoader promptTemplateLoader;
+    private final AgentActionParser actionParser;
+    private final McpToolRegistry toolRegistry;
+    private final Gson gson = new Gson();
+
+    public LlmAgentPlanner(
+            LLMService llmService,
+            PromptTemplateLoader promptTemplateLoader,
+            AgentActionParser actionParser,
+            McpToolRegistry toolRegistry
+    ) {
+        this.llmService = Objects.requireNonNull(
+                llmService,
+                "llmService cannot be null"
+        );
+        this.promptTemplateLoader = Objects.requireNonNull(
+                promptTemplateLoader,
+                "promptTemplateLoader cannot be null"
+        );
+        this.actionParser = Objects.requireNonNull(
+                actionParser,
+                "actionParser cannot be null"
+        );
+        this.toolRegistry = Objects.requireNonNull(
+                toolRegistry,
+                "toolRegistry cannot be null"
+        );
+    }
+
+    @Override
+    public AgentAction plan(AgentState state) {
+        Objects.requireNonNull(state, "state cannot be null");
+
+        if (state.getOriginalQuestion() == null
+                || state.getOriginalQuestion().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Original question must be a non-blank string"
+            );
+        }
+        Map<String, String> slots = Map.of(
+                "original_question",
+                state.getOriginalQuestion().trim(),
+                "current_step",
+                String.valueOf(state.getCurrentStep()),
+                "max_steps",
+                String.valueOf(state.getMaxSteps()),
+                "steps",
+                formatSteps(state),
+                "tools",
+                formatTools()
+        );
+
+        String prompt = promptTemplateLoader.render(
+                "prompt/agent-planner.st",
+                slots
+        );
+
+        ChatRequest request = ChatRequest.builder()
+                .messages(List.of(ChatMessage.user(prompt)))
+                .temperature(0.1D)
+                .thinking(false)
+                .build();
+
+        String rawAction = llmService.chat(request);
+
+        if (rawAction == null || rawAction.isBlank()) {
+            throw new IllegalStateException(
+                    "Agent planner LLM returned a blank action"
+            );
+        }
+
+        return actionParser.parse(rawAction);
+    }
+
+    private String formatSteps(AgentState state) {
+        List<AgentStep> steps = state.getSteps();
+
+        if (steps == null || steps.isEmpty()) {
+            return "无历史步骤";
+        }
+
+        StringBuilder builder = new StringBuilder();
+
+        for (AgentStep step : steps) {
+            Objects.requireNonNull(
+                    step,
+                    "step cannot be null"
+            );
+
+            AgentAction action = Objects.requireNonNull(
+                    step.getAction(),
+                    "step action cannot be null"
+            );
+
+            AgentObservation observation = Objects.requireNonNull(
+                    step.getObservation(),
+                    "step observation cannot be null"
+            );
+
+            builder.append("Step ")
+                    .append(step.getStepIndex())
+                    .append('\n');
+
+            builder.append("actionType: ")
+                    .append(action.getType())
+                    .append('\n');
+
+            builder.append("arguments: ")
+                    .append(gson.toJson(
+                            action.getArguments() == null
+                                    ? Map.of()
+                                    : action.getArguments()
+                    ))
+                    .append('\n');
+
+            builder.append("observationSuccess: ")
+                    .append(observation.isSuccess())
+                    .append('\n');
+
+            builder.append("observationContent: ")
+                    .append(formatNullable(observation.getContent()))
+                    .append('\n');
+
+            builder.append("observationError: ")
+                    .append(formatNullable(observation.getErrorMessage()))
+                    .append("\n\n");
+        }
+
+        return builder.toString().trim();
+    }
+
+    private String formatTools() {
+        List<McpSchema.Tool> tools = toolRegistry.listAllTools();
+
+        if (tools == null || tools.isEmpty()) {
+            return "无可用 MCP 工具";
+        }
+
+        StringBuilder builder = new StringBuilder();
+        int toolIndex = 1;
+
+        for (McpSchema.Tool tool : tools) {
+            Objects.requireNonNull(
+                    tool,
+                    "registered MCP tool cannot be null"
+            );
+
+            builder.append("Tool ")
+                    .append(toolIndex++)
+                    .append('\n');
+
+            builder.append("toolId: ")
+                    .append(formatNullable(tool.name()))
+                    .append('\n');
+
+            builder.append("description: ")
+                    .append(formatNullable(tool.description()))
+                    .append('\n');
+
+            builder.append("inputSchema: ")
+                    .append(
+                            tool.inputSchema() == null
+                                    ? "{}"
+                                    : gson.toJson(tool.inputSchema())
+                    )
+                    .append("\n\n");
+        }
+
+        return builder.toString().trim();
+    }
+
+    private String formatNullable(String value) {
+        return value == null || value.isBlank()
+                ? "无"
+                : value.trim();
+    }
+}
