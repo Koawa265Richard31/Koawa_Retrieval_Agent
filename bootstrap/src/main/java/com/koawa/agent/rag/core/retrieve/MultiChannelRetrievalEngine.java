@@ -174,6 +174,8 @@ public class MultiChannelRetrievalEngine {
         for (SearchResultPostProcessor processor : enabledProcessors) {
             try {
                 int beforeSize = chunks.size();
+
+                //重排序,去重入口
                 chunks = processor.process(chunks, results, context);
                 int afterSize = chunks.size();
 
