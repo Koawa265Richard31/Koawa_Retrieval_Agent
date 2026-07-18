@@ -21,6 +21,8 @@ import com.koawa.agent.agent.domain.AgentAction;
 import com.koawa.agent.agent.domain.AgentActionType;
 import com.koawa.agent.agent.domain.AgentObservation;
 import com.koawa.agent.agent.domain.AgentState;
+import com.koawa.agent.agent.executor.policy.AgentExecutionPolicy;
+import com.koawa.agent.agent.executor.policy.ToolExecutionDecision;
 import com.koawa.agent.rag.core.mcp.McpToolExecutor;
 import com.koawa.agent.rag.core.mcp.McpToolRegistry;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -55,7 +57,8 @@ class CallMcpToolActionHandlerTest {
                 .isError(false)
                 .build());
 
-        CallMcpToolActionHandler handler = new CallMcpToolActionHandler(registry);
+        CallMcpToolActionHandler handler =
+                new CallMcpToolActionHandler(registry, AgentExecutionPolicy.ALLOW_ALL);
 
         AgentAction action = AgentAction.builder()
                 .type(AgentActionType.CALL_MCP_TOOL)
@@ -90,7 +93,8 @@ class CallMcpToolActionHandlerTest {
         when(registry.getExecutor("missing-tool"))
                 .thenReturn(Optional.empty());
 
-        CallMcpToolActionHandler handler = new CallMcpToolActionHandler(registry);
+        CallMcpToolActionHandler handler =
+                new CallMcpToolActionHandler(registry, AgentExecutionPolicy.ALLOW_ALL);
 
         AgentAction action = AgentAction.builder()
                 .type(AgentActionType.CALL_MCP_TOOL)
@@ -112,6 +116,38 @@ class CallMcpToolActionHandlerTest {
     }
 
     @Test
+    void shouldNotExecuteToolWhenPolicyDeniesCall() {
+        when(registry.getExecutor("query-sales"))
+                .thenReturn(Optional.of(toolExecutor));
+
+        AgentExecutionPolicy policy = (preparedCall, state) ->
+                ToolExecutionDecision.deny("Tool is not allowed");
+        CallMcpToolActionHandler handler =
+                new CallMcpToolActionHandler(registry, policy);
+
+        AgentAction action = AgentAction.builder()
+                .type(AgentActionType.CALL_MCP_TOOL)
+                .arguments(Map.of(
+                        "toolId", "query-sales",
+                        "params", Map.of()
+                ))
+                .build();
+
+        AgentObservation result = handler.execute(
+                action,
+                AgentState.builder().build()
+        );
+
+        assertFalse(result.isSuccess());
+        assertEquals("", result.getContent());
+        assertEquals(
+                "MCP tool execution denied by policy: Tool is not allowed",
+                result.getErrorMessage()
+        );
+        verifyNoInteractions(toolExecutor);
+    }
+
+    @Test
     void shouldReturnFailedObservationWhenToolReturnsError() {
         when(registry.getExecutor("query-sales"))
                 .thenReturn(Optional.of(toolExecutor));
@@ -126,7 +162,7 @@ class CallMcpToolActionHandlerTest {
                 );
 
         CallMcpToolActionHandler handler =
-                new CallMcpToolActionHandler(registry);
+                new CallMcpToolActionHandler(registry, AgentExecutionPolicy.ALLOW_ALL);
 
         AgentAction action = AgentAction.builder()
                 .type(AgentActionType.CALL_MCP_TOOL)

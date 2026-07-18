@@ -22,6 +22,9 @@ import com.koawa.agent.agent.domain.AgentActionType;
 import com.koawa.agent.agent.domain.AgentObservation;
 import com.koawa.agent.agent.domain.AgentState;
 import com.koawa.agent.agent.executor.AgentActionHandler;
+import com.koawa.agent.agent.executor.policy.AgentExecutionPolicy;
+import com.koawa.agent.agent.executor.policy.ToolExecutionDecision;
+import com.koawa.agent.agent.executor.tool.PreparedToolCall;
 import com.koawa.agent.rag.core.mcp.McpToolExecutor;
 import com.koawa.agent.rag.core.mcp.McpToolRegistry;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -34,11 +37,19 @@ import java.util.stream.Collectors;
 public class CallMcpToolActionHandler implements AgentActionHandler {
 
     private final McpToolRegistry toolRegistry;
+    private final AgentExecutionPolicy executionPolicy;
 
-    public CallMcpToolActionHandler(McpToolRegistry toolRegistry) {
+    public CallMcpToolActionHandler(
+            McpToolRegistry toolRegistry,
+            AgentExecutionPolicy executionPolicy
+    ) {
         this.toolRegistry = Objects.requireNonNull(
                 toolRegistry,
                 "toolRegistry cannot be null"
+        );
+        this.executionPolicy = Objects.requireNonNull(
+                executionPolicy,
+                "executionPolicy cannot be null"
         );
     }
 
@@ -61,8 +72,8 @@ public class CallMcpToolActionHandler implements AgentActionHandler {
             );
         }
 
-        String toolId = resolveToolId(action);
-        Map<String, Object> parameters = resolveParameters(action);
+        String toolId = parseToolId(action);
+        Map<String, Object> parameters = parseParameters(action);
 
         McpToolExecutor toolExecutor = toolRegistry.getExecutor(toolId).orElse(null);
         if (toolExecutor == null) {
@@ -72,13 +83,34 @@ public class CallMcpToolActionHandler implements AgentActionHandler {
             );
         }
 
+        PreparedToolCall preparedCall = new PreparedToolCall(
+                toolId,
+                parameters,
+                toolExecutor
+        );
+
+        ToolExecutionDecision decision = Objects.requireNonNull(
+                executionPolicy.evaluate(preparedCall, state),
+                "executionPolicy returned null decision"
+        );
+
+        if (!decision.allowed()) {
+            return failedObservation(
+                    preparedCall.toolId(),
+                    "MCP tool execution denied by policy: " + decision.reason()
+            );
+        }
+
         try {
-            McpSchema.CallToolResult result = toolExecutor.execute(parameters);
+            McpSchema.CallToolResult result = preparedCall.executor().execute(
+                    preparedCall.parameters()
+            );
 
             if (result == null) {
                 return failedObservation(
-                        toolId,
-                        "MCP tool returned null result: " + toolId
+                        preparedCall.toolId(),
+                        "MCP tool returned null result: "
+                                + preparedCall.toolId()
                 );
             }
 
@@ -90,17 +122,17 @@ public class CallMcpToolActionHandler implements AgentActionHandler {
                     .content(content)
                     .success(!isError)
                     .metadata(Map.of(
-                            "toolId", toolId
+                            "toolId", preparedCall.toolId()
                     ))
                     .errorMessage(
                             isError
-                                    ? resolveErrorMessage(content)
+                                    ? parseErrorMessage(content)
                                     : null
                     )
                     .build();
         } catch (RuntimeException exception) {
             return failedObservation(
-                    toolId,
+                    preparedCall.toolId(),
                     "MCP tool execution failed: "
                             + Objects.toString(exception.getMessage(),
                             exception.getClass().getSimpleName()
@@ -109,7 +141,7 @@ public class CallMcpToolActionHandler implements AgentActionHandler {
         }
     }
 
-    private String resolveToolId(AgentAction action) {
+    private String parseToolId(AgentAction action) {
         Map<String, Object> arguments = action.getArguments();
 
         if (arguments == null) {
@@ -129,7 +161,7 @@ public class CallMcpToolActionHandler implements AgentActionHandler {
         return toolId.trim();
     }
 
-    private Map<String, Object> resolveParameters(AgentAction action) {
+    private Map<String, Object> parseParameters(AgentAction action) {
         Map<String, Object> arguments = action.getArguments();
         Object paramsValue = arguments.get("params");
 
@@ -157,7 +189,7 @@ public class CallMcpToolActionHandler implements AgentActionHandler {
         return parameters;
     }
 
-    private String resolveErrorMessage(String content) {
+    private String parseErrorMessage(String content) {
         return content.isBlank()
                 ? "MCP tool returned an error"
                 : content;

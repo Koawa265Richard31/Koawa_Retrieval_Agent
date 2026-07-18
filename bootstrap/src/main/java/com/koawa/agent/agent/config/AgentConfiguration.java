@@ -17,6 +17,7 @@
 
 package com.koawa.agent.agent.config;
 
+import com.koawa.agent.agent.event.AgentEventSink;
 import com.koawa.agent.agent.executor.AgentActionExecutor;
 import com.koawa.agent.agent.executor.AgentActionHandler;
 import com.koawa.agent.agent.executor.RoutingAgentActionExecutor;
@@ -24,8 +25,10 @@ import com.koawa.agent.agent.executor.handler.AskClarificationActionHandler;
 import com.koawa.agent.agent.executor.handler.CallMcpToolActionHandler;
 import com.koawa.agent.agent.executor.handler.FinalAnswerActionHandler;
 import com.koawa.agent.agent.executor.handler.RetrieveKbActionHandler;
+import com.koawa.agent.agent.executor.policy.AgentExecutionPolicy;
 import com.koawa.agent.agent.parser.AgentActionParser;
 import com.koawa.agent.agent.planner.AgentPlanner;
+import com.koawa.agent.agent.planner.AgentRequestAssembler;
 import com.koawa.agent.agent.planner.LlmAgentPlanner;
 import com.koawa.agent.agent.runner.AgentLoopRunner;
 import com.koawa.agent.infra.chat.LLMService;
@@ -55,10 +58,19 @@ public class AgentConfiguration {
     }
 
     @Bean
+    public AgentExecutionPolicy agentExecutionPolicy() {
+        return AgentExecutionPolicy.ALLOW_ALL;
+    }
+
+    @Bean
     public CallMcpToolActionHandler callMcpToolActionHandler(
-            McpToolRegistry mcpToolRegistry
+            McpToolRegistry mcpToolRegistry,
+            AgentExecutionPolicy executionPolicy
     ) {
-        return new CallMcpToolActionHandler(mcpToolRegistry);
+        return new CallMcpToolActionHandler(
+                mcpToolRegistry,
+                executionPolicy
+        );
     }
 
     @Bean
@@ -78,6 +90,33 @@ public class AgentConfiguration {
     }
 
     @Bean
+    public AgentRequestAssembler agentRequestAssembler(
+            PromptTemplateLoader promptTemplateLoader
+    ) {
+        return new AgentRequestAssembler(promptTemplateLoader);
+    }
+
+    @Bean
+    public AgentPlanner agentPlanner(
+            LLMService llmService,
+            AgentActionParser actionParser,
+            AgentRequestAssembler requestAssembler,
+            McpToolRegistry mcpToolRegistry
+    ) {
+        return new LlmAgentPlanner(
+                llmService,
+                actionParser,
+                requestAssembler,
+                mcpToolRegistry
+        );
+    }
+
+    @Bean
+    public AgentEventSink agentEventSink() {
+        return AgentEventSink.NOOP;
+    }
+
+    @Bean
     public AgentActionExecutor agentActionExecutor(
             List<AgentActionHandler> handlers
     ) {
@@ -85,25 +124,11 @@ public class AgentConfiguration {
     }
 
     @Bean
-    public AgentPlanner agentPlanner(
-            LLMService llmService,
-            PromptTemplateLoader promptTemplateLoader,
-            AgentActionParser actionParser,
-            McpToolRegistry mcpToolRegistry
-    ) {
-        return new LlmAgentPlanner(
-                llmService,
-                promptTemplateLoader,
-                actionParser,
-                mcpToolRegistry
-        );
-    }
-
-    @Bean
     public AgentLoopRunner agentLoopRunner(
             AgentPlanner planner,
-            AgentActionExecutor executor
+            AgentActionExecutor executor,
+            AgentEventSink eventSink
     ) {
-        return new AgentLoopRunner(planner, executor);
+        return new AgentLoopRunner(planner, executor, eventSink);
     }
 }

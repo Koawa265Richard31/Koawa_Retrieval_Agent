@@ -18,6 +18,7 @@
 package com.koawa.agent.agent.config;
 
 import com.koawa.agent.agent.domain.AgentActionType;
+import com.koawa.agent.agent.event.AgentEventSink;
 import com.koawa.agent.agent.executor.AgentActionExecutor;
 import com.koawa.agent.agent.executor.AgentActionHandler;
 import com.koawa.agent.agent.executor.RoutingAgentActionExecutor;
@@ -25,8 +26,10 @@ import com.koawa.agent.agent.executor.handler.AskClarificationActionHandler;
 import com.koawa.agent.agent.executor.handler.CallMcpToolActionHandler;
 import com.koawa.agent.agent.executor.handler.FinalAnswerActionHandler;
 import com.koawa.agent.agent.executor.handler.RetrieveKbActionHandler;
+import com.koawa.agent.agent.executor.policy.AgentExecutionPolicy;
 import com.koawa.agent.agent.parser.AgentActionParser;
 import com.koawa.agent.agent.planner.AgentPlanner;
+import com.koawa.agent.agent.planner.AgentRequestAssembler;
 import com.koawa.agent.agent.planner.LlmAgentPlanner;
 import com.koawa.agent.agent.runner.AgentLoopRunner;
 import com.koawa.agent.infra.chat.LLMService;
@@ -83,6 +86,9 @@ public class AgentConfigurationTest {
                     .hasSingleBean(AskClarificationActionHandler.class)
                     .hasSingleBean(FinalAnswerActionHandler.class)
                     .hasSingleBean(AgentActionExecutor.class)
+                    .hasSingleBean(AgentExecutionPolicy.class)
+                    .hasSingleBean(AgentEventSink.class)
+                    .hasSingleBean(AgentRequestAssembler.class)
                     .hasSingleBean(AgentPlanner.class)
                     .hasSingleBean(AgentLoopRunner.class);
 

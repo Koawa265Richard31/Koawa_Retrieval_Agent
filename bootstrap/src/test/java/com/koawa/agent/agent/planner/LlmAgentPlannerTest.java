@@ -70,8 +70,8 @@ class LlmAgentPlannerTest {
 
         planner = new LlmAgentPlanner(
                 llmService,
-                promptTemplateLoader,
                 actionParser,
+                new AgentRequestAssembler(promptTemplateLoader),
                 toolRegistry
         );
     }
@@ -230,11 +230,11 @@ class LlmAgentPlannerTest {
                 "Original question must be a non-blank string",
                 exception.getMessage()
         );
+        verify(toolRegistry).listAllTools();
         verifyNoInteractions(
                 promptTemplateLoader,
                 llmService,
-                actionParser,
-                toolRegistry
+                actionParser
         );
     }
 

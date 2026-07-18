@@ -18,18 +18,25 @@
 package com.koawa.agent.agent.runner;
 
 import com.koawa.agent.agent.domain.*;
+import com.koawa.agent.agent.event.AgentEventSink;
 import com.koawa.agent.agent.executor.AgentActionExecutor;
 import com.koawa.agent.agent.planner.AgentPlanner;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
 
+@Slf4j
 public class AgentLoopRunner {
 
     private final AgentPlanner planner;
     private final AgentActionExecutor executor;
+    private final AgentEventSink eventSink;
 
-    public AgentLoopRunner(AgentPlanner planner,
-                           AgentActionExecutor executor) {
+    public AgentLoopRunner(
+            AgentPlanner planner,
+            AgentActionExecutor executor,
+            AgentEventSink eventSink
+    ) {
         this.planner = Objects.requireNonNull(
                 planner,
                 "planner cannot be null"
@@ -37,6 +44,10 @@ public class AgentLoopRunner {
         this.executor = Objects.requireNonNull(
                 executor,
                 "executor cannot be null"
+        );
+        this.eventSink = Objects.requireNonNull(
+                eventSink,
+                "eventSink cannot be null"
         );
     }
 
@@ -56,18 +67,43 @@ public class AgentLoopRunner {
         }
 
         try {
+            publishEvent(AgentEvent.turnStarted(
+                    state.getConversationId(),
+                    state.getCurrentStep()
+            ));
+
             while (state.getCurrentStep() < state.getMaxSteps()) {
                 int stepIndex = state.getCurrentStep();
+
+                publishEvent(AgentEvent.stepStarted(
+                        state.getConversationId(),
+                        stepIndex
+                ));
 
                 AgentAction action = Objects.requireNonNull(
                         planner.plan(state),
                         "planner returned null action"
                 );
 
+                publishEvent(AgentEvent.actionPlanned(
+                        state.getConversationId(),
+                        stepIndex,
+                        action.getType()
+                ));
+
                 AgentObservation observation = Objects.requireNonNull(
                         executor.execute(action, state),
                         "executor returned null observation"
                 );
+
+                publishEvent(AgentEvent.observationReceived(
+                        state.getConversationId(),
+                        stepIndex,
+                        action.getType(),
+                        observation.isSuccess(),
+                        observation.getContent(),
+                        observation.getErrorMessage()
+                ));
 
                 AgentStep step = AgentStep.builder()
                         .action(action)
@@ -80,15 +116,35 @@ public class AgentLoopRunner {
 
                 if (action.getType().isTerminal()) {
                     finishTerminalAction(state, action, observation);
+
+                    publishEvent(AgentEvent.turnCompleted(
+                            state.getConversationId(),
+                            state.getStopReason(),
+                            state.getFinalAnswer()
+                    ));
+
                     return state;
                 }
             }
 
             state.setStopReason(AgentStopReason.MAX_STEPS);
+
+            publishEvent(AgentEvent.turnCompleted(
+                    state.getConversationId(),
+                    state.getStopReason(),
+                    null
+            ));
+
             return state;
         } catch (RuntimeException exception) {
             state.setStopReason(AgentStopReason.ERROR);
             state.setErrorMessage(exception.getMessage());
+
+            publishEvent(AgentEvent.turnFailed(
+                    state.getConversationId(),
+                    state.getErrorMessage()
+            ));
+
             return state;
         }
     }
@@ -110,6 +166,19 @@ public class AgentLoopRunner {
             default -> throw new IllegalStateException(
                     "Unsupported terminal action: " + action.getType()
             );
+        }
+    }
+
+    private void publishEvent(AgentEvent event) {
+        try {
+            eventSink.publish(event);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "发布 Agent 事件失败，事件类型：{}，错误：{}",
+                    event.type(),
+                    exception.getMessage()
+            );
+            log.debug("Agent 事件发布异常", exception);
         }
     }
 }

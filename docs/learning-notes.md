@@ -1599,3 +1599,50 @@ StreamChatPipeline.execute(ctx)
   - 核心链路。
   - 当天修正的误解。
   - 和后续 Agent 工程化的关系。
+
+## 2026-07-18：Planner 拆分、运行事件与工具执行策略边界
+
+### 1. 当天完成内容
+
+本次继续收敛 Agent 内核职责，没有接入完整 MQ、数据库或旧 RAG 长链路。
+
+- 从 `LlmAgentPlanner` 提取 `AgentRequestAssembler`：Assembler 负责 prompt slots、历史步骤、工具定义和 `ChatRequest` 组装；Planner 只保留工具快照、调用 LLM 和解析下一步 Action。
+- 增加结构化运行事件：`TURN_STARTED`、`STEP_STARTED`、`ACTION_PLANNED`、`OBSERVATION_RECEIVED`、`TURN_COMPLETED`、`TURN_FAILED`。
+- `AgentLoopRunner` 通过 `AgentEventSink` 发布事件；事件发布采用 best-effort，Sink 异常只记录日志，不能改变 Agent 的业务结果。
+- 工具调用形成 `parse -> resolve executor -> PreparedToolCall -> policy -> execute` 链路。
+- `PreparedToolCall` 固化规范化后的 `toolId`、不可变参数和已解析的 Executor，确保 Policy 检查的对象就是随后真正执行的对象。
+- `AgentExecutionPolicy` 返回 `ToolExecutionDecision`。Policy 拒绝时，Handler 返回 `success=false` 的 Observation，工具不会执行，Planner 可以据此换工具、修改参数或结束。
+- 增加不可变的 `AgentRunResult`，用于后续 Service 从可变 `AgentState` 提取 `conversationId`、`stopReason`、用户可见 `content` 和 `errorMessage`。
+
+### 2. 当前 Policy 的真实状态
+
+当前 Spring 配置使用 `AgentExecutionPolicy.ALLOW_ALL`。它只是保持旧行为的兼容实现，不是真正的安全策略。
+
+已经完成的是“可拒绝、拒绝后不执行、失败结果可回到 Planner”的机制闭环；尚未完成的是“依据什么规则拒绝”。拒绝规则不能拖到灰度之后，下一开发切片应增加配置化工具 allowlist：Agent 模式默认关闭，灰度开启时只允许显式配置的只读工具；未配置或不在列表中的工具直接拒绝。若以后开放写操作工具，还必须在此边界增加用户确认或更严格的风险分级，不能复用 `ALLOW_ALL`。
+
+### 3. 距离首轮灰度的剩余内容
+
+首轮灰度只要求可控地验证 Agent 链路，不要求一次完成成熟 Harness 的全部能力。
+
+1. 实现真实的 allowlist Policy，并与 Agent 灰度配置绑定；这是接入真实流量前的硬门槛。
+2. 增加薄 `AgentChatService`：创建请求级 `AgentState`、调用 `AgentLoopRunner`、转换为 `AgentRunResult`，不在 Service 内重复调用 LLM 或 Tool。
+3. 增加默认关闭的功能开关和小流量路由；旧 `StreamChatPipeline` 保持默认路径，可随时回退。
+4. 将 `AgentRunResult` 和必要的 `AgentEvent` 适配到现有 SSE 用户协议，并保留任务停止能力。
+5. 明确 `ERROR`、`MAX_STEPS`、超时和取消的用户响应及旧链路降级规则，避免灰度请求静默失败。
+6. 补 Service 主路径、澄清、Policy 拒绝、最大步数、错误与开关路由的固定回归；记录 stop reason、steps、耗时和 fallback 比例。
+
+首轮灰度暂不要求完整 Session 恢复、持久化 Journal、跨进程续跑、多 Agent、插件体系或数据库重构。这些能力应依据灰度数据再决定优先级。
+
+### 4. 验证结果
+
+提交前运行 11 个 Agent 相关测试类，共 37 个测试：
+
+```text
+tests=37, failures=0, errors=0, skipped=0
+```
+
+其中新增的 Policy 拒绝测试确认：拒绝原因进入失败 Observation，`McpToolExecutor` 没有被调用；Event Sink 故障测试确认：可观测性故障不会把正常 Agent Turn 改成 `ERROR`。
+
+### 5. 下一步
+
+下一次从真实 allowlist Policy 开始，然后进入 `AgentChatService`。在这两步完成前，不改 Controller、不启动完整项目、不接 MQ 和数据库。
