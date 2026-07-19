@@ -26,23 +26,29 @@ import com.koawa.agent.agent.executor.handler.CallMcpToolActionHandler;
 import com.koawa.agent.agent.executor.handler.FinalAnswerActionHandler;
 import com.koawa.agent.agent.executor.handler.RetrieveKbActionHandler;
 import com.koawa.agent.agent.executor.policy.AgentExecutionPolicy;
+import com.koawa.agent.agent.executor.policy.AllowListAgentExecutionPolicy;
 import com.koawa.agent.agent.parser.AgentActionParser;
 import com.koawa.agent.agent.planner.AgentPlanner;
 import com.koawa.agent.agent.planner.AgentRequestAssembler;
 import com.koawa.agent.agent.planner.LlmAgentPlanner;
+import com.koawa.agent.agent.routing.AgentRouteDecider;
 import com.koawa.agent.agent.runner.AgentLoopRunner;
+import com.koawa.agent.agent.service.AgentChatService;
+import com.koawa.agent.agent.service.impl.DefaultAgentChatService;
 import com.koawa.agent.infra.chat.LLMService;
 import com.koawa.agent.rag.config.SearchChannelProperties;
 import com.koawa.agent.rag.core.intent.IntentResolver;
 import com.koawa.agent.rag.core.mcp.McpToolRegistry;
 import com.koawa.agent.rag.core.prompt.PromptTemplateLoader;
 import com.koawa.agent.rag.core.retrieve.RetrievalEngine;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
 @Configuration
+@EnableConfigurationProperties(AgentRuntimeProperties.class)
 public class AgentConfiguration {
     @Bean
     public RetrieveKbActionHandler retrieveKbActionHandler(
@@ -58,8 +64,12 @@ public class AgentConfiguration {
     }
 
     @Bean
-    public AgentExecutionPolicy agentExecutionPolicy() {
-        return AgentExecutionPolicy.ALLOW_ALL;
+    public AgentExecutionPolicy agentExecutionPolicy(
+            AgentRuntimeProperties properties
+    ) {
+        return new AllowListAgentExecutionPolicy(
+                properties.getAllowedToolIds()
+        );
     }
 
     @Bean
@@ -130,5 +140,20 @@ public class AgentConfiguration {
             AgentEventSink eventSink
     ) {
         return new AgentLoopRunner(planner, executor, eventSink);
+    }
+
+    @Bean
+    public AgentChatService agentChatService(
+            AgentLoopRunner runner,
+            AgentRuntimeProperties properties
+    ) {
+        return new DefaultAgentChatService(runner, properties);
+    }
+
+    @Bean
+    public AgentRouteDecider agentRouteDecider(
+            AgentRuntimeProperties properties
+    ) {
+        return new AgentRouteDecider(properties);
     }
 }

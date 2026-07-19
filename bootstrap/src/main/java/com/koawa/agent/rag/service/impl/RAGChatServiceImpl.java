@@ -19,8 +19,10 @@ package com.koawa.agent.rag.service.impl;
 
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import com.koawa.agent.agent.routing.AgentRouteDecider;
 import com.koawa.agent.framework.context.UserContext;
 import com.koawa.agent.infra.chat.StreamCallback;
+import com.koawa.agent.rag.service.adapter.AgentStreamChatAdapter;
 import com.koawa.agent.rag.service.ratelimit.ChatQueueLimiter;
 import com.koawa.agent.rag.service.RAGChatService;
 import com.koawa.agent.rag.service.handler.StreamCallbackFactory;
@@ -36,7 +38,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 /**
  * RAG 对话服务默认实现
  * RAGChatServiceImpl 不负责具体 RAG 推理。
- * 它负责启动一次聊天任务：创建 conversationId/taskId，创建 SSE callback，经过限流和 trace 包装，然后把 StreamChatContext 交给 StreamChatPipeline。
+ * 它负责启动一次聊天任务：创建 conversationId/taskId，创建 SSE callback，
+ * 经过限流和 trace 包装，再按灰度规则交给 Agent 或原 RAG Pipeline。
  */
 @Slf4j
 @Service
@@ -48,28 +51,88 @@ public class RAGChatServiceImpl implements RAGChatService {
     private final StreamCallbackFactory callbackFactory;
     private final StreamChatTraceRunner traceRunner;
     private final StreamTaskManager taskManager;
+    private final AgentRouteDecider agentRouteDecider;
+    private final AgentStreamChatAdapter agentStreamChatAdapter;
 
     @Override
-    public void streamChat(String question, String conversationId, Boolean deepThinking, SseEmitter emitter) {
+    public void streamChat(
+            String question,
+            String conversationId,
+            Boolean deepThinking,
+            SseEmitter emitter
+    ) {
         // 生成会话 ID 和任务 ID
-        String actualConversationId = StrUtil.isBlank(conversationId) ? IdUtil.getSnowflakeNextIdStr() : conversationId;
+        String actualConversationId =
+                StrUtil.isBlank(conversationId)
+                ? IdUtil.getSnowflakeNextIdStr()
+                : conversationId.trim();
+
         String taskId = IdUtil.getSnowflakeNextIdStr();
+        String userId = UserContext.getUserId();
 
         //这里不是直接往前端写内容，而是创建一个 StreamCallback。后面 LLM 每吐出一段内容，都会通过这个 callback 推给前端。
-        StreamCallback callback = callbackFactory.createChatEventHandler(emitter, actualConversationId, taskId);
+        StreamCallback callback =
+                callbackFactory.createChatEventHandler(
+                        emitter,
+                        actualConversationId,
+                        taskId
+                );
 
-        chatQueueLimiter.enqueue(question, actualConversationId, emitter,
-                () -> traceRunner.run(question, actualConversationId, taskId, callback, traceAware -> {
-                    StreamChatContext ctx = StreamChatContext.builder()
-                            .question(question)
-                            .conversationId(actualConversationId)
-                            .taskId(taskId)
-                            .deepThinking(Boolean.TRUE.equals(deepThinking))
-                            .userId(UserContext.getUserId())
-                            .callback(traceAware)
-                            .build();
-                    chatPipeline.execute(ctx);
-                }));
+        chatQueueLimiter.enqueue(
+                question,
+                actualConversationId,
+                emitter,
+                () -> traceRunner.run(
+                        question,
+                        actualConversationId,
+                        taskId,
+                        callback,
+                        traceAware -> executeRoutedChat(
+                                question,
+                                actualConversationId,
+                                taskId,
+                                deepThinking,
+                                userId,
+                                traceAware
+                        )
+                )
+        );
+    }
+
+    private void executeRoutedChat(
+            String question,
+            String conversationId,
+            String taskId,
+            Boolean deepThinking,
+            String userId,
+            StreamCallback callback
+    ) {
+        boolean useAgent = agentRouteDecider.shouldUseAgent(
+                conversationId,
+                userId
+        );
+
+        if (useAgent && agentStreamChatAdapter.tryExecute(
+                question,
+                conversationId,
+                taskId,
+                userId,
+                callback
+        )) {
+            return;
+        }
+
+        StreamChatContext context = StreamChatContext.builder()
+                .question(question)
+                .conversationId(conversationId)
+                .taskId(taskId)
+                .deepThinking(Boolean.TRUE.equals(deepThinking))
+                .userId(userId)
+                .callback(callback)
+                .build();
+
+        chatPipeline.execute(context);
+
     }
 
     @Override

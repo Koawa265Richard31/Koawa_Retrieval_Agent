@@ -69,6 +69,7 @@ public class AgentLoopRunner {
         try {
             publishEvent(AgentEvent.turnStarted(
                     state.getConversationId(),
+                    state.getTaskId(),
                     state.getCurrentStep()
             ));
 
@@ -77,6 +78,7 @@ public class AgentLoopRunner {
 
                 publishEvent(AgentEvent.stepStarted(
                         state.getConversationId(),
+                        state.getTaskId(),
                         stepIndex
                 ));
 
@@ -87,6 +89,7 @@ public class AgentLoopRunner {
 
                 publishEvent(AgentEvent.actionPlanned(
                         state.getConversationId(),
+                        state.getTaskId(),
                         stepIndex,
                         action.getType()
                 ));
@@ -98,6 +101,7 @@ public class AgentLoopRunner {
 
                 publishEvent(AgentEvent.observationReceived(
                         state.getConversationId(),
+                        state.getTaskId(),
                         stepIndex,
                         action.getType(),
                         observation.isSuccess(),
@@ -119,6 +123,7 @@ public class AgentLoopRunner {
 
                     publishEvent(AgentEvent.turnCompleted(
                             state.getConversationId(),
+                            state.getTaskId(),
                             state.getStopReason(),
                             state.getFinalAnswer()
                     ));
@@ -131,6 +136,7 @@ public class AgentLoopRunner {
 
             publishEvent(AgentEvent.turnCompleted(
                     state.getConversationId(),
+                    state.getTaskId(),
                     state.getStopReason(),
                     null
             ));
@@ -142,6 +148,7 @@ public class AgentLoopRunner {
 
             publishEvent(AgentEvent.turnFailed(
                     state.getConversationId(),
+                    state.getTaskId(),
                     state.getErrorMessage()
             ));
 

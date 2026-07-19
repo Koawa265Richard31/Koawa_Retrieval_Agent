@@ -15,41 +15,36 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.agent.domain;
+package com.koawa.agent.agent.config;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class AgentState {
+@Validated
+@ConfigurationProperties(prefix = "agent.runtime")
+public class AgentRuntimeProperties {
+    /**
+     * Agent 链路默认关闭。
+     */
+    private boolean enabled = false;
 
-    private String conversationId;
+    @Min(1)
+    private int maxSteps = 8;
 
-    private String taskId;
+    /**
+     * Agent 可以调用的 MCP 工具。
+     * 空集合表示全部拒绝。
+     */
+    private Set<String> allowedToolIds = new LinkedHashSet<>();
 
-    private String userId;
-
-    private String originalQuestion;
-
-    private int currentStep;
-
-    private int maxSteps;
-
-    @Builder.Default
-    private List<AgentStep> steps = new ArrayList<>();
-
-    private String finalAnswer;
-
-    private AgentStopReason stopReason;
-
-    private String errorMessage;
-
+    @Min(0)
+    @Max(100)
+    private int rolloutPercentage = 0;
 }

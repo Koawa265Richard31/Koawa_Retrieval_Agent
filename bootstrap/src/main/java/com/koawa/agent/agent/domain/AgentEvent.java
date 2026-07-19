@@ -22,6 +22,7 @@ import java.util.Objects;
 public record AgentEvent(
         AgentEventType type,
         String conversationId,
+        String taskId,
         Integer stepIndex,
         AgentActionType actionType,
         Boolean success,
@@ -36,11 +37,13 @@ public record AgentEvent(
 
     public static AgentEvent turnStarted(
             String conversationId,
+            String taskId,
             int stepIndex
     ) {
         return new AgentEvent(
                 AgentEventType.TURN_STARTED,
                 conversationId,
+                taskId,
                 stepIndex,
                 null,
                 null,
@@ -52,11 +55,13 @@ public record AgentEvent(
 
     public static AgentEvent stepStarted(
             String conversationId,
+            String taskId,
             int stepIndex
     ) {
         return new AgentEvent(
                 AgentEventType.STEP_STARTED,
                 conversationId,
+                taskId,
                 stepIndex,
                 null,
                 null,
@@ -68,12 +73,14 @@ public record AgentEvent(
 
     public static AgentEvent actionPlanned(
             String conversationId,
+            String taskId,
             int stepIndex,
             AgentActionType actionType
     ) {
         return new AgentEvent(
                 AgentEventType.ACTION_PLANNED,
                 conversationId,
+                taskId,
                 stepIndex,
                 Objects.requireNonNull(
                         actionType,
@@ -88,6 +95,7 @@ public record AgentEvent(
 
     public static AgentEvent observationReceived(
             String conversationId,
+            String taskId,
             int stepIndex,
             AgentActionType actionType,
             boolean success,
@@ -97,6 +105,7 @@ public record AgentEvent(
         return new AgentEvent(
                 AgentEventType.OBSERVATION_RECEIVED,
                 conversationId,
+                taskId,
                 stepIndex,
                 Objects.requireNonNull(
                         actionType,
@@ -111,12 +120,14 @@ public record AgentEvent(
 
     public static AgentEvent turnCompleted(
             String conversationId,
+            String taskId,
             AgentStopReason stopReason,
             String content
     ) {
         return new AgentEvent(
                 AgentEventType.TURN_COMPLETED,
                 conversationId,
+                taskId,
                 null,
                 null,
                 null,
@@ -131,11 +142,13 @@ public record AgentEvent(
 
     public static AgentEvent turnFailed(
             String conversationId,
+            String taskId,
             String errorMessage
     ) {
         return new AgentEvent(
                 AgentEventType.TURN_FAILED,
                 conversationId,
+                taskId,
                 null,
                 null,
                 false,

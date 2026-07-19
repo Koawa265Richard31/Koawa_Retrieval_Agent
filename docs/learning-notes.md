@@ -1646,3 +1646,68 @@ tests=37, failures=0, errors=0, skipped=0
 ### 5. 下一步
 
 下一次从真实 allowlist Policy 开始，然后进入 `AgentChatService`。在这两步完成前，不改 Controller、不启动完整项目、不接 MQ 和数据库。
+
+## 2026-07-19：安全灰度路由、Agent Service 与 taskId 贯通
+
+### 1. 当天完成内容
+
+- 增加 `AllowListAgentExecutionPolicy`，生产 Spring Bean 不再使用 `ALLOW_ALL`。空 allowlist 表示拒绝所有 Tool，名单外 Tool 返回失败 Observation 且不会执行。
+- 增加 `AgentRuntimeProperties`：`enabled=false`、`rolloutPercentage=0`、`maxSteps=8`、`allowedToolIds=[]`，默认状态不会让真实请求进入 Agent，也不会允许任何工具调用。
+- 增加 `AgentRouteDecider`，优先按 `userId`、其次按 `conversationId` 做稳定哈希分桶，避免同一用户在 Agent 与旧 RAG 之间随机跳转。
+- 增加薄 `AgentChatService` 与 `DefaultAgentChatService`：校验问题、生成或规范化 ID、创建请求级 `AgentState`、调用 `AgentLoopRunner`、转换为 `AgentRunResult`。
+- 增加 `AgentStreamChatAdapter`，把可交付的 `FINAL_ANSWER` / `ASK_CLARIFICATION` 结果写入现有 `StreamCallback`；`ERROR`、`MAX_STEPS`、空结果或同步异常回退旧 `StreamChatPipeline`。
+- `RAGChatServiceImpl` 保留原 SSE、限流和 Trace 外壳，在内部根据灰度决策选择 Agent 或旧 RAG，不修改 Controller 和前端协议。
+- `conversationId` 在多轮对话间复用；`taskId` 标识一次用户请求和一次 Agent Loop / RAG Pipeline；`stepIndex` 标识该 Agent Loop 内的步骤；`traceId` 只用于可观测记录。
+- 同一个 `taskId` 已贯穿 callback、Trace、Agent Adapter、Service、State、Result、Event 和 Runner，便于取消、日志与故障定位。
+- RAG 入口统一 trim 外部 conversationId，避免 callback 与 Agent 持久化使用不同会话 ID。
+
+### 2. 当前运行链路
+
+```text
+SseEmitter
+  -> StreamCallback
+  -> ChatQueueLimiter
+  -> StreamChatTraceRunner(traceAware callback)
+  -> AgentRouteDecider
+       -> false: StreamChatPipeline
+       -> true: AgentStreamChatAdapter
+            -> AgentChatService
+            -> AgentLoopRunner
+            -> AgentRunResult
+            -> 可交付: 原 StreamCallback
+            -> 不可交付: StreamChatPipeline fallback
+```
+
+Trace 不负责执行聊天。它只包装原始 callback：第一次内容用于记录 TTFT，`onComplete` / `onError` 用于记录本次请求的最终状态，然后继续把调用转发给原 SSE callback。
+
+### 3. 安全默认值
+
+```yaml
+agent:
+  runtime:
+    enabled: false
+    rollout-percentage: 0
+    max-steps: 8
+    allowed-tool-ids: []
+```
+
+因此本次代码可以合入主分支，但不会自动开启真实 Agent 流量。开启灰度必须同时显式启用 Agent、设置非零比例并配置经过确认的只读工具 allowlist。
+
+### 4. 验证结果
+
+运行 16 个 Agent、Policy、Service、Adapter 和实际路由相关测试类，共 51 个测试：
+
+```text
+tests=51, failures=0, errors=0, skipped=0
+```
+
+重点覆盖：allowlist 允许/拒绝、配置上下界、稳定路由、State/Result 转换、Event taskId、Agent 结果交付、最大步数回退，以及同一 taskId 在 SSE callback、Trace 和 Agent 分支之间保持一致。
+
+### 5. 距离真实灰度的剩余硬门槛
+
+1. `stopTask(taskId)` 当前可以关闭 SSE，但尚未把取消信号传入 Agent Loop；需要增加协作式取消，并明确阻塞中的 LLM / Tool 超时边界。
+2. Planner 当前只读取本轮问题和本轮 Agent Steps，尚未读取之前的对话历史；多轮会话灰度前需要补齐历史上下文。
+3. 生产 `AgentEventSink` 仍为 `NOOP`；灰度前至少需要结构化日志或指标，记录 stop reason、steps、耗时和 fallback。
+4. 当前未启动完整 MQ、数据库、LLM、KB 和 MCP 环境；设置非零灰度比例前必须完成至少一条真实 KB 和一条 allowlist Tool 冒烟链路。
+
+完整 Session 恢复、持久化 Journal、多 Agent 和插件体系仍不阻塞首轮灰度。

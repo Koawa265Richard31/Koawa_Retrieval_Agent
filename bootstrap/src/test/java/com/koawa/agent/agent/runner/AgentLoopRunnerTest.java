@@ -58,6 +58,7 @@ class AgentLoopRunnerTest {
 
     private AgentState state(int maxSteps) {
         return AgentState.builder()
+                .taskId("task-1")
                 .currentStep(0)
                 .maxSteps(maxSteps)
                 .build();
@@ -123,6 +124,7 @@ class AgentLoopRunnerTest {
                         AgentStopReason.MAX_STEPS,
                         completed.stopReason()
                 ),
+                () -> assertEquals("task-1", completed.taskId()),
                 () -> assertNull(completed.content())
         );
     }
@@ -156,6 +158,7 @@ class AgentLoopRunnerTest {
                         AgentStopReason.ERROR,
                         failed.stopReason()
                 ),
+                () -> assertEquals("task-1", failed.taskId()),
                 () -> assertEquals("executor failed", failed.errorMessage())
         );
     }
@@ -190,6 +193,7 @@ class AgentLoopRunnerTest {
 
         AgentState state = AgentState.builder()
                 .conversationId("conversation-1")
+                .taskId("task-1")
                 .currentStep(0)
                 .maxSteps(2)
                 .build();
@@ -212,6 +216,9 @@ class AgentLoopRunnerTest {
                         ),
                         events.stream().map(AgentEvent::type).toList()
                 ),
+                () -> assertTrue(events.stream().allMatch(
+                        event -> "task-1".equals(event.taskId())
+                )),
                 () -> assertEquals(
                         "conversation-1",
                         turnStarted.conversationId()

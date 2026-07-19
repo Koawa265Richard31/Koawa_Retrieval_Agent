@@ -41,6 +41,13 @@ rocketmq:
 milvus:
   uri: http://localhost:19530
 
+agent:
+  runtime:
+    enabled: false
+    rollout-percentage: 0
+    max-steps: 8
+    allowed-tool-ids: []
+
 rag:
   vector:
     type: pg  # 可选 milvus / pg

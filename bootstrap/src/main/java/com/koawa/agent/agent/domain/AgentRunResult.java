@@ -21,6 +21,7 @@ import java.util.Objects;
 
 public record AgentRunResult(
         String conversationId,
+        String taskId,
         AgentStopReason stopReason,
         String content,
         String errorMessage
@@ -38,6 +39,7 @@ public record AgentRunResult(
 
         return new AgentRunResult(
                 state.getConversationId(),
+                state.getTaskId(),
                 state.getStopReason(),
                 state.getFinalAnswer(),
                 state.getErrorMessage()

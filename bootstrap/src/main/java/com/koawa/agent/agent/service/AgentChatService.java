@@ -15,41 +15,16 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.agent.domain;
+package com.koawa.agent.agent.service;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.koawa.agent.agent.domain.AgentRunResult;
 
-import java.util.ArrayList;
-import java.util.List;
+public interface AgentChatService {
 
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class AgentState {
-
-    private String conversationId;
-
-    private String taskId;
-
-    private String userId;
-
-    private String originalQuestion;
-
-    private int currentStep;
-
-    private int maxSteps;
-
-    @Builder.Default
-    private List<AgentStep> steps = new ArrayList<>();
-
-    private String finalAnswer;
-
-    private AgentStopReason stopReason;
-
-    private String errorMessage;
-
+    AgentRunResult chat(
+            String question,
+            String conversationId,
+            String taskId,
+            String userId
+    );
 }

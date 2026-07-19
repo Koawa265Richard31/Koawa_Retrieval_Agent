@@ -26,12 +26,16 @@ import com.koawa.agent.agent.executor.handler.AskClarificationActionHandler;
 import com.koawa.agent.agent.executor.handler.CallMcpToolActionHandler;
 import com.koawa.agent.agent.executor.handler.FinalAnswerActionHandler;
 import com.koawa.agent.agent.executor.handler.RetrieveKbActionHandler;
+import com.koawa.agent.agent.executor.policy.AllowListAgentExecutionPolicy;
 import com.koawa.agent.agent.executor.policy.AgentExecutionPolicy;
 import com.koawa.agent.agent.parser.AgentActionParser;
 import com.koawa.agent.agent.planner.AgentPlanner;
 import com.koawa.agent.agent.planner.AgentRequestAssembler;
 import com.koawa.agent.agent.planner.LlmAgentPlanner;
+import com.koawa.agent.agent.routing.AgentRouteDecider;
 import com.koawa.agent.agent.runner.AgentLoopRunner;
+import com.koawa.agent.agent.service.AgentChatService;
+import com.koawa.agent.agent.service.impl.DefaultAgentChatService;
 import com.koawa.agent.infra.chat.LLMService;
 import com.koawa.agent.rag.config.SearchChannelProperties;
 import com.koawa.agent.rag.core.intent.IntentResolver;
@@ -86,16 +90,30 @@ public class AgentConfigurationTest {
                     .hasSingleBean(AskClarificationActionHandler.class)
                     .hasSingleBean(FinalAnswerActionHandler.class)
                     .hasSingleBean(AgentActionExecutor.class)
+                    .hasSingleBean(AgentRuntimeProperties.class)
                     .hasSingleBean(AgentExecutionPolicy.class)
                     .hasSingleBean(AgentEventSink.class)
                     .hasSingleBean(AgentRequestAssembler.class)
                     .hasSingleBean(AgentPlanner.class)
-                    .hasSingleBean(AgentLoopRunner.class);
+                    .hasSingleBean(AgentLoopRunner.class)
+                    .hasSingleBean(AgentChatService.class)
+                    .hasSingleBean(AgentRouteDecider.class);
 
             assertThat(context.getBean(AgentActionExecutor.class))
                     .isInstanceOf(RoutingAgentActionExecutor.class);
             assertThat(context.getBean(AgentPlanner.class))
                     .isInstanceOf(LlmAgentPlanner.class);
+            assertThat(context.getBean(AgentExecutionPolicy.class))
+                    .isInstanceOf(AllowListAgentExecutionPolicy.class);
+            assertThat(context.getBean(AgentChatService.class))
+                    .isInstanceOf(DefaultAgentChatService.class);
+
+            AgentRuntimeProperties properties =
+                    context.getBean(AgentRuntimeProperties.class);
+            assertThat(properties.isEnabled()).isFalse();
+            assertThat(properties.getRolloutPercentage()).isZero();
+            assertThat(properties.getMaxSteps()).isEqualTo(8);
+            assertThat(properties.getAllowedToolIds()).isEmpty();
 
             assertThat(
                     context.getBeansOfType(AgentActionHandler.class).values()
@@ -103,5 +121,45 @@ public class AgentConfigurationTest {
                     .extracting(AgentActionHandler::supportedAction)
                     .containsExactlyInAnyOrder(AgentActionType.values());
         });
+    }
+
+    @Test
+    void shouldBindAgentRuntimeProperties() {
+        contextRunner
+                .withPropertyValues(
+                        "agent.runtime.enabled=true",
+                        "agent.runtime.rollout-percentage=25",
+                        "agent.runtime.max-steps=5",
+                        "agent.runtime.allowed-tool-ids="
+                                + "sales_query,weather_query"
+                )
+                .run(context -> {
+                    AgentRuntimeProperties properties =
+                            context.getBean(AgentRuntimeProperties.class);
+
+                    assertThat(properties.isEnabled()).isTrue();
+                    assertThat(properties.getRolloutPercentage())
+                            .isEqualTo(25);
+                    assertThat(properties.getMaxSteps()).isEqualTo(5);
+                    assertThat(properties.getAllowedToolIds())
+                            .containsExactlyInAnyOrder(
+                                    "sales_query",
+                                    "weather_query"
+                            );
+                });
+    }
+
+    @Test
+    void shouldRejectNonPositiveMaxSteps() {
+        contextRunner
+                .withPropertyValues("agent.runtime.max-steps=0")
+                .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    void shouldRejectRolloutPercentageAboveOneHundred() {
+        contextRunner
+                .withPropertyValues("agent.runtime.rollout-percentage=101")
+                .run(context -> assertThat(context).hasFailed());
     }
 }
