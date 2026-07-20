@@ -15,52 +15,28 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.agent.domain;
+package com.koawa.agent.rag.service.adapter;
 
+import com.koawa.agent.agent.service.AgentConversationHistoryLoader;
 import com.koawa.agent.framework.convention.ChatMessage;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.koawa.agent.rag.core.memory.ConversationMemoryService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class AgentState {
+@Component
+@RequiredArgsConstructor
+public final class ConversationMemoryAgentHistoryLoader
+        implements AgentConversationHistoryLoader {
 
-    private String conversationId;
+    private final ConversationMemoryService memoryService;
 
-    private String taskId;
-
-    private String userId;
-
-    private String originalQuestion;
-
-    private int currentStep;
-
-    private int maxSteps;
-
-    private Instant deadlineAt;
-
-    @Builder.Default
-    private List<AgentStep> steps = new ArrayList<>();
-
-    @Builder.Default
-    private List<ChatMessage> historySnapshot = List.of();
-
-    private String finalAnswer;
-
-    private AgentStopReason stopReason;
-
-    private AgentFailureType failureType;
-
-    private String errorMessage;
-
-    private int planningRecoveryAttempts;
-
+    @Override
+    public List<ChatMessage> load(
+            String conversationId,
+            String userId
+    ) {
+        return memoryService.load(conversationId, userId);
+    }
 }

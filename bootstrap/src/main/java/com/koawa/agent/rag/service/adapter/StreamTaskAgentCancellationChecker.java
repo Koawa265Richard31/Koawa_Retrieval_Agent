@@ -15,37 +15,21 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.agent.domain;
+package com.koawa.agent.rag.service.adapter;
 
-public enum AgentStopReason {
+import com.koawa.agent.agent.runner.AgentCancellationChecker;
+import com.koawa.agent.rag.service.handler.StreamTaskManager;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-    /**
-     * 已获得最终回答
-     */
-    FINAL_ANSWER,
+@Component
+@RequiredArgsConstructor
+public final class StreamTaskAgentCancellationChecker implements AgentCancellationChecker {
 
-    /**
-     *超过最大步数，防止死循环
-     */
-    MAX_STEPS,
+    private final StreamTaskManager taskManager;
 
-    /**
-     * Agent turn exceeded its configured deadline.
-     */
-    TIMEOUT,
-
-    /**
-     * planner / executor 异常
-     */
-    ERROR,
-
-    /**
-     * 信息不足，需要用户补充
-     */
-    ASK_CLARIFICATION,
-
-    /**
-     * 用户主动取消本次任务
-     */
-    CANCELLED,
+    @Override
+    public boolean isCancelled(String taskId) {
+        return taskManager.isCancelled(taskId);
+    }
 }

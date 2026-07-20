@@ -19,25 +19,41 @@ package com.koawa.agent.agent.runner;
 
 import com.koawa.agent.agent.domain.*;
 import com.koawa.agent.agent.event.AgentEventSink;
+import com.koawa.agent.agent.exception.AgentFailureException;
 import com.koawa.agent.agent.executor.AgentActionExecutor;
 import com.koawa.agent.agent.executor.RoutingAgentActionExecutor;
 import com.koawa.agent.agent.executor.handler.AskClarificationActionHandler;
 import com.koawa.agent.agent.executor.handler.FinalAnswerActionHandler;
 import com.koawa.agent.agent.planner.AgentPlanner;
+import com.koawa.agent.agent.recovery.AgentRecoveryDecision;
+import com.koawa.agent.agent.recovery.AgentRecoveryPolicy;
+import com.koawa.agent.agent.recovery.DefaultAgentRecoveryPolicy;
 import com.koawa.agent.framework.convention.ChatRequest;
 import com.koawa.agent.infra.chat.LLMService;
 import com.koawa.agent.agent.planner.ScriptedAgentPlanner;
 import com.koawa.agent.rag.core.prompt.PromptTemplateLoader;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AgentLoopRunnerTest {
+    private static final AgentRecoveryPolicy NO_RECOVERY =
+            failureType -> AgentRecoveryDecision.STOP;
+    private static final Instant START =
+            Instant.parse("2026-07-20T00:00:00Z");
+    private static final Duration TURN_TIMEOUT = Duration.ofSeconds(10);
+
     private AgentAction action(AgentActionType type) {
         return AgentAction.builder()
                 .type(type)
@@ -81,7 +97,9 @@ class AgentLoopRunnerTest {
         AgentState result = new AgentLoopRunner(
                 planner,
                 executor,
-                AgentEventSink.NOOP
+                AgentEventSink.NOOP,
+                AgentCancellationChecker.NEVER_CANCELLED,
+                NO_RECOVERY
         ).run(state(5));
 
         assertEquals(2, result.getCurrentStep());
@@ -107,7 +125,9 @@ class AgentLoopRunnerTest {
         AgentState result = new AgentLoopRunner(
                 planner,
                 executor,
-                events::add
+                events::add,
+                AgentCancellationChecker.NEVER_CANCELLED,
+                NO_RECOVERY
         ).run(state(2));
 
         AgentEvent completed = events.get(events.size() - 1);
@@ -143,13 +163,19 @@ class AgentLoopRunnerTest {
         AgentState result = new AgentLoopRunner(
                 planner,
                 executor,
-                events::add
+                events::add,
+                AgentCancellationChecker.NEVER_CANCELLED,
+                NO_RECOVERY
         ).run(state(3));
 
         AgentEvent failed = events.get(events.size() - 1);
         assertEquals(0, result.getCurrentStep());
         assertTrue(result.getSteps().isEmpty());
         assertEquals(AgentStopReason.ERROR, result.getStopReason());
+        assertEquals(
+                AgentFailureType.ACTION_EXECUTION_FAILED,
+                result.getFailureType()
+        );
         assertEquals("executor failed", result.getErrorMessage());
         assertAll(
                 () -> assertEquals(AgentEventType.TURN_FAILED, failed.type()),
@@ -161,6 +187,87 @@ class AgentLoopRunnerTest {
                 () -> assertEquals("task-1", failed.taskId()),
                 () -> assertEquals("executor failed", failed.errorMessage())
         );
+    }
+
+    @Test
+    void shouldRecoverWhenFirstPlanningAttemptReturnsInvalidAction() {
+        AgentPlanner planner = mock(AgentPlanner.class);
+        AgentActionExecutor executor = mock(AgentActionExecutor.class);
+        AgentFailureException plannerFailure = new AgentFailureException(
+                AgentFailureType.INVALID_ACTION_RESPONSE,
+                "Agent action is invalid JSON"
+        );
+        AgentAction finalAnswer = action(AgentActionType.FINAL_ANSWER);
+        when(planner.plan(any(AgentState.class)))
+                .thenThrow(plannerFailure)
+                .thenReturn(finalAnswer);
+        when(executor.execute(eq(finalAnswer), any(AgentState.class)))
+                .thenReturn(observation(
+                        AgentActionType.FINAL_ANSWER,
+                        "final answer"
+                ));
+
+        AgentState result = new AgentLoopRunner(
+                planner,
+                executor,
+                AgentEventSink.NOOP,
+                AgentCancellationChecker.NEVER_CANCELLED,
+                new DefaultAgentRecoveryPolicy()
+        ).run(state(3));
+
+        assertAll(
+                () -> assertEquals(1, result.getCurrentStep()),
+                () -> assertEquals(1, result.getSteps().size()),
+                () -> assertEquals(
+                        AgentStopReason.FINAL_ANSWER,
+                        result.getStopReason()
+                ),
+                () -> assertEquals(1, result.getPlanningRecoveryAttempts()),
+                () -> assertNull(result.getFailureType()),
+                () -> assertNull(result.getErrorMessage())
+        );
+        verify(planner, times(2)).plan(any(AgentState.class));
+        verify(executor).execute(eq(finalAnswer), any(AgentState.class));
+    }
+
+    @Test
+    void shouldStopWhenPlanningRecoveryBudgetIsExhausted() {
+        AgentPlanner planner = mock(AgentPlanner.class);
+        AgentActionExecutor executor = mock(AgentActionExecutor.class);
+        AgentFailureException plannerFailure = new AgentFailureException(
+                AgentFailureType.INVALID_ACTION_RESPONSE,
+                "Agent action is invalid JSON"
+        );
+        when(planner.plan(any(AgentState.class)))
+                .thenThrow(plannerFailure, plannerFailure);
+
+        AgentState result = new AgentLoopRunner(
+                planner,
+                executor,
+                AgentEventSink.NOOP,
+                AgentCancellationChecker.NEVER_CANCELLED,
+                new DefaultAgentRecoveryPolicy()
+        ).run(state(3));
+
+        assertAll(
+                () -> assertEquals(0, result.getCurrentStep()),
+                () -> assertTrue(result.getSteps().isEmpty()),
+                () -> assertEquals(
+                        AgentStopReason.ERROR,
+                        result.getStopReason()
+                ),
+                () -> assertEquals(
+                        AgentFailureType.INVALID_ACTION_RESPONSE,
+                        result.getFailureType()
+                ),
+                () -> assertEquals(
+                        plannerFailure.getMessage(),
+                        result.getErrorMessage()
+                ),
+                () -> assertEquals(1, result.getPlanningRecoveryAttempts())
+        );
+        verify(planner, times(2)).plan(any(AgentState.class));
+        verifyNoInteractions(executor);
     }
 
     @Test
@@ -198,7 +305,13 @@ class AgentLoopRunnerTest {
                 .maxSteps(2)
                 .build();
 
-        new AgentLoopRunner(planner, executor, eventSink).run(state);
+        new AgentLoopRunner(
+                planner,
+                executor,
+                eventSink,
+                AgentCancellationChecker.NEVER_CANCELLED,
+                NO_RECOVERY
+        ).run(state);
 
         AgentEvent turnStarted = events.get(0);
         AgentEvent stepStarted = events.get(1);
@@ -264,7 +377,9 @@ class AgentLoopRunnerTest {
         AgentState result = new AgentLoopRunner(
                 planner,
                 executor,
-                failingSink
+                failingSink,
+                AgentCancellationChecker.NEVER_CANCELLED,
+                NO_RECOVERY
         ).run(state(2));
 
         assertAll(
@@ -302,7 +417,9 @@ class AgentLoopRunnerTest {
         AgentLoopRunner runner = new AgentLoopRunner(
                 planner,
                 executor,
-                AgentEventSink.NOOP
+                AgentEventSink.NOOP,
+                AgentCancellationChecker.NEVER_CANCELLED,
+                NO_RECOVERY
         );
 
         AgentState state = AgentState.builder()
@@ -363,7 +480,9 @@ class AgentLoopRunnerTest {
                 new AgentLoopRunner(
                         planner,
                         executor,
-                        AgentEventSink.NOOP
+                        AgentEventSink.NOOP,
+                        AgentCancellationChecker.NEVER_CANCELLED,
+                        NO_RECOVERY
                 ).run(state);
 
         assertEquals(1, result.getCurrentStep());
@@ -377,5 +496,283 @@ class AgentLoopRunnerTest {
                 expectedSlots
         );
         verify(llmService).chat(any(ChatRequest.class));
+    }
+
+    @Test
+    void shouldCancelBeforePlanning() {
+        AgentPlanner planner = mock(AgentPlanner.class);
+        AgentActionExecutor executor = mock(AgentActionExecutor.class);
+        List<AgentEvent> events = new ArrayList<>();
+        AgentCancellationChecker cancellationChecker = taskId -> true;
+
+        AgentState result = new AgentLoopRunner(
+                planner,
+                executor,
+                events::add,
+                cancellationChecker,
+                NO_RECOVERY
+        ).run(state(2));
+
+        assertAll(
+                () -> assertEquals(0, result.getCurrentStep()),
+                () -> assertTrue(result.getSteps().isEmpty()),
+                () -> assertEquals(
+                        AgentStopReason.CANCELLED,
+                        result.getStopReason()
+                ),
+                () -> assertEquals(
+                        List.of(
+                                AgentEventType.TURN_STARTED,
+                                AgentEventType.TURN_COMPLETED
+                        ),
+                        events.stream().map(AgentEvent::type).toList()
+                ),
+                () -> assertEquals(
+                        AgentStopReason.CANCELLED,
+                        events.get(1).stopReason()
+                )
+        );
+        verifyNoInteractions(planner, executor);
+    }
+
+    @Test
+    void shouldCancelAfterPlanningWithoutExecutingAction() {
+        AgentPlanner planner = mock(AgentPlanner.class);
+        AgentActionExecutor executor = mock(AgentActionExecutor.class);
+        AgentAction plannedAction = action(AgentActionType.CALL_MCP_TOOL);
+        AtomicInteger cancellationChecks = new AtomicInteger();
+        AgentCancellationChecker cancellationChecker = taskId ->
+                cancellationChecks.incrementAndGet() >= 2;
+        when(planner.plan(any(AgentState.class))).thenReturn(plannedAction);
+
+        AgentState result = new AgentLoopRunner(
+                planner,
+                executor,
+                AgentEventSink.NOOP,
+                cancellationChecker,
+                NO_RECOVERY
+        ).run(state(2));
+
+        assertAll(
+                () -> assertEquals(0, result.getCurrentStep()),
+                () -> assertTrue(result.getSteps().isEmpty()),
+                () -> assertEquals(
+                        AgentStopReason.CANCELLED,
+                        result.getStopReason()
+                ),
+                () -> assertEquals(2, cancellationChecks.get())
+        );
+        verify(planner).plan(any(AgentState.class));
+        verifyNoInteractions(executor);
+    }
+
+    @Test
+    void shouldTimeoutBeforeFirstPlanningAttempt() {
+        Instant deadline = START.plus(TURN_TIMEOUT);
+        MutableClock clock = new MutableClock(deadline);
+        AgentPlanner planner = mock(AgentPlanner.class);
+        AgentActionExecutor executor = mock(AgentActionExecutor.class);
+        AgentState state = state(2);
+        state.setDeadlineAt(deadline);
+
+        AgentState result = new AgentLoopRunner(
+                planner,
+                executor,
+                AgentEventSink.NOOP,
+                AgentCancellationChecker.NEVER_CANCELLED,
+                NO_RECOVERY,
+                clock
+        ).run(state);
+
+        assertAll(
+                () -> assertEquals(0, result.getCurrentStep()),
+                () -> assertTrue(result.getSteps().isEmpty()),
+                () -> assertEquals(
+                        AgentStopReason.TIMEOUT,
+                        result.getStopReason()
+                ),
+                () -> assertNull(result.getFailureType()),
+                () -> assertNull(result.getErrorMessage())
+        );
+        verifyNoInteractions(planner, executor);
+    }
+
+    @Test
+    void shouldTimeoutAfterPlanningBeforeExecutingAction() {
+        Instant deadline = START.plus(TURN_TIMEOUT);
+        MutableClock clock = new MutableClock(START);
+        AgentAction plannedAction = action(AgentActionType.RETRIEVE_KB);
+        AgentPlanner planner = mock(AgentPlanner.class);
+        AgentActionExecutor executor = mock(AgentActionExecutor.class);
+        AgentState state = state(2);
+        state.setDeadlineAt(deadline);
+        when(planner.plan(any(AgentState.class))).thenAnswer(invocation -> {
+            clock.advance(TURN_TIMEOUT);
+            return plannedAction;
+        });
+
+        AgentState result = new AgentLoopRunner(
+                planner,
+                executor,
+                AgentEventSink.NOOP,
+                AgentCancellationChecker.NEVER_CANCELLED,
+                NO_RECOVERY,
+                clock
+        ).run(state);
+
+        assertAll(
+                () -> assertEquals(0, result.getCurrentStep()),
+                () -> assertTrue(result.getSteps().isEmpty()),
+                () -> assertEquals(
+                        AgentStopReason.TIMEOUT,
+                        result.getStopReason()
+                )
+        );
+        verify(planner).plan(any(AgentState.class));
+        verifyNoInteractions(executor);
+    }
+
+    @Test
+    void shouldRecordObservationBeforeTimingOutAfterExecution() {
+        Instant deadline = START.plus(TURN_TIMEOUT);
+        MutableClock clock = new MutableClock(START);
+        AgentAction plannedAction = action(AgentActionType.RETRIEVE_KB);
+        AgentObservation completedObservation = observation(
+                AgentActionType.RETRIEVE_KB,
+                "retrieval result"
+        );
+        AgentPlanner planner = mock(AgentPlanner.class);
+        AgentActionExecutor executor = mock(AgentActionExecutor.class);
+        AgentState state = state(2);
+        state.setDeadlineAt(deadline);
+        when(planner.plan(any(AgentState.class))).thenReturn(plannedAction);
+        when(executor.execute(
+                eq(plannedAction),
+                any(AgentState.class)
+        )).thenAnswer(invocation -> {
+            clock.advance(TURN_TIMEOUT);
+            return completedObservation;
+        });
+
+        AgentState result = new AgentLoopRunner(
+                planner,
+                executor,
+                AgentEventSink.NOOP,
+                AgentCancellationChecker.NEVER_CANCELLED,
+                NO_RECOVERY,
+                clock
+        ).run(state);
+
+        assertAll(
+                () -> assertEquals(1, result.getCurrentStep()),
+                () -> assertEquals(1, result.getSteps().size()),
+                () -> assertSame(
+                        completedObservation,
+                        result.getSteps().get(0).getObservation()
+                ),
+                () -> assertEquals(
+                        AgentStopReason.TIMEOUT,
+                        result.getStopReason()
+                )
+        );
+        verify(planner).plan(any(AgentState.class));
+        verify(executor).execute(
+                eq(plannedAction),
+                any(AgentState.class)
+        );
+    }
+
+    @Test
+    void shouldTimeoutBeforePlanningRecoveryRetry() {
+        Instant deadline = START.plus(TURN_TIMEOUT);
+        MutableClock clock = new MutableClock(START);
+        AgentFailureException plannerFailure = new AgentFailureException(
+                AgentFailureType.INVALID_ACTION_RESPONSE,
+                "Agent action is invalid JSON"
+        );
+        AgentPlanner planner = mock(AgentPlanner.class);
+        AgentActionExecutor executor = mock(AgentActionExecutor.class);
+        AgentState state = state(2);
+        state.setDeadlineAt(deadline);
+        when(planner.plan(any(AgentState.class))).thenAnswer(invocation -> {
+            clock.advance(TURN_TIMEOUT);
+            throw plannerFailure;
+        });
+
+        AgentState result = new AgentLoopRunner(
+                planner,
+                executor,
+                AgentEventSink.NOOP,
+                AgentCancellationChecker.NEVER_CANCELLED,
+                new DefaultAgentRecoveryPolicy(),
+                clock
+        ).run(state);
+
+        assertAll(
+                () -> assertEquals(0, result.getCurrentStep()),
+                () -> assertTrue(result.getSteps().isEmpty()),
+                () -> assertEquals(
+                        AgentStopReason.TIMEOUT,
+                        result.getStopReason()
+                )
+        );
+        verify(planner).plan(any(AgentState.class));
+        verifyNoInteractions(executor);
+    }
+
+    @Test
+    void shouldPreferCancellationWhenCancelledAndTimedOut() {
+        Instant deadline = START.plus(TURN_TIMEOUT);
+        MutableClock clock = new MutableClock(deadline);
+        AgentPlanner planner = mock(AgentPlanner.class);
+        AgentActionExecutor executor = mock(AgentActionExecutor.class);
+        AgentState state = state(2);
+        state.setDeadlineAt(deadline);
+
+        AgentState result = new AgentLoopRunner(
+                planner,
+                executor,
+                AgentEventSink.NOOP,
+                taskId -> true,
+                NO_RECOVERY,
+                clock
+        ).run(state);
+
+        assertAll(
+                () -> assertEquals(
+                        AgentStopReason.CANCELLED,
+                        result.getStopReason()
+                ),
+                () -> assertNull(result.getFailureType()),
+                () -> assertNull(result.getErrorMessage())
+        );
+        verifyNoInteractions(planner, executor);
+    }
+
+    private static final class MutableClock extends Clock {
+        private Instant current;
+
+        private MutableClock(Instant current) {
+            this.current = current;
+        }
+
+        private void advance(Duration duration) {
+            current = current.plus(duration);
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneOffset.UTC;
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public Instant instant() {
+            return current;
+        }
     }
 }

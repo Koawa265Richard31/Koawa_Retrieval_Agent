@@ -15,37 +15,12 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.agent.domain;
+package com.koawa.agent.agent.runner;
 
-public enum AgentStopReason {
+@FunctionalInterface
+public interface AgentCancellationChecker {
 
-    /**
-     * 已获得最终回答
-     */
-    FINAL_ANSWER,
+    AgentCancellationChecker NEVER_CANCELLED = taskId -> false;
 
-    /**
-     *超过最大步数，防止死循环
-     */
-    MAX_STEPS,
-
-    /**
-     * Agent turn exceeded its configured deadline.
-     */
-    TIMEOUT,
-
-    /**
-     * planner / executor 异常
-     */
-    ERROR,
-
-    /**
-     * 信息不足，需要用户补充
-     */
-    ASK_CLARIFICATION,
-
-    /**
-     * 用户主动取消本次任务
-     */
-    CANCELLED,
+    boolean isCancelled(String taskId);
 }

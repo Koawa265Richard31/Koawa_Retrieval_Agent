@@ -122,6 +122,12 @@ public class RAGChatServiceImpl implements RAGChatService {
             return;
         }
 
+        // Agent 失败本可回退旧 RAG，但用户取消拥有更高优先级，不能在取消后重新启动一条链路。
+        if (taskManager.isCancelled(taskId)) {
+            callback.onComplete();
+            return;
+        }
+
         StreamChatContext context = StreamChatContext.builder()
                 .question(question)
                 .conversationId(conversationId)

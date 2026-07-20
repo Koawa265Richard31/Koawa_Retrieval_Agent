@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -108,5 +109,61 @@ class AgentStreamChatAdapterTest {
 
         assertFalse(delivered);
         verifyNoInteractions(memoryService, callback);
+    }
+
+    @Test
+    void shouldRequestOldRagFallbackForTimeout() {
+        when(agentChatService.chat(
+                "question",
+                "conversation-1",
+                "task-1",
+                "user-1"
+        )).thenReturn(new AgentRunResult(
+                "conversation-1",
+                "task-1",
+                AgentStopReason.TIMEOUT,
+                null,
+                null
+        ));
+
+        boolean delivered = adapter.tryExecute(
+                "question",
+                "conversation-1",
+                "task-1",
+                "user-1",
+                callback
+        );
+
+        assertFalse(delivered);
+        verifyNoInteractions(memoryService, callback);
+    }
+
+    @Test
+    void shouldCompleteCancelledAgentWithoutFallingBackOrPersisting() {
+        when(agentChatService.chat(
+                "question",
+                "conversation-1",
+                "task-1",
+                "user-1"
+        )).thenReturn(new AgentRunResult(
+                "conversation-1",
+                "task-1",
+                AgentStopReason.CANCELLED,
+                null,
+                null
+        ));
+
+        boolean handled = adapter.tryExecute(
+                "question",
+                "conversation-1",
+                "task-1",
+                "user-1",
+                callback
+        );
+
+        assertTrue(handled);
+        verify(callback).onComplete();
+        verify(callback, never()).onContent(any());
+        verifyNoInteractions(memoryService);
     }
 }

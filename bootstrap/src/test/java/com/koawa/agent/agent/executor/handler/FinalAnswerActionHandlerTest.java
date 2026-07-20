@@ -22,10 +22,12 @@ import com.koawa.agent.agent.domain.AgentActionType;
 import com.koawa.agent.agent.domain.AgentObservation;
 import com.koawa.agent.agent.domain.AgentState;
 import com.koawa.agent.agent.domain.AgentStep;
+import com.koawa.agent.framework.convention.ChatMessage;
 import com.koawa.agent.framework.convention.ChatRequest;
 import com.koawa.agent.infra.chat.LLMService;
 import com.koawa.agent.rag.core.prompt.PromptTemplateLoader;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.List;
 import java.util.Map;
@@ -270,6 +272,65 @@ class FinalAnswerActionHandlerTest {
                 expectedSlots
         );
         verify(llmService).chat(any(ChatRequest.class));
+    }
+
+    @Test
+    void shouldPrependHistorySnapshotToFinalAnswerPrompt() {
+        LLMService llmService = mock(LLMService.class);
+        PromptTemplateLoader promptTemplateLoader =
+                mock(PromptTemplateLoader.class);
+        when(promptTemplateLoader.render(
+                eq("prompt/agent-final-answer.st"),
+                anyMap()
+        )).thenReturn("rendered final prompt");
+        when(llmService.chat(any(ChatRequest.class)))
+                .thenReturn("final answer");
+
+        AgentState state = AgentState.builder()
+                .originalQuestion("那它适合 IO 场景吗？")
+                .historySnapshot(List.of(
+                        ChatMessage.user("介绍一下 Java 虚拟线程"),
+                        ChatMessage.assistant("虚拟线程是轻量级线程")
+                ))
+                .build();
+        AgentAction action = AgentAction.builder()
+                .type(AgentActionType.FINAL_ANSWER)
+                .build();
+
+        new FinalAnswerActionHandler(
+                llmService,
+                promptTemplateLoader
+        ).execute(action, state);
+
+        ArgumentCaptor<ChatRequest> requestCaptor =
+                ArgumentCaptor.forClass(ChatRequest.class);
+        verify(llmService).chat(requestCaptor.capture());
+
+        List<ChatMessage> messages =
+                requestCaptor.getValue().getMessages();
+        assertAll(
+                () -> assertEquals(3, messages.size()),
+                () -> assertEquals(
+                        "介绍一下 Java 虚拟线程",
+                        messages.get(0).getContent()
+                ),
+                () -> assertEquals(
+                        ChatMessage.Role.ASSISTANT,
+                        messages.get(1).getRole()
+                ),
+                () -> assertEquals(
+                        "虚拟线程是轻量级线程",
+                        messages.get(1).getContent()
+                ),
+                () -> assertEquals(
+                        ChatMessage.Role.USER,
+                        messages.get(2).getRole()
+                ),
+                () -> assertEquals(
+                        "rendered final prompt",
+                        messages.get(2).getContent()
+                )
+        );
     }
 
 }

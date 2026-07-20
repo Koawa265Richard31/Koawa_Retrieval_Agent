@@ -18,7 +18,9 @@
 package com.koawa.agent.agent.planner;
 
 import com.koawa.agent.agent.domain.AgentAction;
+import com.koawa.agent.agent.domain.AgentFailureType;
 import com.koawa.agent.agent.domain.AgentState;
+import com.koawa.agent.agent.exception.AgentFailureException;
 import com.koawa.agent.agent.parser.AgentActionParser;
 import com.koawa.agent.framework.convention.ChatRequest;
 import com.koawa.agent.infra.chat.LLMService;
@@ -66,14 +68,32 @@ public class LlmAgentPlanner implements AgentPlanner {
 
         ChatRequest request = requestAssembler.assemble(state, tools);
 
-        String rawAction = llmService.chat(request);
+        String rawAction;
+        try {
+            rawAction = llmService.chat(request);
+        } catch (RuntimeException exception) {
+            throw new AgentFailureException(
+                    AgentFailureType.MODEL_CALL_FAILED,
+                    exception.getMessage(),
+                    exception
+            );
+        }
 
         if (rawAction == null || rawAction.isBlank()) {
-            throw new IllegalStateException(
+            throw new AgentFailureException(
+                    AgentFailureType.EMPTY_MODEL_RESPONSE,
                     "Agent planner LLM returned a blank action"
             );
         }
 
-        return actionParser.parse(rawAction);
+        try {
+            return actionParser.parse(rawAction);
+        } catch (IllegalArgumentException exception) {
+            throw new AgentFailureException(
+                    AgentFailureType.INVALID_ACTION_RESPONSE,
+                    exception.getMessage(),
+                    exception
+            );
+        }
     }
 }

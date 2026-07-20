@@ -19,10 +19,13 @@ package com.koawa.agent.agent.planner;
 
 import com.koawa.agent.agent.domain.AgentAction;
 import com.koawa.agent.agent.domain.AgentActionType;
+import com.koawa.agent.agent.domain.AgentFailureType;
 import com.koawa.agent.agent.domain.AgentObservation;
 import com.koawa.agent.agent.domain.AgentState;
 import com.koawa.agent.agent.domain.AgentStep;
+import com.koawa.agent.agent.exception.AgentFailureException;
 import com.koawa.agent.agent.parser.AgentActionParser;
+import com.koawa.agent.framework.convention.ChatMessage;
 import com.koawa.agent.framework.convention.ChatRequest;
 import com.koawa.agent.infra.chat.LLMService;
 import com.koawa.agent.rag.core.mcp.McpToolRegistry;
@@ -112,7 +115,11 @@ class LlmAgentPlannerTest {
                 () -> assertEquals("0", renderedSlots.get("current_step")),
                 () -> assertEquals("3", renderedSlots.get("max_steps")),
                 () -> assertEquals("无历史步骤", renderedSlots.get("steps")),
-                () -> assertEquals("无可用 MCP 工具", renderedSlots.get("tools"))
+                () -> assertEquals("无可用 MCP 工具", renderedSlots.get("tools")),
+                () -> assertEquals(
+                        "无规划恢复信息",
+                        renderedSlots.get("recovery_context")
+                )
         );
 
         ArgumentCaptor<ChatRequest> requestCaptor =
@@ -130,6 +137,30 @@ class LlmAgentPlannerTest {
                 () -> assertEquals(Boolean.FALSE, request.getThinking())
         );
         verify(actionParser).parse(rawAction);
+    }
+
+    @Test
+    void shouldIncludePlanningRecoveryContextInPrompt() {
+        AgentAction expectedAction = stubFinalAnswerResponse();
+        AgentState state = state("test question");
+        state.setPlanningRecoveryAttempts(1);
+        state.setFailureType(AgentFailureType.INVALID_ACTION_RESPONSE);
+
+        AgentAction result = planner.plan(state);
+
+        assertSame(expectedAction, result);
+        String recoveryContext = renderedSlots.get("recovery_context");
+        assertAll(
+                () -> assertTrue(recoveryContext.contains(
+                        "planningRetryAttempt: 1"
+                )),
+                () -> assertTrue(recoveryContext.contains(
+                        "failureType: INVALID_ACTION_RESPONSE"
+                )),
+                () -> assertTrue(recoveryContext.contains(
+                        "请修正 JSON 结构、Action 类型和 arguments"
+                ))
+        );
     }
 
     @Test
@@ -220,6 +251,52 @@ class LlmAgentPlannerTest {
     }
 
     @Test
+    void shouldPrependHistorySnapshotToPlannerPrompt() {
+        stubFinalAnswerResponse();
+        AgentState state = state("那它适合 IO 场景吗？");
+        state.setHistorySnapshot(List.of(
+                ChatMessage.user("介绍一下 Java 虚拟线程"),
+                ChatMessage.assistant("虚拟线程是轻量级线程")
+        ));
+
+        planner.plan(state);
+
+        ArgumentCaptor<ChatRequest> requestCaptor =
+                ArgumentCaptor.forClass(ChatRequest.class);
+        verify(llmService).chat(requestCaptor.capture());
+
+        List<ChatMessage> messages =
+                requestCaptor.getValue().getMessages();
+        assertAll(
+                () -> assertEquals(3, messages.size()),
+                () -> assertEquals(
+                        ChatMessage.Role.USER,
+                        messages.get(0).getRole()
+                ),
+                () -> assertEquals(
+                        "介绍一下 Java 虚拟线程",
+                        messages.get(0).getContent()
+                ),
+                () -> assertEquals(
+                        ChatMessage.Role.ASSISTANT,
+                        messages.get(1).getRole()
+                ),
+                () -> assertEquals(
+                        "虚拟线程是轻量级线程",
+                        messages.get(1).getContent()
+                ),
+                () -> assertEquals(
+                        ChatMessage.Role.USER,
+                        messages.get(2).getRole()
+                ),
+                () -> assertEquals(
+                        RENDERED_PROMPT,
+                        messages.get(2).getContent()
+                )
+        );
+    }
+
+    @Test
     void shouldRejectBlankOriginalQuestion() {
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
@@ -243,20 +320,27 @@ class LlmAgentPlannerTest {
         String rawAction = " ";
         when(llmService.chat(any(ChatRequest.class))).thenReturn(rawAction);
 
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
+        AgentFailureException exception = assertThrows(
+                AgentFailureException.class,
                 () -> planner.plan(state("测试问题"))
         );
 
-        assertEquals(
-                "Agent planner LLM returned a blank action",
-                exception.getMessage()
+        assertAll(
+                () -> assertEquals(
+                        AgentFailureType.EMPTY_MODEL_RESPONSE,
+                        exception.getFailureType()
+                ),
+                () -> assertEquals(
+                        "Agent planner LLM returned a blank action",
+                        exception.getMessage()
+                ),
+                () -> assertNull(exception.getCause())
         );
         verifyNoInteractions(actionParser);
     }
 
     @Test
-    void shouldPropagateParserFailure() {
+    void shouldClassifyParserFailure() {
         String rawAction = "not-json";
         IllegalArgumentException parserFailure =
                 new IllegalArgumentException("Agent action is invalid JSON");
@@ -264,12 +348,41 @@ class LlmAgentPlannerTest {
         when(llmService.chat(any(ChatRequest.class))).thenReturn(rawAction);
         when(actionParser.parse(rawAction)).thenThrow(parserFailure);
 
-        IllegalArgumentException result = assertThrows(
-                IllegalArgumentException.class,
+        AgentFailureException result = assertThrows(
+                AgentFailureException.class,
                 () -> planner.plan(state("测试问题"))
         );
 
-        assertSame(parserFailure, result);
+        assertAll(
+                () -> assertEquals(
+                        AgentFailureType.INVALID_ACTION_RESPONSE,
+                        result.getFailureType()
+                ),
+                () -> assertEquals(parserFailure.getMessage(), result.getMessage()),
+                () -> assertSame(parserFailure, result.getCause())
+        );
+    }
+
+    @Test
+    void shouldClassifyModelCallFailureAndPreserveCause() {
+        IllegalStateException modelFailure =
+                new IllegalStateException("model unavailable");
+        when(llmService.chat(any(ChatRequest.class))).thenThrow(modelFailure);
+
+        AgentFailureException result = assertThrows(
+                AgentFailureException.class,
+                () -> planner.plan(state("测试问题"))
+        );
+
+        assertAll(
+                () -> assertEquals(
+                        AgentFailureType.MODEL_CALL_FAILED,
+                        result.getFailureType()
+                ),
+                () -> assertEquals(modelFailure.getMessage(), result.getMessage()),
+                () -> assertSame(modelFailure, result.getCause())
+        );
+        verifyNoInteractions(actionParser);
     }
 
     private AgentState state(String question) {

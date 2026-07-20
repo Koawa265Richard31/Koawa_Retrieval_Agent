@@ -23,17 +23,39 @@ import com.koawa.agent.agent.domain.AgentRunResult;
 import com.koawa.agent.agent.domain.AgentState;
 import com.koawa.agent.agent.runner.AgentLoopRunner;
 import com.koawa.agent.agent.service.AgentChatService;
+import com.koawa.agent.agent.service.AgentConversationHistoryLoader;
+import com.koawa.agent.framework.convention.ChatMessage;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 public final class DefaultAgentChatService implements AgentChatService {
 
     private final AgentLoopRunner runner;
     private final AgentRuntimeProperties properties;
+    private final AgentConversationHistoryLoader historyLoader;
+    private final Clock clock;
 
     public DefaultAgentChatService(
             AgentLoopRunner runner,
-            AgentRuntimeProperties properties
+            AgentRuntimeProperties properties,
+            AgentConversationHistoryLoader historyLoader
+    ) {
+        this(
+                runner,
+                properties,
+                historyLoader,
+                Clock.systemUTC()
+        );
+    }
+
+    public DefaultAgentChatService(
+            AgentLoopRunner runner,
+            AgentRuntimeProperties properties,
+            AgentConversationHistoryLoader historyLoader,
+            Clock clock
     ) {
         this.runner = Objects.requireNonNull(
                 runner,
@@ -42,6 +64,14 @@ public final class DefaultAgentChatService implements AgentChatService {
         this.properties = Objects.requireNonNull(
                 properties,
                 "properties cannot be null"
+        );
+        this.historyLoader = Objects.requireNonNull(
+                historyLoader,
+                "historyLoader cannot be null"
+        );
+        this.clock = Objects.requireNonNull(
+                clock,
+                "clock cannot be null"
         );
     }
 
@@ -60,6 +90,17 @@ public final class DefaultAgentChatService implements AgentChatService {
 
         String actualConversationId = resolveId(conversationId);
         String actualTaskId = resolveId(taskId);
+        Instant deadlineAt = clock.instant().plus(
+                properties.getTurnTimeout()
+        );
+
+        List<ChatMessage> loadedHistory =
+                historyLoader.load(actualConversationId, userId);
+
+        List<ChatMessage> historySnapshot =
+                loadedHistory == null
+                        ? List.of()
+                        : List.copyOf(loadedHistory);
 
         AgentState initialState = AgentState.builder()
                 .conversationId(actualConversationId)
@@ -68,6 +109,8 @@ public final class DefaultAgentChatService implements AgentChatService {
                 .originalQuestion(question)
                 .currentStep(0)
                 .maxSteps(properties.getMaxSteps())
+                .deadlineAt(deadlineAt)
+                .historySnapshot(historySnapshot)
                 .build();
 
         AgentState completedState = Objects.requireNonNull(

@@ -15,37 +15,33 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.agent.domain;
+package com.koawa.agent.agent.recovery;
 
-public enum AgentStopReason {
+import com.koawa.agent.agent.domain.AgentFailureType;
 
-    /**
-     * 已获得最终回答
-     */
-    FINAL_ANSWER,
+import java.util.Objects;
 
-    /**
-     *超过最大步数，防止死循环
-     */
-    MAX_STEPS,
+public final class DefaultAgentRecoveryPolicy
+        implements AgentRecoveryPolicy {
 
-    /**
-     * Agent turn exceeded its configured deadline.
-     */
-    TIMEOUT,
+    @Override
+    public AgentRecoveryDecision decide(
+            AgentFailureType failureType
+    ) {
+        Objects.requireNonNull(
+                failureType,
+                "failureType cannot be null"
+        );
 
-    /**
-     * planner / executor 异常
-     */
-    ERROR,
+        return switch (failureType) {
+            case EMPTY_MODEL_RESPONSE,
+                 INVALID_ACTION_RESPONSE ->
+                    AgentRecoveryDecision.RETRY_PLANNING;
 
-    /**
-     * 信息不足，需要用户补充
-     */
-    ASK_CLARIFICATION,
-
-    /**
-     * 用户主动取消本次任务
-     */
-    CANCELLED,
+            case UNEXPECTED,
+                 MODEL_CALL_FAILED,
+                 ACTION_EXECUTION_FAILED ->
+                    AgentRecoveryDecision.STOP;
+        };
+    }
 }

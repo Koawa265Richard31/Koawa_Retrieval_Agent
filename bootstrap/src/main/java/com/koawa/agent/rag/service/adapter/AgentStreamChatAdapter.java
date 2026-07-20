@@ -66,6 +66,11 @@ public final class AgentStreamChatAdapter {
             return false;
         }
 
+        if (result.stopReason() == AgentStopReason.CANCELLED) {
+            callback.onComplete();
+            return true;
+        }
+
         if (!isDeliverable(result)) {
             log.warn(
                     "Agent 未产生可交付结果，回退旧 RAG，"

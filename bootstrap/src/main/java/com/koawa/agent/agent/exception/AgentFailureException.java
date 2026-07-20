@@ -15,37 +15,36 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.agent.domain;
+package com.koawa.agent.agent.exception;
 
-public enum AgentStopReason {
+import com.koawa.agent.agent.domain.AgentFailureType;
 
-    /**
-     * 已获得最终回答
-     */
-    FINAL_ANSWER,
+import java.util.Objects;
 
-    /**
-     *超过最大步数，防止死循环
-     */
-    MAX_STEPS,
+public final class AgentFailureException extends RuntimeException {
 
-    /**
-     * Agent turn exceeded its configured deadline.
-     */
-    TIMEOUT,
+    private final AgentFailureType failureType;
 
-    /**
-     * planner / executor 异常
-     */
-    ERROR,
+    public AgentFailureException(
+            AgentFailureType failureType,
+            String message
+    ) {
+        this(failureType, message, null);
+    }
 
-    /**
-     * 信息不足，需要用户补充
-     */
-    ASK_CLARIFICATION,
+    public AgentFailureException(
+            AgentFailureType failureType,
+            String message,
+            Throwable cause
+    ) {
+        super(message, cause);
+        this.failureType = Objects.requireNonNull(
+                failureType,
+                "failureType cannot be null"
+        );
+    }
 
-    /**
-     * 用户主动取消本次任务
-     */
-    CANCELLED,
+    public AgentFailureType getFailureType() {
+        return failureType;
+    }
 }

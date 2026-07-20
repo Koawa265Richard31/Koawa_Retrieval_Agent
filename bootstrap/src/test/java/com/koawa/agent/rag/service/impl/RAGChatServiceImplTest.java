@@ -43,6 +43,7 @@ import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -164,6 +165,55 @@ class RAGChatServiceImplTest {
                 taskId,
                 "user-1"
         );
+        verifyNoInteractions(chatPipeline);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void shouldNotFallBackToOldRagWhenAgentFailsAfterCancellation() {
+        SseEmitter emitter = new SseEmitter();
+        when(callbackFactory.createChatEventHandler(
+                eq(emitter),
+                eq("conversation-1"),
+                any(String.class)
+        )).thenReturn(callback);
+        doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(3)).run();
+            return null;
+        }).when(chatQueueLimiter).enqueue(
+                eq("question"),
+                eq("conversation-1"),
+                eq(emitter),
+                any(Runnable.class)
+        );
+        doAnswer(invocation -> {
+            Consumer<StreamCallback> businessLogic =
+                    invocation.getArgument(4);
+            businessLogic.accept(callback);
+            return null;
+        }).when(traceRunner).run(
+                eq("question"),
+                eq("conversation-1"),
+                any(String.class),
+                eq(callback),
+                any(Consumer.class)
+        );
+        when(agentChatService.chat(
+                eq("question"),
+                eq("conversation-1"),
+                anyString(),
+                eq("user-1")
+        )).thenThrow(new IllegalStateException("planner failed"));
+        when(taskManager.isCancelled(anyString())).thenReturn(true);
+
+        service.streamChat(
+                "question",
+                "conversation-1",
+                false,
+                emitter
+        );
+
+        verify(callback).onComplete();
         verifyNoInteractions(chatPipeline);
     }
 

@@ -31,9 +31,13 @@ import com.koawa.agent.agent.parser.AgentActionParser;
 import com.koawa.agent.agent.planner.AgentPlanner;
 import com.koawa.agent.agent.planner.AgentRequestAssembler;
 import com.koawa.agent.agent.planner.LlmAgentPlanner;
+import com.koawa.agent.agent.recovery.AgentRecoveryPolicy;
+import com.koawa.agent.agent.recovery.DefaultAgentRecoveryPolicy;
 import com.koawa.agent.agent.routing.AgentRouteDecider;
+import com.koawa.agent.agent.runner.AgentCancellationChecker;
 import com.koawa.agent.agent.runner.AgentLoopRunner;
 import com.koawa.agent.agent.service.AgentChatService;
+import com.koawa.agent.agent.service.AgentConversationHistoryLoader;
 import com.koawa.agent.agent.service.impl.DefaultAgentChatService;
 import com.koawa.agent.infra.chat.LLMService;
 import com.koawa.agent.rag.config.SearchChannelProperties;
@@ -45,11 +49,17 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Clock;
 import java.util.List;
 
 @Configuration
 @EnableConfigurationProperties(AgentRuntimeProperties.class)
 public class AgentConfiguration {
+    @Bean
+    public Clock agentClock() {
+        return Clock.systemUTC();
+    }
+
     @Bean
     public RetrieveKbActionHandler retrieveKbActionHandler(
             IntentResolver intentResolver,
@@ -122,11 +132,6 @@ public class AgentConfiguration {
     }
 
     @Bean
-    public AgentEventSink agentEventSink() {
-        return AgentEventSink.NOOP;
-    }
-
-    @Bean
     public AgentActionExecutor agentActionExecutor(
             List<AgentActionHandler> handlers
     ) {
@@ -134,20 +139,47 @@ public class AgentConfiguration {
     }
 
     @Bean
+    public AgentEventSink agentEventSink() {
+        return AgentEventSink.NOOP;
+    }
+
+    @Bean
+    public AgentRecoveryPolicy agentRecoveryPolicy() {
+        return new DefaultAgentRecoveryPolicy();
+    }
+
+    @Bean
     public AgentLoopRunner agentLoopRunner(
             AgentPlanner planner,
             AgentActionExecutor executor,
-            AgentEventSink eventSink
+            AgentEventSink eventSink,
+            AgentCancellationChecker cancellationChecker,
+            AgentRecoveryPolicy recoveryPolicy,
+            Clock clock
     ) {
-        return new AgentLoopRunner(planner, executor, eventSink);
+        return new AgentLoopRunner(
+                planner,
+                executor,
+                eventSink,
+                cancellationChecker,
+                recoveryPolicy,
+                clock
+        );
     }
 
     @Bean
     public AgentChatService agentChatService(
             AgentLoopRunner runner,
-            AgentRuntimeProperties properties
+            AgentRuntimeProperties properties,
+            AgentConversationHistoryLoader historyLoader,
+            Clock clock
     ) {
-        return new DefaultAgentChatService(runner, properties);
+        return new DefaultAgentChatService(
+                runner,
+                properties,
+                historyLoader,
+                clock
+        );
     }
 
     @Bean

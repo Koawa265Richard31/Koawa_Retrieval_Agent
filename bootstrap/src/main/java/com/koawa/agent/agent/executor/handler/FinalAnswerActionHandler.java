@@ -24,6 +24,7 @@ import com.koawa.agent.framework.convention.ChatRequest;
 import com.koawa.agent.infra.chat.LLMService;
 import com.koawa.agent.rag.core.prompt.PromptTemplateLoader;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,9 +77,7 @@ public class FinalAnswerActionHandler implements AgentActionHandler {
         String prompt = promptTemplateLoader.render("prompt/agent-final-answer.st", slots);
 
         ChatRequest request = ChatRequest.builder()
-                .messages(List.of(
-                        ChatMessage.user(prompt)
-                ))
+                .messages(buildMessages(state, prompt))
                 .build();
 
         String answer = llmService.chat(request);
@@ -139,5 +138,19 @@ public class FinalAnswerActionHandler implements AgentActionHandler {
         return value == null || value.isBlank()
                 ? "无"
                 : value.trim();
+    }
+
+    private List<ChatMessage> buildMessages(
+            AgentState state,
+            String prompt
+    ) {
+        List<ChatMessage> messages = new ArrayList<>();
+
+        if (state.getHistorySnapshot() != null) {
+            messages.addAll(state.getHistorySnapshot());
+        }
+
+        messages.add(ChatMessage.user(prompt));
+        return List.copyOf(messages);
     }
 }

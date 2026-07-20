@@ -32,9 +32,13 @@ import com.koawa.agent.agent.parser.AgentActionParser;
 import com.koawa.agent.agent.planner.AgentPlanner;
 import com.koawa.agent.agent.planner.AgentRequestAssembler;
 import com.koawa.agent.agent.planner.LlmAgentPlanner;
+import com.koawa.agent.agent.recovery.AgentRecoveryPolicy;
+import com.koawa.agent.agent.recovery.DefaultAgentRecoveryPolicy;
 import com.koawa.agent.agent.routing.AgentRouteDecider;
+import com.koawa.agent.agent.runner.AgentCancellationChecker;
 import com.koawa.agent.agent.runner.AgentLoopRunner;
 import com.koawa.agent.agent.service.AgentChatService;
+import com.koawa.agent.agent.service.AgentConversationHistoryLoader;
 import com.koawa.agent.agent.service.impl.DefaultAgentChatService;
 import com.koawa.agent.infra.chat.LLMService;
 import com.koawa.agent.rag.config.SearchChannelProperties;
@@ -44,6 +48,9 @@ import com.koawa.agent.rag.core.prompt.PromptTemplateLoader;
 import com.koawa.agent.rag.core.retrieve.RetrievalEngine;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+
+import java.time.Clock;
+import java.time.Duration;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.Mockito.mock;
@@ -79,6 +86,14 @@ public class AgentConfigurationTest {
                     .withBean(
                             AgentActionParser.class,
                             () -> mock(AgentActionParser.class)
+                    )
+                    .withBean(
+                            AgentCancellationChecker.class,
+                            () -> AgentCancellationChecker.NEVER_CANCELLED
+                    )
+                    .withBean(
+                            AgentConversationHistoryLoader.class,
+                            () -> AgentConversationHistoryLoader.EMPTY
                     );
 
     @Test
@@ -95,6 +110,10 @@ public class AgentConfigurationTest {
                     .hasSingleBean(AgentEventSink.class)
                     .hasSingleBean(AgentRequestAssembler.class)
                     .hasSingleBean(AgentPlanner.class)
+                    .hasSingleBean(AgentRecoveryPolicy.class)
+                    .hasSingleBean(AgentCancellationChecker.class)
+                    .hasSingleBean(AgentConversationHistoryLoader.class)
+                    .hasSingleBean(Clock.class)
                     .hasSingleBean(AgentLoopRunner.class)
                     .hasSingleBean(AgentChatService.class)
                     .hasSingleBean(AgentRouteDecider.class);
@@ -103,6 +122,8 @@ public class AgentConfigurationTest {
                     .isInstanceOf(RoutingAgentActionExecutor.class);
             assertThat(context.getBean(AgentPlanner.class))
                     .isInstanceOf(LlmAgentPlanner.class);
+            assertThat(context.getBean(AgentRecoveryPolicy.class))
+                    .isInstanceOf(DefaultAgentRecoveryPolicy.class);
             assertThat(context.getBean(AgentExecutionPolicy.class))
                     .isInstanceOf(AllowListAgentExecutionPolicy.class);
             assertThat(context.getBean(AgentChatService.class))
@@ -113,6 +134,8 @@ public class AgentConfigurationTest {
             assertThat(properties.isEnabled()).isFalse();
             assertThat(properties.getRolloutPercentage()).isZero();
             assertThat(properties.getMaxSteps()).isEqualTo(8);
+            assertThat(properties.getTurnTimeout())
+                    .isEqualTo(Duration.ofSeconds(120));
             assertThat(properties.getAllowedToolIds()).isEmpty();
 
             assertThat(
@@ -130,6 +153,7 @@ public class AgentConfigurationTest {
                         "agent.runtime.enabled=true",
                         "agent.runtime.rollout-percentage=25",
                         "agent.runtime.max-steps=5",
+                        "agent.runtime.turn-timeout=2s",
                         "agent.runtime.allowed-tool-ids="
                                 + "sales_query,weather_query"
                 )
@@ -141,6 +165,8 @@ public class AgentConfigurationTest {
                     assertThat(properties.getRolloutPercentage())
                             .isEqualTo(25);
                     assertThat(properties.getMaxSteps()).isEqualTo(5);
+                    assertThat(properties.getTurnTimeout())
+                            .isEqualTo(Duration.ofSeconds(2));
                     assertThat(properties.getAllowedToolIds())
                             .containsExactlyInAnyOrder(
                                     "sales_query",
@@ -153,6 +179,13 @@ public class AgentConfigurationTest {
     void shouldRejectNonPositiveMaxSteps() {
         contextRunner
                 .withPropertyValues("agent.runtime.max-steps=0")
+                .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    void shouldRejectNonPositiveTurnTimeout() {
+        contextRunner
+                .withPropertyValues("agent.runtime.turn-timeout=0ms")
                 .run(context -> assertThat(context).hasFailed());
     }
 

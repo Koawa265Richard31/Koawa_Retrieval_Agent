@@ -28,6 +28,7 @@ import com.koawa.agent.rag.core.prompt.PromptTemplateLoader;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -65,7 +66,8 @@ public class AgentRequestAssembler {
                 "current_step", String.valueOf(state.getCurrentStep()),
                 "max_steps", String.valueOf(state.getMaxSteps()),
                 "steps", formatSteps(state),
-                "tools", formatTools(tools)
+                "tools", formatTools(tools),
+                "recovery_context", formatRecoveryContext(state)
         );
 
         String prompt = promptTemplateLoader.render(
@@ -74,10 +76,35 @@ public class AgentRequestAssembler {
         );
 
         return ChatRequest.builder()
-                .messages(List.of(ChatMessage.user(prompt)))
+                .messages(buildMessages(state, prompt))
                 .temperature(0.1D)
                 .thinking(false)
                 .build();
+    }
+
+    private String formatRecoveryContext(AgentState state) {
+        if (state.getPlanningRecoveryAttempts() <= 0
+                || state.getFailureType() == null) {
+            return "无规划恢复信息";
+        }
+
+        String correction = switch (state.getFailureType()) {
+            case EMPTY_MODEL_RESPONSE ->
+                    "上一次模型响应为空，请仅返回符合协议的 JSON Action";
+
+            case INVALID_ACTION_RESPONSE ->
+                    "上一次响应无法解析为合法 Action，"
+                            + "请修正 JSON 结构、Action 类型和 arguments";
+
+            default -> "无规划恢复信息";
+        };
+
+        return "planningRetryAttempt: "
+                + state.getPlanningRecoveryAttempts()
+                + "\nfailureType: "
+                + state.getFailureType()
+                + "\ncorrection: "
+                + correction;
     }
 
     private String formatSteps(AgentState state) {
@@ -180,5 +207,19 @@ public class AgentRequestAssembler {
         return value == null || value.isBlank()
                 ? "无"
                 : value.trim();
+    }
+
+    private List<ChatMessage> buildMessages(
+            AgentState state,
+            String prompt
+    ) {
+        List<ChatMessage> messages = new ArrayList<>();
+
+        if (state.getHistorySnapshot() != null) {
+            messages.addAll(state.getHistorySnapshot());
+        }
+
+        messages.add(ChatMessage.user(prompt));
+        return List.copyOf(messages);
     }
 }
