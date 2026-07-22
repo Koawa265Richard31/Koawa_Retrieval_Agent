@@ -19,6 +19,7 @@ package com.koawa.agent.agent.config;
 
 import com.koawa.agent.agent.domain.AgentActionType;
 import com.koawa.agent.agent.event.AgentEventSink;
+import com.koawa.agent.agent.event.LoggingAgentEventSink;
 import com.koawa.agent.agent.executor.AgentActionExecutor;
 import com.koawa.agent.agent.executor.AgentActionHandler;
 import com.koawa.agent.agent.executor.RoutingAgentActionExecutor;
@@ -126,6 +127,8 @@ public class AgentConfigurationTest {
                     .isInstanceOf(DefaultAgentRecoveryPolicy.class);
             assertThat(context.getBean(AgentExecutionPolicy.class))
                     .isInstanceOf(AllowListAgentExecutionPolicy.class);
+            assertThat(context.getBean(AgentEventSink.class))
+                    .isInstanceOf(LoggingAgentEventSink.class);
             assertThat(context.getBean(AgentChatService.class))
                     .isInstanceOf(DefaultAgentChatService.class);
 

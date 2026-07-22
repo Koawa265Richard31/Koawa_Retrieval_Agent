@@ -37,6 +37,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -90,6 +91,9 @@ class DefaultAgentChatServiceTest {
         assertEquals("conversation-1", result.conversationId());
         assertEquals("task-1", result.taskId());
         assertEquals(AgentStopReason.FINAL_ANSWER, result.stopReason());
+        assertEquals(0, result.stepCount());
+        assertEquals(0, result.planningRecoveryAttempts());
+        assertNull(result.failureType());
         assertEquals("answer", result.content());
     }
 

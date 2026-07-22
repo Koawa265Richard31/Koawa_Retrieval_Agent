@@ -47,19 +47,49 @@ public class McpClientToolExecutor implements McpToolExecutor {
     @Override
     public CallToolResult execute(Map<String, Object> parameters) {
         long startMs = System.currentTimeMillis();
+
         try {
-            Map<String, Object> args = parameters != null ? parameters : Map.of();
-            CallToolResult result = mcpClient.callTool(new CallToolRequest(toolDefinition.name(), args));
-            log.info("MCP 远程工具调用完成, toolId={}, params={}, contentSize={}, elapsed={}ms",
-                    toolDefinition.name(), args,
-                    result.content() != null ? result.content().size() : 0,
-                    System.currentTimeMillis() - startMs);
+            Map<String, Object> args = parameters != null
+                    ? parameters
+                    : Map.of();
+
+            CallToolResult result = mcpClient
+                    .callTool(
+                            new CallToolRequest(toolDefinition.name(), args)
+                    );
+
+            log.info(
+                    "MCP 远程工具调用完成, "
+                            + "toolId={}, parameterCount={}, "
+                            + "contentSize={}, elapsedMs={}",
+                    toolDefinition.name(),
+                    args.size(),
+                    result.content() != null
+                            ? result.content().size()
+                            : 0,
+                    System.currentTimeMillis() - startMs
+            );
+
             return result;
         } catch (Exception e) {
-            String reason = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-            log.warn("MCP 远程工具调用异常, toolId={}, params={}, elapsed={}ms, reason={}",
-                    toolDefinition.name(), parameters,
-                    System.currentTimeMillis() - startMs, reason);
+            String reason = e.getMessage() != null
+                    ? e.getMessage()
+                    : e.getClass().getSimpleName();
+
+            int parameterCount = parameters == null
+                    ? 0
+                    : parameters.size();
+
+            log.warn(
+                    "MCP 远程工具调用异常, "
+                            + "toolId={}, parameterCount={}, "
+                            + "elapsedMs={}, errorType={}",
+                    toolDefinition.name(),
+                    parameterCount,
+                    System.currentTimeMillis() - startMs,
+                    e.getClass().getSimpleName()
+            );
+
             return CallToolResult.builder()
                     .content(List.of(new TextContent("远程调用失败: " + reason)))
                     .isError(true)

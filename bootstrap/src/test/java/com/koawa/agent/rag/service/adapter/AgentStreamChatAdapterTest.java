@@ -24,6 +24,9 @@ import com.koawa.agent.framework.convention.ChatMessage;
 import com.koawa.agent.infra.chat.StreamCallback;
 import com.koawa.agent.rag.core.memory.ConversationMemoryService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,6 +38,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(OutputCaptureExtension.class)
 class AgentStreamChatAdapterTest {
 
     private final AgentChatService agentChatService =
@@ -46,7 +50,7 @@ class AgentStreamChatAdapterTest {
             new AgentStreamChatAdapter(agentChatService, memoryService);
 
     @Test
-    void shouldDeliverAgentResultWithSameTaskId() {
+    void shouldDeliverAgentResultWithSameTaskId(CapturedOutput output) {
         when(agentChatService.chat(
                 "question",
                 "conversation-1",
@@ -56,7 +60,10 @@ class AgentStreamChatAdapterTest {
                 "conversation-1",
                 "task-1",
                 AgentStopReason.FINAL_ANSWER,
-                "answer",
+                1,
+                0,
+                null,
+                "sensitive-content",
                 null
         ));
 
@@ -80,8 +87,18 @@ class AgentStreamChatAdapterTest {
                 eq("user-1"),
                 any(ChatMessage.class)
         );
-        verify(callback).onContent("answer");
+        verify(callback).onContent("sensitive-content");
         verify(callback).onComplete();
+
+        String logs = output.getOut();
+        assertTrue(logs.contains("agent_run_summary"));
+        assertTrue(logs.contains("outcome=DELIVERED"));
+        assertTrue(logs.contains("stopReason=FINAL_ANSWER"));
+        assertTrue(logs.contains("stepCount=1"));
+        assertTrue(logs.contains("planningRecoveryAttempts=0"));
+        assertTrue(logs.contains("fallbackRequested=false"));
+        assertTrue(logs.contains("hasContent=true"));
+        assertFalse(logs.contains("sensitive-content"));
     }
 
     @Test
@@ -95,6 +112,9 @@ class AgentStreamChatAdapterTest {
                 "conversation-1",
                 "task-1",
                 AgentStopReason.MAX_STEPS,
+                5,
+                0,
+                null,
                 null,
                 null
         ));
@@ -112,7 +132,7 @@ class AgentStreamChatAdapterTest {
     }
 
     @Test
-    void shouldRequestOldRagFallbackForTimeout() {
+    void shouldRequestOldRagFallbackForTimeout(CapturedOutput output) {
         when(agentChatService.chat(
                 "question",
                 "conversation-1",
@@ -122,8 +142,11 @@ class AgentStreamChatAdapterTest {
                 "conversation-1",
                 "task-1",
                 AgentStopReason.TIMEOUT,
+                2,
+                0,
                 null,
-                null
+                null,
+                "sensitive-error"
         ));
 
         boolean delivered = adapter.tryExecute(
@@ -136,6 +159,15 @@ class AgentStreamChatAdapterTest {
 
         assertFalse(delivered);
         verifyNoInteractions(memoryService, callback);
+
+        String logs = output.getOut();
+        assertTrue(logs.contains("agent_run_summary"));
+        assertTrue(logs.contains("outcome=FALLBACK_REQUESTED"));
+        assertTrue(logs.contains("stopReason=TIMEOUT"));
+        assertTrue(logs.contains("stepCount=2"));
+        assertTrue(logs.contains("fallbackRequested=true"));
+        assertTrue(logs.contains("hasError=true"));
+        assertFalse(logs.contains("sensitive-error"));
     }
 
     @Test
@@ -149,6 +181,9 @@ class AgentStreamChatAdapterTest {
                 "conversation-1",
                 "task-1",
                 AgentStopReason.CANCELLED,
+                0,
+                0,
+                null,
                 null,
                 null
         ));

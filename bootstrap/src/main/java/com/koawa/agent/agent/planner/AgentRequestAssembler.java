@@ -79,6 +79,7 @@ public class AgentRequestAssembler {
                 .messages(buildMessages(state, prompt))
                 .temperature(0.1D)
                 .thinking(false)
+                .deadlineAt(state.getDeadlineAt())
                 .build();
     }
 

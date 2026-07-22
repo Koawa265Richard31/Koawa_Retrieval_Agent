@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -44,8 +45,8 @@ public final class AgentStreamChatAdapter {
             String userId,
             StreamCallback callback
     ) {
+        long startedAtNanos = System.nanoTime();
         AgentRunResult result;
-
         try {
             result = Objects.requireNonNull(
                     agentChatService.chat(
@@ -63,11 +64,19 @@ public final class AgentStreamChatAdapter {
                     taskId,
                     exception
             );
+            logRunSummary(
+                    conversationId, taskId, null,
+                    "EXCEPTION", true, true, startedAtNanos
+            );
             return false;
         }
 
         if (result.stopReason() == AgentStopReason.CANCELLED) {
             callback.onComplete();
+            logRunSummary(
+                    conversationId, taskId, result,
+                    "CANCELLED", false, false, startedAtNanos
+            );
             return true;
         }
 
@@ -78,6 +87,10 @@ public final class AgentStreamChatAdapter {
                     conversationId,
                     taskId,
                     result.stopReason()
+            );
+            logRunSummary(
+                    conversationId, taskId, result,
+                    "FALLBACK_REQUESTED", true, false, startedAtNanos
             );
             return false;
         }
@@ -90,6 +103,10 @@ public final class AgentStreamChatAdapter {
 
         callback.onContent(result.content());
         callback.onComplete();
+        logRunSummary(
+                conversationId, taskId, result,
+                "DELIVERED", false, false, startedAtNanos
+        );
         return true;
     }
 
@@ -124,5 +141,49 @@ public final class AgentStreamChatAdapter {
         return completed
                 && result.content() != null
                 && !result.content().isBlank();
+    }
+
+    private void logRunSummary(
+            String conversationId,
+            String taskId,
+            AgentRunResult result,
+            String outcome,
+            boolean fallbackRequested,
+            boolean exceptionOccurred,
+            long startedAtNanos
+    ) {
+        long elapsedMs = TimeUnit.NANOSECONDS.toMillis(
+                System.nanoTime() - startedAtNanos
+        );
+
+        boolean hasContent = result != null
+                && result.content() != null
+                && !result.content().isBlank();
+
+        boolean hasError = exceptionOccurred
+                || result != null
+                && result.errorMessage() != null
+                && !result.errorMessage().isBlank();
+
+        log.info(
+                "agent_run_summary conversationId={}, taskId={}, outcome={}, "
+                        + "stopReason={}, stepCount={}, "
+                        + "planningRecoveryAttempts={}, failureType={}, "
+                        + "elapsedMs={}, fallbackRequested={}, "
+                        + "hasContent={}, hasError={}",
+                conversationId,
+                taskId,
+                outcome,
+                result == null ? null : result.stopReason(),
+                result == null ? null : result.stepCount(),
+                result == null
+                        ? null
+                        : result.planningRecoveryAttempts(),
+                result == null ? null : result.failureType(),
+                elapsedMs,
+                fallbackRequested,
+                hasContent,
+                hasError
+        );
     }
 }

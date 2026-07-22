@@ -131,6 +131,9 @@ class RAGChatServiceImplTest {
                 "conversation-1",
                 invocation.getArgument(2),
                 AgentStopReason.FINAL_ANSWER,
+                1,
+                0,
+                null,
                 "answer",
                 null
         ));

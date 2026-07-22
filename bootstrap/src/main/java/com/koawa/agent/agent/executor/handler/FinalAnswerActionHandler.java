@@ -78,6 +78,7 @@ public class FinalAnswerActionHandler implements AgentActionHandler {
 
         ChatRequest request = ChatRequest.builder()
                 .messages(buildMessages(state, prompt))
+                .deadlineAt(state.getDeadlineAt())
                 .build();
 
         String answer = llmService.chat(request);

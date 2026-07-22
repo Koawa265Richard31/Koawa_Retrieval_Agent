@@ -23,6 +23,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Builder.Default;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -121,4 +122,12 @@ public class ChatRequest {
      * </p>
      */
     private Boolean enableTools;
+
+    /**
+     * 本次调用允许执行到的绝对截止时间。
+     *
+     * <p>为 null 时使用底层客户端的默认超时；
+     * 非 null 时，客户端应根据当前时间计算剩余预算。</p>
+     */
+    private Instant deadlineAt;
 }

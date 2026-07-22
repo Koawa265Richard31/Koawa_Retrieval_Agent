@@ -29,6 +29,7 @@ import com.koawa.agent.rag.core.prompt.PromptTemplateLoader;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -59,9 +60,11 @@ class FinalAnswerActionHandlerTest {
                 .observation(observation)
                 .build();
 
+        Instant deadlineAt = Instant.parse("2026-07-20T12:00:00Z");
         AgentState state = AgentState.builder()
                 .originalQuestion("原始问题")
                 .steps(List.of(step))
+                .deadlineAt(deadlineAt)
                 .build();
 
         String expectedObservations = """
@@ -102,7 +105,13 @@ class FinalAnswerActionHandlerTest {
                 expectedSlots
         );
 
-        verify(llmService).chat(any(ChatRequest.class));
+        ArgumentCaptor<ChatRequest> requestCaptor =
+                ArgumentCaptor.forClass(ChatRequest.class);
+        verify(llmService).chat(requestCaptor.capture());
+        assertEquals(
+                deadlineAt,
+                requestCaptor.getValue().getDeadlineAt()
+        );
     }
 
     @Test

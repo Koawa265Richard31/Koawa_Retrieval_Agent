@@ -20,6 +20,8 @@ package com.koawa.agent.infra.model;
 import com.koawa.agent.framework.errorcode.BaseErrorCode;
 import com.koawa.agent.framework.exception.RemoteException;
 import com.koawa.agent.infra.enums.ModelCapability;
+import com.koawa.agent.infra.http.ModelClientErrorType;
+import com.koawa.agent.infra.http.ModelClientException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -64,6 +66,11 @@ public class ModelRoutingExecutor {
                 healthStore.markSuccess(target.id());
                 return response;
             } catch (Exception e) {
+                if (e instanceof ModelClientException modelException
+                        && modelException.getErrorType()
+                        == ModelClientErrorType.DEADLINE_EXCEEDED) {
+                    throw modelException;
+                }
                 last = e;
                 healthStore.markFailure(target.id());
                 log.warn("{} model failed, fallback to next. modelId={}, provider={}", label, target.id(), target.candidate().getProvider(), e);

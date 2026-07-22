@@ -17,9 +17,13 @@
 
 package com.koawa.agent.rag.core.mcp;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,8 +31,16 @@ import java.util.List;
  * MCP 客户端配置属性
  */
 @Data
+@Validated
 @ConfigurationProperties(prefix = "rag.mcp")
 public class McpClientProperties {
+
+    /**
+     * 单次 MCP 同步请求的最长等待时间。
+     */
+    @NotNull
+    @DurationMin(millis = 1)
+    private Duration requestTimeout = Duration.ofSeconds(30);
 
     /**
      * MCP Server 列表

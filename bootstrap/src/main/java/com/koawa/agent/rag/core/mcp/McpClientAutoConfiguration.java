@@ -73,6 +73,7 @@ public class McpClientAutoConfiguration {
                     HttpClientStreamableHttpTransport.builder(mcpUrl).build();
 
             McpSyncClient client = McpClient.sync(transport)
+                    .requestTimeout(properties.getRequestTimeout())
                     .clientInfo(new Implementation("koawa-agent-bootstrap", "1.0.0"))
                     .build();
             client.initialize();

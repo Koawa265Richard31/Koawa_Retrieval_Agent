@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -103,7 +104,11 @@ class LlmAgentPlannerTest {
 
         stubPlannerResponse(rawAction, expectedAction);
 
-        AgentAction result = planner.plan(state(" 如何申请退款？ "));
+        Instant deadlineAt = Instant.parse("2026-07-20T12:00:00Z");
+        AgentState state = state(" 如何申请退款？ ");
+        state.setDeadlineAt(deadlineAt);
+
+        AgentAction result = planner.plan(state);
 
         assertSame(expectedAction, result);
         assertNotNull(renderedSlots);
@@ -134,7 +139,8 @@ class LlmAgentPlannerTest {
                         request.getMessages().get(0).getContent()
                 ),
                 () -> assertEquals(0.1D, request.getTemperature()),
-                () -> assertEquals(Boolean.FALSE, request.getThinking())
+                () -> assertEquals(Boolean.FALSE, request.getThinking()),
+                () -> assertEquals(deadlineAt, request.getDeadlineAt())
         );
         verify(actionParser).parse(rawAction);
     }

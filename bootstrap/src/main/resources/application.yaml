@@ -91,6 +91,7 @@ rag:
       min-interval-seconds: 60
 
   mcp:
+    request-timeout: 30s
     servers:
       - name: default
         url: http://localhost:9099

@@ -51,6 +51,11 @@ public enum ModelClientErrorType {
     NETWORK_ERROR,
 
     /**
+     * 调用截止时间已耗尽 - 请求不应继续发送或切换备用模型
+     */
+    DEADLINE_EXCEEDED,
+
+    /**
      * 无效响应 - 模型返回的响应格式不正确
      */
     INVALID_RESPONSE,

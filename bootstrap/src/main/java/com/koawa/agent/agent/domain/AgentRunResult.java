@@ -23,6 +23,9 @@ public record AgentRunResult(
         String conversationId,
         String taskId,
         AgentStopReason stopReason,
+        int stepCount,
+        int planningRecoveryAttempts,
+        AgentFailureType failureType,
         String content,
         String errorMessage
 ) {
@@ -41,6 +44,9 @@ public record AgentRunResult(
                 state.getConversationId(),
                 state.getTaskId(),
                 state.getStopReason(),
+                state.getSteps().size(),
+                state.getPlanningRecoveryAttempts(),
+                state.getFailureType(),
                 state.getFinalAnswer(),
                 state.getErrorMessage()
         );

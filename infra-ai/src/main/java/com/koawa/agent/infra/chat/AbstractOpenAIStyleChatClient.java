@@ -44,6 +44,8 @@ import okio.BufferedSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -53,6 +55,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Slf4j
 public abstract class AbstractOpenAIStyleChatClient implements ChatClient {
+
+    private static final Duration MIN_CALL_TIMEOUT =
+            Duration.ofMillis(1);
 
     @Autowired
     private OkHttpClient syncHttpClient;
@@ -105,7 +110,8 @@ public abstract class AbstractOpenAIStyleChatClient implements ChatClient {
                 .build();
 
         JsonObject respJson;
-        try (Response response = syncHttpClient.newCall(requestHttp).execute()) {
+        OkHttpClient callClient = resolveSyncHttpClient(request);
+        try (Response response = callClient.newCall(requestHttp).execute()) {
             if (!response.isSuccessful()) {
                 String body = HttpResponseHelper.readBody(response.body());
                 log.warn("{} 同步请求失败: status={}, body={}", provider(), response.code(), body);
@@ -117,12 +123,76 @@ public abstract class AbstractOpenAIStyleChatClient implements ChatClient {
             }
             respJson = HttpResponseHelper.parseJson(response.body(), provider());
         } catch (IOException e) {
+            if (deadlineExceeded(request, Instant.now())) {
+                throw new ModelClientException(
+                        provider() + " 同步请求超过调用期限",
+                        ModelClientErrorType.DEADLINE_EXCEEDED,
+                        null,
+                        e
+                );
+            }
             throw new ModelClientException(
                     provider() + " 同步请求失败: " + e.getMessage(),
                     ModelClientErrorType.NETWORK_ERROR, null, e);
         }
 
         return extractChatContent(respJson);
+    }
+
+    private OkHttpClient resolveSyncHttpClient(ChatRequest request) {
+        return resolveSyncHttpClient(
+                request,
+                Instant.now()
+        );
+    }
+
+    OkHttpClient resolveSyncHttpClient(
+            ChatRequest request,
+            Instant now
+    ) {
+        Instant deadlineAt = request.getDeadlineAt();
+
+        if (deadlineAt == null) {
+            return syncHttpClient;
+        }
+
+        if (deadlineExceeded(request, now)) {
+            throw new ModelClientException(
+                    provider() + " 同步请求未执行：调用期限已到",
+                    ModelClientErrorType.DEADLINE_EXCEEDED,
+                    null
+            );
+        }
+
+        Duration remaining =
+                Duration.between(now, deadlineAt);
+
+        Duration configuredTimeout = Duration.ofMillis(
+                syncHttpClient.callTimeoutMillis()
+        );
+
+        if (!configuredTimeout.isZero()
+                && remaining.compareTo(configuredTimeout) >= 0) {
+            return syncHttpClient;
+        }
+
+        Duration effectiveTimeout =
+                remaining.compareTo(MIN_CALL_TIMEOUT) < 0
+                        ? MIN_CALL_TIMEOUT
+                        : remaining;
+
+        return syncHttpClient.newBuilder()
+                .callTimeout(effectiveTimeout)
+                .build();
+    }
+
+    private boolean deadlineExceeded(
+            ChatRequest request,
+            Instant now
+    ) {
+        Instant deadlineAt = request.getDeadlineAt();
+        return deadlineAt != null
+                && !now.isBefore(deadlineAt);
     }
 
     // ==================== 模板方法：流式调用 ====================
