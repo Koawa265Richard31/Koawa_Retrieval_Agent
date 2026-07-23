@@ -374,7 +374,7 @@ select:focus:not(:focus-visible),
   }
 
   .admin-layout .admin-sidebar {
-    @apply flex w-64 flex-col bg-gradient-to-b from-[#1a1f2e] to-[#252d3d] text-white/70 transition-[width] duration-200;
+    @apply flex w-64 flex-col bg-[#0d1b2a] text-white/70 transition-[width] duration-200;
   }
 
   .admin-layout .admin-sidebar--collapsed {
@@ -386,7 +386,7 @@ select:focus:not(:focus-visible),
   }
 
   .admin-layout .admin-sidebar__logo {
-    @apply flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-sm font-semibold text-white;
+    @apply flex h-10 w-10 items-center justify-center rounded-xl bg-teal-300 text-sm font-semibold text-[#0d1b2a];
   }
 
   .admin-layout .admin-sidebar__title {
@@ -426,7 +426,7 @@ select:focus:not(:focus-visible),
   }
 
   .admin-layout .admin-sidebar__item--active {
-    @apply bg-indigo-500/20 text-white;
+    @apply bg-teal-300/15 text-white;
   }
 
   .admin-layout .admin-sidebar__item--group-active {
@@ -438,7 +438,7 @@ select:focus:not(:focus-visible),
   }
 
   .admin-layout .admin-sidebar__item-indicator.is-active {
-    @apply bg-indigo-400;
+    @apply bg-teal-300;
   }
 
   .admin-layout .admin-sidebar__item-indicator.is-group-active {
@@ -450,7 +450,7 @@ select:focus:not(:focus-visible),
   }
 
   .admin-layout .admin-sidebar__item--active .admin-sidebar__item-icon {
-    @apply text-indigo-300;
+    @apply text-teal-200;
   }
 
   .admin-layout .admin-sidebar__item--group-active .admin-sidebar__item-icon {
@@ -558,7 +558,7 @@ select:focus:not(:focus-visible),
   }
 
   .admin-layout .ui-button[data-variant="default"] {
-    @apply bg-indigo-600 text-white hover:bg-indigo-700;
+    @apply bg-teal-700 text-white hover:bg-teal-800;
   }
 
   .admin-layout .ui-button[data-variant="outline"] {
@@ -570,7 +570,7 @@ select:focus:not(:focus-visible),
   }
 
   .admin-layout .ui-button.admin-primary-gradient {
-    @apply bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] text-white hover:from-[#4338CA] hover:to-[#6D28D9];
+    @apply bg-teal-700 text-white hover:bg-teal-800;
   }
 
   .admin-layout .ui-badge {

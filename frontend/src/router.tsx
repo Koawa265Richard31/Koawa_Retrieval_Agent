@@ -1,24 +1,104 @@
+import * as React from "react";
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
-import { LoginPage } from "@/pages/LoginPage";
-import { ChatPage } from "@/pages/ChatPage";
-import { NotFoundPage } from "@/pages/NotFoundPage";
-import { AdminLayout } from "@/pages/admin/AdminLayout";
-import { DashboardPage } from "@/pages/admin/dashboard/DashboardPage";
-import { KnowledgeListPage } from "@/pages/admin/knowledge/KnowledgeListPage";
-import { KnowledgeDocumentsPage } from "@/pages/admin/knowledge/KnowledgeDocumentsPage";
-import { KnowledgeChunksPage } from "@/pages/admin/knowledge/KnowledgeChunksPage";
-import { IntentTreePage } from "@/pages/admin/intent-tree/IntentTreePage";
-import { IntentListPage } from "@/pages/admin/intent-tree/IntentListPage";
-import { IntentEditPage } from "@/pages/admin/intent-tree/IntentEditPage";
-import { IngestionPage } from "@/pages/admin/ingestion/IngestionPage";
-import { RagTracePage } from "@/pages/admin/traces/RagTracePage";
-import { RagTraceDetailPage } from "@/pages/admin/traces/RagTraceDetailPage";
-import { SystemSettingsPage } from "@/pages/admin/settings/SystemSettingsPage";
-import { SampleQuestionPage } from "@/pages/admin/sample-questions/SampleQuestionPage";
-import { QueryTermMappingPage } from "@/pages/admin/query-term-mapping/QueryTermMappingPage";
-import { UserListPage } from "@/pages/admin/users/UserListPage";
 import { useAuthStore } from "@/stores/authStore";
+
+const LoginPage = React.lazy(() =>
+  import("@/pages/LoginPage").then((module) => ({ default: module.LoginPage }))
+);
+const ChatPage = React.lazy(() =>
+  import("@/pages/ChatPage").then((module) => ({ default: module.ChatPage }))
+);
+const NotFoundPage = React.lazy(() =>
+  import("@/pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage }))
+);
+const AdminLayout = React.lazy(() =>
+  import("@/pages/admin/AdminLayout").then((module) => ({ default: module.AdminLayout }))
+);
+const DashboardPage = React.lazy(() =>
+  import("@/pages/admin/dashboard/DashboardPage").then((module) => ({
+    default: module.DashboardPage
+  }))
+);
+const KnowledgeListPage = React.lazy(() =>
+  import("@/pages/admin/knowledge/KnowledgeListPage").then((module) => ({
+    default: module.KnowledgeListPage
+  }))
+);
+const KnowledgeDocumentsPage = React.lazy(() =>
+  import("@/pages/admin/knowledge/KnowledgeDocumentsPage").then((module) => ({
+    default: module.KnowledgeDocumentsPage
+  }))
+);
+const KnowledgeChunksPage = React.lazy(() =>
+  import("@/pages/admin/knowledge/KnowledgeChunksPage").then((module) => ({
+    default: module.KnowledgeChunksPage
+  }))
+);
+const IntentTreePage = React.lazy(() =>
+  import("@/pages/admin/intent-tree/IntentTreePage").then((module) => ({
+    default: module.IntentTreePage
+  }))
+);
+const IntentListPage = React.lazy(() =>
+  import("@/pages/admin/intent-tree/IntentListPage").then((module) => ({
+    default: module.IntentListPage
+  }))
+);
+const IntentEditPage = React.lazy(() =>
+  import("@/pages/admin/intent-tree/IntentEditPage").then((module) => ({
+    default: module.IntentEditPage
+  }))
+);
+const IngestionPage = React.lazy(() =>
+  import("@/pages/admin/ingestion/IngestionPage").then((module) => ({
+    default: module.IngestionPage
+  }))
+);
+const RagTracePage = React.lazy(() =>
+  import("@/pages/admin/traces/RagTracePage").then((module) => ({
+    default: module.RagTracePage
+  }))
+);
+const RagTraceDetailPage = React.lazy(() =>
+  import("@/pages/admin/traces/RagTraceDetailPage").then((module) => ({
+    default: module.RagTraceDetailPage
+  }))
+);
+const SystemSettingsPage = React.lazy(() =>
+  import("@/pages/admin/settings/SystemSettingsPage").then((module) => ({
+    default: module.SystemSettingsPage
+  }))
+);
+const SampleQuestionPage = React.lazy(() =>
+  import("@/pages/admin/sample-questions/SampleQuestionPage").then((module) => ({
+    default: module.SampleQuestionPage
+  }))
+);
+const QueryTermMappingPage = React.lazy(() =>
+  import("@/pages/admin/query-term-mapping/QueryTermMappingPage").then((module) => ({
+    default: module.QueryTermMappingPage
+  }))
+);
+const UserListPage = React.lazy(() =>
+  import("@/pages/admin/users/UserListPage").then((module) => ({
+    default: module.UserListPage
+  }))
+);
+
+function lazyPage(element: React.ReactNode) {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#f5f2eb] text-sm text-slate-500">
+          正在加载工作台…
+        </div>
+      }
+    >
+      {element}
+    </React.Suspense>
+  );
+}
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -63,35 +143,19 @@ export const router = createBrowserRouter([
   },
   {
     path: "/login",
-    element: (
-      <RedirectIfAuth>
-        <LoginPage />
-      </RedirectIfAuth>
-    )
+    element: <RedirectIfAuth>{lazyPage(<LoginPage />)}</RedirectIfAuth>
   },
   {
     path: "/chat",
-    element: (
-      <RequireAuth>
-        <ChatPage />
-      </RequireAuth>
-    )
+    element: <RequireAuth>{lazyPage(<ChatPage />)}</RequireAuth>
   },
   {
     path: "/chat/:sessionId",
-    element: (
-      <RequireAuth>
-        <ChatPage />
-      </RequireAuth>
-    )
+    element: <RequireAuth>{lazyPage(<ChatPage />)}</RequireAuth>
   },
   {
     path: "/admin",
-    element: (
-      <RequireAdmin>
-        <AdminLayout />
-      </RequireAdmin>
-    ),
+    element: <RequireAdmin>{lazyPage(<AdminLayout />)}</RequireAdmin>,
     children: [
       {
         index: true,
@@ -99,64 +163,64 @@ export const router = createBrowserRouter([
       },
       {
         path: "dashboard",
-        element: <DashboardPage />
+        element: lazyPage(<DashboardPage />)
       },
       {
         path: "knowledge",
-        element: <KnowledgeListPage />
+        element: lazyPage(<KnowledgeListPage />)
       },
       {
         path: "knowledge/:kbId",
-        element: <KnowledgeDocumentsPage />
+        element: lazyPage(<KnowledgeDocumentsPage />)
       },
       {
         path: "knowledge/:kbId/docs/:docId",
-        element: <KnowledgeChunksPage />
+        element: lazyPage(<KnowledgeChunksPage />)
       },
       {
         path: "intent-tree",
-        element: <IntentTreePage />
+        element: lazyPage(<IntentTreePage />)
       },
       {
         path: "intent-list",
-        element: <IntentListPage />
+        element: lazyPage(<IntentListPage />)
       },
       {
         path: "intent-list/:id/edit",
-        element: <IntentEditPage />
+        element: lazyPage(<IntentEditPage />)
       },
       {
         path: "ingestion",
-        element: <IngestionPage />
+        element: lazyPage(<IngestionPage />)
       },
       {
         path: "traces",
-        element: <RagTracePage />
+        element: lazyPage(<RagTracePage />)
       },
       {
         path: "traces/:traceId",
-        element: <RagTraceDetailPage />
+        element: lazyPage(<RagTraceDetailPage />)
       },
       {
         path: "settings",
-        element: <SystemSettingsPage />
+        element: lazyPage(<SystemSettingsPage />)
       },
       {
         path: "sample-questions",
-        element: <SampleQuestionPage />
+        element: lazyPage(<SampleQuestionPage />)
       },
       {
         path: "mappings",
-        element: <QueryTermMappingPage />
+        element: lazyPage(<QueryTermMappingPage />)
       },
       {
         path: "users",
-        element: <UserListPage />
+        element: lazyPage(<UserListPage />)
       }
     ]
   },
   {
     path: "*",
-    element: <NotFoundPage />
+    element: lazyPage(<NotFoundPage />)
   }
 ]);

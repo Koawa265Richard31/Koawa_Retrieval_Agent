@@ -32,6 +32,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
+@org.junit.jupiter.api.Tag("integration")
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class IntentTreeServiceTests {

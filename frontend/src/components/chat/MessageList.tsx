@@ -101,11 +101,11 @@ export function MessageList({ messages, isLoading, isStreaming, sessionKey }: Me
     }
     if (document.fonts?.ready) {
       document.fonts.ready.then(() => {
-      if (active) {
-        scrollToBottom();
-      }
-    });
-  }
+        if (active) {
+          scrollToBottom();
+        }
+      });
+    }
     if (settleTimerRef.current) {
       window.clearTimeout(settleTimerRef.current);
     }
@@ -124,7 +124,7 @@ export function MessageList({ messages, isLoading, isStreaming, sessionKey }: Me
       }
       window.removeEventListener("load", handleLoad);
     };
-  }, [messages.length, isStreaming, isLoading, sessionKey]);
+  }, [messages.length, isStreaming, isLoading, sessionKey, scrollToBottom]);
 
   React.useEffect(() => {
     return () => {
@@ -182,7 +182,10 @@ export function MessageList({ messages, isLoading, isStreaming, sessionKey }: Me
       ({ className, ...props }, ref) => (
         <div
           ref={ref}
-          className={cn("mx-auto max-w-[800px] space-y-10 px-6 pt-10 pb-2 md:px-8", className)}
+          className={cn(
+            "mx-auto max-w-[900px] space-y-9 px-4 pb-3 pt-8 sm:px-8 md:pt-10",
+            className
+          )}
           {...props}
         />
       )

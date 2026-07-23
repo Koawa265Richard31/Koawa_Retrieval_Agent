@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
+@org.junit.jupiter.api.Tag("integration")
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class MilvusCollectionTests {

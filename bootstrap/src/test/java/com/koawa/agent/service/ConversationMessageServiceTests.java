@@ -30,6 +30,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 
 @Slf4j
+@org.junit.jupiter.api.Tag("integration")
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class ConversationMessageServiceTests {

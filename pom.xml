@@ -15,7 +15,13 @@
     <properties>
         <java.version>17</java.version>
         <argLine></argLine>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <spring-boot.version>3.5.7</spring-boot.version>
+        <spring-ai.version>1.1.8</spring-ai.version>
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <test.excluded-groups>integration</test.excluded-groups>
         <milvus-sdk.version>2.6.6</milvus-sdk.version>
         <tika.version>3.2.3</tika.version>
         <hutool-all.version>5.8.37</hutool-all.version>
@@ -44,6 +50,14 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -183,6 +197,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -206,8 +221,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+                    <excludedGroups>${test.excluded-groups}</excludedGroups>
                 </configuration>
             </plugin>
 
@@ -234,4 +251,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>integration</id>
+            <properties>
+                <test.excluded-groups></test.excluded-groups>
+            </properties>
+        </profile>
+    </profiles>
 </project>

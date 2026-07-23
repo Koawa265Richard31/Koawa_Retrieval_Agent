@@ -1,17 +1,15 @@
 import * as React from "react";
 import { differenceInCalendarDays, isValid } from "date-fns";
 import {
-  BookOpen,
-  Bot,
+  Database,
   LogOut,
-  MessageSquare,
   MoreHorizontal,
   Pencil,
-  PlayCircle,
   Plus,
   Search,
   Settings,
-  Trash2
+  Trash2,
+  X
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -31,7 +29,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Loading } from "@/components/common/Loading";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import { useChatStore } from "@/stores/chatStore";
@@ -42,10 +39,11 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
   const {
     sessions,
     currentSessionId,
-    isLoading,
     sessionsLoaded,
     createSession,
     deleteSession,
@@ -53,62 +51,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     selectSession,
     fetchSessions
   } = useChatStore();
-  const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
   const [query, setQuery] = React.useState("");
   const [renamingId, setRenamingId] = React.useState<string | null>(null);
   const [renameValue, setRenameValue] = React.useState("");
-  const [deleteTarget, setDeleteTarget] = React.useState<{
-    id: string;
-    title: string;
-  } | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; title: string } | null>(
+    null
+  );
   const [avatarFailed, setAvatarFailed] = React.useState(false);
   const renameInputRef = React.useRef<HTMLInputElement | null>(null);
 
   React.useEffect(() => {
-    if (sessions.length === 0) {
+    if (!sessionsLoaded) {
       fetchSessions().catch(() => null);
     }
-  }, [fetchSessions, sessions.length]);
-
-  const filteredSessions = React.useMemo(() => {
-    const keyword = query.trim().toLowerCase();
-    if (!keyword) return sessions;
-    return sessions.filter((session) => {
-      const title = (session.title || "新对话").toLowerCase();
-      return title.includes(keyword) || session.id.toLowerCase().includes(keyword);
-    });
-  }, [query, sessions]);
-
-  const groupedSessions = React.useMemo(() => {
-    const now = new Date();
-    const groups = new Map<string, typeof filteredSessions>();
-    const order: string[] = [];
-
-    const resolveLabel = (value?: string) => {
-      const parsed = value ? new Date(value) : now;
-      const date = isValid(parsed) ? parsed : now;
-      const diff = Math.max(0, differenceInCalendarDays(now, date));
-      if (diff === 0) return "今天";
-      if (diff <= 7) return "7天内";
-      if (diff <= 30) return "30天内";
-      return "更早";
-    };
-
-    filteredSessions.forEach((session) => {
-      const label = resolveLabel(session.lastTime);
-      if (!groups.has(label)) {
-        groups.set(label, []);
-        order.push(label);
-      }
-      groups.get(label)?.push(session);
-    });
-
-    return order.map((label) => ({
-      label,
-      items: groups.get(label) || []
-    }));
-  }, [filteredSessions]);
+  }, [fetchSessions, sessionsLoaded]);
 
   React.useEffect(() => {
     if (renamingId) {
@@ -121,11 +77,43 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     setAvatarFailed(false);
   }, [user?.avatar, user?.userId]);
 
-  const avatarUrl = user?.avatar?.trim();
-  const showAvatar = Boolean(avatarUrl) && !avatarFailed;
-  const avatarFallback = (user?.username || user?.userId || "用户").slice(0, 1).toUpperCase();
-  const sessionTitleFont =
-    "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Arial, sans-serif";
+  const filteredSessions = React.useMemo(() => {
+    const keyword = query.trim().toLowerCase();
+    if (!keyword) return sessions;
+    return sessions.filter((session) =>
+      `${session.title || "新对话"} ${session.id}`.toLowerCase().includes(keyword)
+    );
+  }, [query, sessions]);
+
+  const groupedSessions = React.useMemo(() => {
+    const now = new Date();
+    const labels = ["今天", "7 天内", "30 天内", "更早"];
+    const groups = new Map(labels.map((label) => [label, [] as typeof filteredSessions]));
+    filteredSessions.forEach((session) => {
+      const parsed = session.lastTime ? new Date(session.lastTime) : now;
+      const date = isValid(parsed) ? parsed : now;
+      const days = Math.max(0, differenceInCalendarDays(now, date));
+      const label =
+        days === 0 ? labels[0] : days <= 7 ? labels[1] : days <= 30 ? labels[2] : labels[3];
+      groups.get(label)?.push(session);
+    });
+    return labels
+      .map((label) => ({ label, items: groups.get(label) || [] }))
+      .filter((group) => group.items.length > 0);
+  }, [filteredSessions]);
+
+  const createNewSession = async () => {
+    await createSession();
+    navigate("/chat");
+    onClose();
+  };
+
+  const openSession = async (id: string) => {
+    if (renamingId === id) return;
+    await selectSession(id);
+    navigate(`/chat/${id}`);
+    onClose();
+  };
 
   const startRename = (id: string, title: string) => {
     setRenamingId(id);
@@ -139,188 +127,136 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const commitRename = async () => {
     if (!renamingId) return;
-    const nextTitle = renameValue.trim();
-    if (!nextTitle) {
-      cancelRename();
-      return;
+    const title = renameValue.trim();
+    const original = sessions.find((session) => session.id === renamingId)?.title || "新对话";
+    if (title && title !== original) {
+      await renameSession(renamingId, title);
     }
-    const currentTitle = sessions.find((session) => session.id === renamingId)?.title || "新对话";
-    if (nextTitle === currentTitle) {
-      cancelRename();
-      return;
-    }
-    await renameSession(renamingId, nextTitle);
     cancelRename();
   };
 
+  const avatarUrl = user?.avatar?.trim();
+  const showAvatar = Boolean(avatarUrl) && !avatarFailed;
+  const displayName = user?.username || user?.userId || "用户";
+  const avatarFallback = displayName.slice(0, 1).toUpperCase();
+
   return (
     <>
-      <div
+      <button
+        type="button"
+        aria-label="关闭会话列表"
         className={cn(
-          "fixed inset-0 z-30 bg-slate-900/30 backdrop-blur-sm transition-opacity lg:hidden",
+          "fixed inset-0 z-30 bg-slate-950/45 backdrop-blur-sm transition-opacity lg:hidden",
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         )}
         onClick={onClose}
       />
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 flex h-screen w-[280px] flex-shrink-0 flex-col bg-[#FAFAFA] p-3 transition-transform lg:static lg:h-screen lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-[292px] flex-col bg-[#0d1b2a] text-slate-200 shadow-2xl transition-transform lg:static lg:z-auto lg:m-3 lg:mr-0 lg:h-[calc(100vh-24px)] lg:translate-x-0 lg:rounded-[22px] lg:shadow-[0_24px_60px_-36px_rgba(2,6,23,.9)]",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="border-b border-[#F0F0F0] pb-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#3B82F6]">
-              <Bot className="h-5 w-5 text-white" />
-            </div>
-            <div style={{ fontFamily: sessionTitleFont }}>
-              <p className="text-base font-semibold text-[#1A1A1A]">KoawaAgent AI 智能体</p>
-              <p className="text-xs text-[#999999]">Powered by AI</p>
-            </div>
+        <div className="flex items-center gap-3 px-5 pb-5 pt-5">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-teal-300/20 bg-teal-300/10 text-teal-200">
+            <Database className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold tracking-[0.06em] text-white">
+              KOAWA KNOWLEDGE
+            </p>
+            <p className="text-[11px] text-slate-400">企业知识智能平台</p>
+          </div>
+          <button
+            type="button"
+            aria-label="关闭侧边栏"
+            className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white lg:hidden"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="px-4">
+          <button
+            type="button"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-teal-300 text-sm font-semibold text-[#0d1b2a] shadow-[0_12px_28px_-14px_rgba(94,234,212,.8)] transition hover:bg-teal-200"
+            onClick={() => createNewSession().catch(() => null)}
+          >
+            <Plus className="h-4 w-4" />
+            发起新对话
+          </button>
+
+          <div className="relative mt-4">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="搜索历史对话"
+              className="h-10 w-full rounded-xl border border-white/10 bg-white/[0.055] pl-9 pr-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-teal-300/40 focus:bg-white/[0.08]"
+            />
           </div>
         </div>
-        <div className="py-3 space-y-4">
-          <div className="relative overflow-hidden rounded-2xl border border-[#E6EEF6] bg-gradient-to-br from-[#F0F9FF] via-white to-[#FEF3C7] p-3 shadow-[0_14px_30px_rgba(15,23,42,0.08)]">
-            <span
-              aria-hidden="true"
-              className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-[#BAE6FD]/70 blur-2xl"
-            />
-            <span
-              aria-hidden="true"
-              className="absolute -left-12 -bottom-10 h-28 w-28 rounded-full bg-[#FDE68A]/70 blur-2xl"
-            />
-            <div className="relative">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-[11px] font-semibold text-[#94A3B8]">快速开始</span>
-                <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-[#2563EB]">
-                  新内容
-                </span>
-              </div>
-              <button
-                type="button"
-                className="mt-2 flex w-full items-center gap-3 rounded-2xl bg-white/90 px-4 py-3 text-left shadow-[0_10px_20px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-[1px] hover:shadow-[0_16px_30px_rgba(15,23,42,0.12)]"
-                onClick={() => {
-                  createSession().catch(() => null);
-                  navigate("/chat");
-                  onClose();
-                }}
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#60A5FA] to-[#2563EB] text-white shadow-[0_6px_14px_rgba(37,99,235,0.3)]">
-                  <Plus className="h-4 w-4" />
-                </span>
-                <span className="flex-1">
-                  <span className="block text-sm font-semibold text-[#1F2937]">新建对话</span>
-                  <span className="block text-xs text-[#94A3B8]">从空白开始</span>
-                </span>
-              </button>
-              {user?.role === "admin" ? (
-                <button
-                  type="button"
-                  className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-3 py-1.5 text-xs font-semibold text-[#1D4ED8] transition-colors hover:bg-white"
-                  onClick={() => {
-                    window.open("/admin", "_blank");
-                    onClose();
-                  }}
-                >
-                  <Settings className="h-3.5 w-3.5" />
-                  管理后台
-                </button>
-              ) : null}
-            </div>
+
+        <div className="mt-6 flex min-h-0 flex-1 flex-col">
+          <div className="flex items-center justify-between px-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              历史对话
+            </p>
+            <span className="text-[11px] tabular-nums text-slate-600">{sessions.length}</span>
           </div>
-          <div className="rounded-2xl border border-[#E6EEF6] bg-white p-3 shadow-[0_12px_26px_rgba(15,23,42,0.06)]">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[11px] font-semibold text-[#94A3B8]">搜索对话</span>
-              <span className="text-[10px] text-[#CBD5F5]">Ctrl / Cmd + K</span>
-            </div>
-            <div className="mt-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="搜索对话..."
-                  className="h-10 w-full rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] pl-9 pr-3 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:border-[#93C5FD] focus:outline-none transition-colors"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="relative flex-1 min-h-0">
-          <div className="h-full overflow-y-auto sidebar-scroll">
-            {sessions.length === 0 && (!sessionsLoaded || isLoading) ? (
-              <div
-                className="flex h-full items-center justify-center text-[#999999]"
-                style={{ fontFamily: sessionTitleFont }}
-              >
-                <Loading label="加载会话中" />
-              </div>
-            ) : filteredSessions.length === 0 ? (
-              <div
-                className="flex h-full flex-col items-center justify-center text-[#999999]"
-                style={{ fontFamily: sessionTitleFont }}
-              >
-                <MessageSquare className="h-16 w-16" />
-                <p className="mt-2 text-[14px]">暂无对话记录</p>
+
+          <div className="sidebar-scroll mt-3 min-h-0 flex-1 overflow-y-auto px-3 pb-4">
+            {!sessionsLoaded ? (
+              <p className="px-2 py-6 text-center text-xs text-slate-500">正在加载会话…</p>
+            ) : groupedSessions.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-white/10 px-4 py-8 text-center">
+                <p className="text-sm text-slate-400">暂无匹配的对话</p>
+                <p className="mt-1 text-xs text-slate-600">从一个业务问题开始吧</p>
               </div>
             ) : (
-              <div>
-                {groupedSessions.map((group, index) => (
-                  <div key={group.label} className={cn("flex flex-col", index === 0 ? "mt-0" : "mt-4")}>
-                    <p className="mb-1.5 pl-3 text-[12px] font-normal leading-[18px] text-[#999999]">
-                      {group.label}
-                    </p>
+              groupedSessions.map((group) => (
+                <section key={group.label} className="mb-5">
+                  <p className="mb-1.5 px-2 text-[11px] text-slate-500">{group.label}</p>
+                  <div className="space-y-1">
                     {group.items.map((session) => (
                       <div
                         key={session.id}
-                        className={cn(
-                          "group my-[1px] flex min-h-[40px] cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 text-[14px] leading-[22px] transition-colors duration-200",
-                          currentSessionId === session.id
-                            ? "bg-[#DBEAFE] text-[#2563EB]"
-                            : "text-[#333333] hover:bg-[#F5F5F5]"
-                        )}
                         role="button"
                         tabIndex={0}
-                        onClick={() => {
-                          if (renamingId === session.id) return;
-                          if (renamingId) {
-                            cancelRename();
-                          }
-                          selectSession(session.id).catch(() => null);
-                          navigate(`/chat/${session.id}`);
-                          onClose();
-                        }}
+                        onClick={() => openSession(session.id).catch(() => null)}
                         onKeyDown={(event) => {
-                          if (event.key === "Enter") {
-                            selectSession(session.id).catch(() => null);
-                            navigate(`/chat/${session.id}`);
-                            onClose();
-                          }
+                          if (event.key === "Enter") openSession(session.id).catch(() => null);
                         }}
+                        className={cn(
+                          "group flex min-h-10 cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm transition",
+                          currentSessionId === session.id
+                            ? "bg-white/10 text-white"
+                            : "text-slate-400 hover:bg-white/[0.055] hover:text-slate-200"
+                        )}
                       >
+                        <span
+                          className={cn(
+                            "h-1.5 w-1.5 shrink-0 rounded-full",
+                            currentSessionId === session.id ? "bg-teal-300" : "bg-slate-700"
+                          )}
+                        />
                         {renamingId === session.id ? (
                           <input
                             ref={renameInputRef}
                             value={renameValue}
                             onChange={(event) => setRenameValue(event.target.value)}
                             onClick={(event) => event.stopPropagation()}
+                            onBlur={() => commitRename().catch(() => null)}
                             onKeyDown={(event) => {
-                              if (event.key === "Enter") {
-                                event.preventDefault();
-                                commitRename().catch(() => null);
-                              }
-                              if (event.key === "Escape") {
-                                event.preventDefault();
-                                cancelRename();
-                              }
+                              event.stopPropagation();
+                              if (event.key === "Enter") commitRename().catch(() => null);
+                              if (event.key === "Escape") cancelRename();
                             }}
-                            onBlur={() => {
-                              commitRename().catch(() => null);
-                            }}
-                            className="h-6 flex-1 rounded-md border border-[#E5E5E5] bg-white px-2 text-[14px] leading-[22px] text-[#333333] focus:border-[#2563EB] focus:outline-none"
+                            className="h-7 min-w-0 flex-1 rounded-md border border-teal-300/30 bg-slate-950/40 px-2 text-sm text-white outline-none"
                           />
                         ) : (
-                          <span className="min-w-0 flex-1 truncate font-normal">
+                          <span className="min-w-0 flex-1 truncate">
                             {session.title || "新对话"}
                           </span>
                         )}
@@ -328,33 +264,25 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                           <DropdownMenuTrigger asChild>
                             <button
                               type="button"
-                              className={cn(
-                                "flex h-6 w-6 items-center justify-center rounded text-[#666666] transition-opacity duration-150 hover:bg-[rgba(0,0,0,0.06)]",
-                                currentSessionId === session.id
-                                  ? "pointer-events-auto opacity-100 text-[#2563EB]"
-                                  : "pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100"
-                              )}
-                              onClick={(event) => event.stopPropagation()}
                               aria-label="会话操作"
+                              onClick={(event) => event.stopPropagation()}
+                              className="rounded-md p-1 text-slate-500 opacity-0 transition hover:bg-white/10 hover:text-white group-hover:opacity-100 data-[state=open]:opacity-100"
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="start"
-                            className="min-w-[120px] rounded-lg border-0 bg-white p-0 py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)]"
-                          >
+                          <DropdownMenuContent align="start" className="w-36">
                             <DropdownMenuItem
                               onClick={(event) => {
                                 event.stopPropagation();
                                 startRename(session.id, session.title || "新对话");
                               }}
-                              className="px-4 py-2 text-[14px] text-[#333333] focus:bg-[#F5F5F5] focus:text-[#333333] data-[highlighted]:bg-[#F5F5F5] data-[highlighted]:text-[#333333]"
                             >
                               <Pencil className="mr-2 h-4 w-4" />
                               重命名
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              className="text-rose-600 focus:text-rose-600"
                               onClick={(event) => {
                                 event.stopPropagation();
                                 setDeleteTarget({
@@ -362,7 +290,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                   title: session.title || "新对话"
                                 });
                               }}
-                              className="px-4 py-2 text-[14px] text-[#FF4D4F] focus:bg-[#F5F5F5] focus:text-[#FF4D4F] data-[highlighted]:bg-[#F5F5F5] data-[highlighted]:text-[#FF4D4F]"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               删除
@@ -372,68 +299,53 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                       </div>
                     ))}
                   </div>
-                ))}
-              </div>
+                </section>
+              ))
             )}
           </div>
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-5 bg-gradient-to-b from-transparent to-[#FAFAFA]"
-          />
         </div>
-        <div className="mt-auto pt-3">
+
+        <div className="border-t border-white/10 p-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors hover:bg-[#F5F5F5] data-[state=open]:bg-[#EEEEEE]"
-                aria-label="用户菜单"
+                className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-white/[0.06] data-[state=open]:bg-white/[0.08]"
               >
-                <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#3B82F6] text-white">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-300 text-sm font-semibold text-[#0d1b2a]">
                   {showAvatar ? (
                     <img
                       src={avatarUrl}
-                      alt={user?.username || user?.userId || "用户"}
+                      alt={displayName}
                       className="h-full w-full object-cover"
                       onError={() => setAvatarFailed(true)}
                     />
                   ) : (
-                    <span className="text-sm font-medium">{avatarFallback}</span>
+                    avatarFallback
                   )}
-                </div>
-                <span className="flex-1 truncate text-sm font-medium text-[#1A1A1A]">
-                  {(() => {
-                    const fallback = user?.username || user?.userId || "用户";
-                    return /^\d+$/.test(fallback) ? "用户" : fallback;
-                  })()}
                 </span>
-                <MoreHorizontal className="h-4 w-4 text-[#999999]" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-white">
+                    {displayName}
+                  </span>
+                  <span className="block text-[11px] text-slate-500">
+                    {user?.role === "admin" ? "系统管理员" : "知识库成员"}
+                  </span>
+                </span>
+                <MoreHorizontal className="h-4 w-4 text-slate-500" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" side="top" sideOffset={8} className="w-48">
-              <DropdownMenuItem asChild>
-                <a
-                  href="https://github.com/koawa-hua/koaw.agent"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center"
-                >
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  官方文档
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a
-                  href="https://space.bilibili.com/352177376"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center"
-                >
-                  <PlayCircle className="mr-2 h-4 w-4" />
-                  哔哩哔哩
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => logout()} className="text-rose-600 focus:text-rose-600">
+            <DropdownMenuContent align="start" side="top" sideOffset={8} className="w-52">
+              {user?.role === "admin" ? (
+                <DropdownMenuItem onClick={() => navigate("/admin")}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  管理控制台
+                </DropdownMenuItem>
+              ) : null}
+              <DropdownMenuItem
+                className="text-rose-600 focus:text-rose-600"
+                onClick={() => logout()}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 退出登录
               </DropdownMenuItem>
@@ -441,16 +353,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </DropdownMenu>
         </div>
       </aside>
-      <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => {
-        if (!open) {
-          setDeleteTarget(null);
-        }
-      }}>
+
+      <AlertDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>删除该会话？</AlertDialogTitle>
             <AlertDialogDescription>
-              [{deleteTarget?.title || "该会话"}] 将被永久删除，无法恢复。
+              “{deleteTarget?.title || "该会话"}”及其消息记录将被永久删除。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -463,14 +377,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 setDeleteTarget(null);
                 deleteSession(target.id)
                   .then(() => {
-                    if (isCurrent) {
-                      navigate("/chat");
-                    }
+                    if (isCurrent) navigate("/chat");
                   })
                   .catch(() => null);
               }}
             >
-              删除
+              确认删除
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

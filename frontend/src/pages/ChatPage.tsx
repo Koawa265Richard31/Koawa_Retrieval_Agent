@@ -80,8 +80,12 @@ export function ChatPage() {
 
   return (
     <MainLayout>
-      <div className="flex h-full flex-col bg-white">
-        <div className="flex-1 min-h-0">
+      <div className="relative flex h-full flex-col overflow-hidden bg-[#fbfaf7]">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:radial-gradient(#0f766e_0.7px,transparent_0.7px)] [background-size:18px_18px]"
+        />
+        <div className="relative min-h-0 flex-1">
           <MessageList
             messages={messages}
             isLoading={isLoading}
@@ -90,8 +94,8 @@ export function ChatPage() {
           />
         </div>
         {showWelcome ? null : (
-          <div className="relative z-20 bg-white">
-            <div className="mx-auto max-w-[800px] px-6 pt-1 pb-4">
+          <div className="relative z-20 border-t border-slate-200/60 bg-[#fbfaf7]/95 backdrop-blur-xl">
+            <div className="mx-auto max-w-[900px] px-4 pb-4 pt-3 sm:px-8">
               <ChatInput />
             </div>
           </div>

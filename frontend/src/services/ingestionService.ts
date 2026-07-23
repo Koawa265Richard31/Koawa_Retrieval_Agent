@@ -13,7 +13,7 @@ export interface IngestionPipelineNode {
   nodeId: string;
   nodeType: string;
   settings?: Record<string, unknown> | null;
-  condition?: Record<string, unknown> | null;
+  condition?: unknown;
   nextNodeId?: string | null;
 }
 
@@ -34,7 +34,7 @@ export interface IngestionPipelinePayload {
     nodeId: string;
     nodeType: string;
     settings?: Record<string, unknown> | null;
-    condition?: Record<string, unknown> | null;
+    condition?: unknown;
     nextNodeId?: string | null;
   }>;
 }

@@ -1,0 +1,230 @@
+name: ragent
+
+services:
+  runtime-init:
+    image: pgvector/pgvector:0.8.5-pg17-bookworm
+    user: "0:0"
+    command:
+      - sh
+      - -ec
+      - |
+        mkdir -p \
+          /runtime/rocketmq/namesrv-logs \
+          /runtime/rocketmq/broker-logs \
+          /runtime/rocketmq/broker-store \
+          /runtime/rustfs
+        chown -R 3000:3000 /runtime/rocketmq
+        chown -R 10001:10001 /runtime/rustfs
+    volumes:
+      - ${RAGENT_DATA_ROOT:-./runtime}:/runtime
+    restart: "no"
+    mem_limit: 64m
+    cpus: 0.1
+
+  postgres:
+    image: pgvector/pgvector:0.8.5-pg17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    command:
+      - postgres
+      - -c
+      - max_connections=30
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - work_mem=4MB
+    volumes:
+      - ${RAGENT_DATA_ROOT:-./runtime}/postgres:/var/lib/postgresql/data
+      - ../resources/database/schema_pg.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ../resources/database/init_data_pg.sql:/docker-entrypoint-initdb.d/02-init-data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    mem_limit: 1500m
+    cpus: 1.0
+
+  redis:
+    image: redis:7.4.9-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command:
+      - sh
+      - -c
+      - exec redis-server --appendonly yes --maxmemory 192mb --maxmemory-policy allkeys-lru --requirepass "$${REDIS_PASSWORD}"
+    volumes:
+      - ${RAGENT_DATA_ROOT:-./runtime}/redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.35
+
+  admin-bootstrap:
+    image: pgvector/pgvector:0.8.5-pg17-bookworm
+    environment:
+      PGHOST: postgres
+      PGDATABASE: ${POSTGRES_DB}
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      - sh
+      - -ec
+      - |
+        psql -v ON_ERROR_STOP=1 -v admin_password="$${ADMIN_PASSWORD}" <<'SQL'
+        UPDATE t_user
+        SET password = :'admin_password', update_time = CURRENT_TIMESTAMP
+        WHERE username = 'admin';
+        SQL
+    restart: "no"
+    mem_limit: 128m
+    cpus: 0.1
+
+  rustfs:
+    image: rustfs/rustfs:1.0.0-alpha.72
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
+      RUSTFS_CONSOLE_ENABLE: "true"
+    command: ["/data"]
+    depends_on:
+      runtime-init:
+        condition: service_completed_successfully
+    volumes:
+      - ${RAGENT_DATA_ROOT:-./runtime}/rustfs:/data
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 0.5
+
+  rmqnamesrv:
+    image: apache/rocketmq:5.2.0
+    environment:
+      JAVA_OPT_EXT: -Xms128m -Xmx256m -Xmn64m
+    command: sh mqnamesrv
+    depends_on:
+      runtime-init:
+        condition: service_completed_successfully
+    volumes:
+      - ${RAGENT_DATA_ROOT:-./runtime}/rocketmq/namesrv-logs:/home/rocketmq/logs
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q 'The Name Server boot success' /home/rocketmq/logs/rocketmqlogs/namesrv.log"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    mem_limit: 384m
+    cpus: 0.35
+
+  rmqbroker:
+    image: apache/rocketmq:5.2.0
+    environment:
+      NAMESRV_ADDR: rmqnamesrv:9876
+      JAVA_OPT_EXT: -Xms384m -Xmx640m -Xmn128m
+    depends_on:
+      rmqnamesrv:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - |
+        cat > /home/rocketmq/rocketmq-5.2.0/conf/broker.conf <<'EOF'
+        brokerClusterName = DefaultCluster
+        brokerName = broker-a
+        brokerId = 0
+        deleteWhen = 04
+        fileReservedTime = 48
+        brokerRole = ASYNC_MASTER
+        flushDiskType = ASYNC_FLUSH
+        brokerIP1 = rmqbroker
+        autoCreateTopicEnable = true
+        EOF
+        exec sh mqbroker -c /home/rocketmq/rocketmq-5.2.0/conf/broker.conf
+    volumes:
+      - ${RAGENT_DATA_ROOT:-./runtime}/rocketmq/broker-store:/home/rocketmq/store
+      - ${RAGENT_DATA_ROOT:-./runtime}/rocketmq/broker-logs:/home/rocketmq/logs
+    restart: unless-stopped
+    mem_limit: 1024m
+    cpus: 0.75
+
+  mcp-server:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: mcp-server
+    environment:
+      JAVA_TOOL_OPTIONS: -Xms64m -Xmx320m -XX:+UseSerialGC
+    restart: unless-stopped
+    mem_limit: 448m
+    cpus: 0.35
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: app
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JAVA_TOOL_OPTIONS: -Xms256m -Xmx1536m -XX:+UseG1GC -XX:MaxMetaspaceSize=256m -Duser.home=/tmp
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
+      SILICONFLOW_API_KEY: ${SILICONFLOW_API_KEY}
+      SILICONFLOW_CHAT_MODEL: ${SILICONFLOW_CHAT_MODEL:-deepseek-ai/DeepSeek-V3.2}
+      SILICONFLOW_EMBEDDING_MODEL: ${SILICONFLOW_EMBEDDING_MODEL:-Qwen/Qwen3-Embedding-8B}
+      AGENT_ENABLED: ${AGENT_ENABLED:-false}
+      AGENT_ROLLOUT_PERCENTAGE: ${AGENT_ROLLOUT_PERCENTAGE:-0}
+      AGENT_MAX_STEPS: ${AGENT_MAX_STEPS:-8}
+      AGENT_TURN_TIMEOUT: ${AGENT_TURN_TIMEOUT:-120s}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      admin-bootstrap:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      rmqbroker:
+        condition: service_started
+      rustfs:
+        condition: service_started
+      mcp-server:
+        condition: service_started
+    ports:
+      - ${APP_BIND_ADDRESS:-0.0.0.0}:${APP_PORT:-9090}:9090
+    restart: unless-stopped
+    mem_limit: 1792m
+    cpus: 1.5
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: frontend
+      args:
+        VITE_API_BASE_URL: /api/koawa-agent
+    depends_on:
+      app:
+        condition: service_started
+    ports:
+      - ${FRONTEND_BIND_ADDRESS:-0.0.0.0}:${FRONTEND_PORT:-80}:80
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25

@@ -1,0 +1,13 @@
+.git/
+.idea/
+.codex/
+.agents/
+**/target/
+frontend/node_modules/
+frontend/dist/
+deploy/.env
+deploy/runtime/
+docs/
+scripts/
+resources/docker/
+resources/database/backups/

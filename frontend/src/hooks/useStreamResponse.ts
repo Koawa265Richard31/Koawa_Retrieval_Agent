@@ -89,7 +89,7 @@ async function readSseStream(response: Response, handlers: StreamHandlers, signa
     dataLines = [];
   };
 
-  while (true) {
+  for (;;) {
     if (signal?.aborted) {
       reader.cancel();
       break;

@@ -8,7 +8,6 @@ import {
   ClipboardList,
   Database,
   GitBranch,
-  Github,
   Layers,
   LayoutDashboard,
   Lightbulb,
@@ -21,7 +20,8 @@ import {
   Upload,
   Users,
   FolderKanban,
-  Workflow
+  Workflow,
+  type LucideIcon
 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -48,7 +55,7 @@ import { Avatar } from "@/components/common/Avatar";
 type MenuChild = {
   path: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   search?: string;
 };
 
@@ -56,7 +63,7 @@ type MenuItem = {
   id?: string;
   path: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   search?: string;
   children?: MenuChild[];
 };
@@ -72,7 +79,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       {
         path: "/admin/dashboard",
-        label: "Dashboard",
+        label: "运营概览",
         icon: LayoutDashboard
       },
       {
@@ -127,7 +134,7 @@ const menuGroups: MenuGroup[] = [
         path: "/admin/traces",
         label: "链路追踪",
         icon: Workflow
-      },
+      }
     ]
   },
   {
@@ -147,13 +154,13 @@ const menuGroups: MenuGroup[] = [
         path: "/admin/settings",
         label: "系统设置",
         icon: Settings
-      },
+      }
     ]
   }
 ];
 
 const breadcrumbMap: Record<string, string> = {
-  dashboard: "Dashboard",
+  dashboard: "运营概览",
   knowledge: "知识库管理",
   "intent-tree": "意图树配置",
   "intent-list": "意图列表",
@@ -177,8 +184,10 @@ export function AdminLayout() {
     newPassword: "",
     confirmPassword: ""
   });
-  const [starCount, setStarCount] = useState<number | null>(null);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ ingestion: true, intent: true });
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    ingestion: true,
+    intent: true
+  });
   const [kbQuery, setKbQuery] = useState("");
   const [kbOptions, setKbOptions] = useState<KnowledgeBase[]>([]);
   const [docOptions, setDocOptions] = useState<KnowledgeDocumentSearchItem[]>([]);
@@ -194,25 +203,6 @@ export function AdminLayout() {
   };
 
   useEffect(() => {
-    let active = true;
-    fetch("https://api.github.com/repos/koawa-hua/koaw.agent")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!active) return;
-        const count = typeof data?.stargazers_count === "number" ? data.stargazers_count : null;
-        setStarCount(count);
-      })
-      .catch(() => {
-        if (active) {
-          setStarCount(null);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
     if (!searchFocused) return;
     const keyword = kbQuery.trim();
     if (!keyword) {
@@ -225,10 +215,7 @@ export function AdminLayout() {
     let active = true;
     const handle = window.setTimeout(() => {
       setSearchLoading(true);
-      Promise.all([
-        getKnowledgeBases(1, 6, keyword),
-        searchKnowledgeDocuments(keyword, 6)
-      ])
+      Promise.all([getKnowledgeBases(1, 6, keyword), searchKnowledgeDocuments(keyword, 6)])
         .then(([kbData, docData]) => {
           if (!active) return;
           setKbOptions(kbData || []);
@@ -255,9 +242,7 @@ export function AdminLayout() {
 
   const breadcrumbs = useMemo(() => {
     const segments = location.pathname.split("/").filter(Boolean);
-    const items: { label: string; to?: string }[] = [
-      { label: "首页", to: "/admin/dashboard" }
-    ];
+    const items: { label: string; to?: string }[] = [{ label: "首页", to: "/admin/dashboard" }];
 
     if (segments[0] !== "admin") return items;
     const section = segments[1];
@@ -316,16 +301,10 @@ export function AdminLayout() {
   const avatarUrl = user?.avatar?.trim();
   const showAvatar = Boolean(avatarUrl);
   const roleLabel = user?.role === "admin" ? "管理员" : "成员";
-  const starLabel = useMemo(() => {
-    if (starCount === null) return "--";
-    if (starCount < 1000) return String(starCount);
-    const rounded = Math.round((starCount / 1000) * 10) / 10;
-    const text = String(rounded).replace(/\.0$/, "");
-    return `${text}k`;
-  }, [starCount]);
   const isIngestionActive = location.pathname.startsWith("/admin/ingestion");
   const isIntentActive =
-    location.pathname.startsWith("/admin/intent-tree") || location.pathname.startsWith("/admin/intent-list");
+    location.pathname.startsWith("/admin/intent-tree") ||
+    location.pathname.startsWith("/admin/intent-list");
 
   useEffect(() => {
     setOpenGroups((prev) => ({
@@ -437,11 +416,11 @@ export function AdminLayout() {
       <aside className={cn("admin-sidebar", collapsed && "admin-sidebar--collapsed")}>
         <div className="admin-sidebar__brand">
           <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-            <div className="admin-sidebar__logo">R</div>
+            <div className="admin-sidebar__logo">K</div>
             {!collapsed && (
               <div className="min-w-0">
-                <h1 className="admin-sidebar__title">KoawaAgent AI 管理后台</h1>
-                <p className="admin-sidebar__subtitle">Knowledge Console</p>
+                <h1 className="admin-sidebar__title">Koawa Knowledge</h1>
+                <p className="admin-sidebar__subtitle">企业知识管理控制台</p>
               </div>
             )}
           </div>
@@ -450,9 +429,7 @@ export function AdminLayout() {
         <nav className="flex-1 space-y-4 px-2 pb-4">
           {menuGroups.map((group) => (
             <div key={group.title} className="space-y-2">
-              {!collapsed && (
-                <p className="admin-sidebar__group-title">{group.title}</p>
-              )}
+              {!collapsed && <p className="admin-sidebar__group-title">{group.title}</p>}
               <div className="space-y-1">
                 {group.items.flatMap((item) => {
                   if (!item.children || item.children.length === 0) {
@@ -470,18 +447,21 @@ export function AdminLayout() {
                         )}
                       >
                         <span
-                          className={cn(
-                            "admin-sidebar__item-indicator",
-                            isActive && "is-active"
-                          )}
+                          className={cn("admin-sidebar__item-indicator", isActive && "is-active")}
                         />
                         <Icon className="admin-sidebar__item-icon" />
-                        {collapsed ? <span className="sr-only">{item.label}</span> : <span>{item.label}</span>}
+                        {collapsed ? (
+                          <span className="sr-only">{item.label}</span>
+                        ) : (
+                          <span>{item.label}</span>
+                        )}
                       </Link>
                     );
                   }
 
-                  const isGroupActive = item.children.some((child) => isLeafActive(child.path, child.search));
+                  const isGroupActive = item.children.some((child) =>
+                    isLeafActive(child.path, child.search)
+                  );
                   const groupId = item.id as string;
                   const isOpen = openGroups[groupId];
 
@@ -501,10 +481,7 @@ export function AdminLayout() {
                           )}
                         >
                           <span
-                            className={cn(
-                              "admin-sidebar__item-indicator",
-                              isActive && "is-active"
-                            )}
+                            className={cn("admin-sidebar__item-indicator", isActive && "is-active")}
                           />
                           <ChildIcon className="admin-sidebar__item-icon" />
                           <span className="sr-only">{child.label}</span>
@@ -513,22 +490,24 @@ export function AdminLayout() {
                     });
                   }
 
-                      return (
-                        <div key={item.label} className="space-y-1">
-                          <button
-                            type="button"
-                            onClick={() => setOpenGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }))}
-                            className={cn(
-                              "admin-sidebar__item admin-sidebar__item--group w-full text-white/60",
-                              isGroupActive && "admin-sidebar__item--group-active text-white"
-                            )}
-                          >
-                            <span
-                              className={cn(
-                                "admin-sidebar__item-indicator",
-                                isGroupActive && "is-group-active"
-                              )}
-                            />
+                  return (
+                    <div key={item.label} className="space-y-1">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }))
+                        }
+                        className={cn(
+                          "admin-sidebar__item admin-sidebar__item--group w-full text-white/60",
+                          isGroupActive && "admin-sidebar__item--group-active text-white"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "admin-sidebar__item-indicator",
+                            isGroupActive && "is-group-active"
+                          )}
+                        />
                         <item.icon className="admin-sidebar__item-icon" />
                         <span className="flex-1 text-left">{item.label}</span>
                         {isOpen ? (
@@ -578,7 +557,11 @@ export function AdminLayout() {
             className="admin-sidebar__collapse"
             onClick={() => setCollapsed((prev) => !prev)}
           >
-            {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
+            {collapsed ? (
+              <ChevronsRight className="h-4 w-4" />
+            ) : (
+              <ChevronsLeft className="h-4 w-4" />
+            )}
             {!collapsed && <span>收起侧边栏</span>}
           </button>
         </div>
@@ -688,19 +671,10 @@ export function AdminLayout() {
                 <MessageSquare className="h-4 w-4" />
                 返回聊天
               </Button>
-              <a
-                href="https://github.com/koawa-hua/koaw.agent"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-                aria-label="打开 GitHub 仓库"
-              >
-                <Github className="h-4 w-4" />
-                <span className="font-medium">Star</span>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                  {starLabel}
-                </span>
-              </a>
+              <span className="hidden items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 md:inline-flex">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                私有化部署
+              </span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -711,7 +685,7 @@ export function AdminLayout() {
                     <Avatar
                       name={user?.username || "管理员"}
                       src={showAvatar ? avatarUrl : undefined}
-                      className="h-8 w-8 border-slate-200 bg-indigo-50 text-xs font-semibold text-indigo-600"
+                      className="h-8 w-8 border-teal-200 bg-teal-50 text-xs font-semibold text-teal-700"
                     />
                     <span className="hidden sm:inline">{user?.username || "管理员"}</span>
                     <ChevronDown className="h-4 w-4 text-slate-400" />
@@ -726,7 +700,10 @@ export function AdminLayout() {
                     <KeyRound className="mr-2 h-4 w-4" />
                     修改密码
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout} className="text-rose-600 focus:text-rose-600">
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="text-rose-600 focus:text-rose-600"
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     退出登录
                   </DropdownMenuItem>
@@ -776,7 +753,9 @@ export function AdminLayout() {
               <Input
                 type="password"
                 value={passwordForm.currentPassword}
-                onChange={(event) => setPasswordForm((prev) => ({ ...prev, currentPassword: event.target.value }))}
+                onChange={(event) =>
+                  setPasswordForm((prev) => ({ ...prev, currentPassword: event.target.value }))
+                }
                 placeholder="请输入当前密码"
                 name="current-password"
                 autoComplete="current-password"
@@ -787,7 +766,9 @@ export function AdminLayout() {
               <Input
                 type="password"
                 value={passwordForm.newPassword}
-                onChange={(event) => setPasswordForm((prev) => ({ ...prev, newPassword: event.target.value }))}
+                onChange={(event) =>
+                  setPasswordForm((prev) => ({ ...prev, newPassword: event.target.value }))
+                }
                 placeholder="请输入新密码"
                 name="new-password"
                 autoComplete="new-password"
@@ -798,7 +779,9 @@ export function AdminLayout() {
               <Input
                 type="password"
                 value={passwordForm.confirmPassword}
-                onChange={(event) => setPasswordForm((prev) => ({ ...prev, confirmPassword: event.target.value }))}
+                onChange={(event) =>
+                  setPasswordForm((prev) => ({ ...prev, confirmPassword: event.target.value }))
+                }
                 placeholder="再次输入新密码"
                 name="confirm-new-password"
                 autoComplete="new-password"

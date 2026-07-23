@@ -28,9 +28,9 @@ module.exports = {
         "chat-assistant": "hsl(var(--chat-assistant))"
       },
       fontFamily: {
-        display: ["'Space Grotesk'", "ui-sans-serif", "system-ui"],
-        body: ["'DM Sans'", "ui-sans-serif", "system-ui"],
-        mono: ["'JetBrains Mono'", "ui-monospace", "SFMono-Regular"]
+        display: ["Inter", "PingFang SC", "Microsoft YaHei", "ui-sans-serif", "system-ui"],
+        body: ["Inter", "PingFang SC", "Microsoft YaHei", "ui-sans-serif", "system-ui"],
+        mono: ["SFMono-Regular", "Cascadia Code", "Consolas", "ui-monospace"]
       },
       boxShadow: {
         soft: "0 24px 60px -30px rgba(10, 10, 15, 0.65)",
@@ -46,7 +46,7 @@ module.exports = {
           "0%, 100%": { opacity: 1 },
           "50%": { opacity: 0.5 }
         },
-        "blink": {
+        blink: {
           "0%, 100%": { opacity: 1 },
           "50%": { opacity: 0 }
         },
@@ -54,11 +54,11 @@ module.exports = {
           "0%": { transform: "rotate(0deg)" },
           "100%": { transform: "rotate(360deg)" }
         },
-        "glow": {
+        glow: {
           "0%, 100%": { opacity: 0.5 },
           "50%": { opacity: 1 }
         },
-        "float": {
+        float: {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-6px)" }
         }
@@ -66,10 +66,10 @@ module.exports = {
       animation: {
         "fade-up": "fade-up 0.35s ease-out",
         "pulse-soft": "pulse-soft 1.4s ease-in-out infinite",
-        "blink": "blink 1s step-end infinite",
+        blink: "blink 1s step-end infinite",
         "spin-slow": "spin-slow 4s linear infinite",
-        "glow": "glow 2.6s ease-in-out infinite",
-        "float": "float 6s ease-in-out infinite"
+        glow: "glow 2.6s ease-in-out infinite",
+        float: "float 6s ease-in-out infinite"
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

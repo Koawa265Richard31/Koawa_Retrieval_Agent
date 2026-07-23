@@ -1,7 +1,8 @@
-import * as React from "react";
-import { Github, Menu } from "lucide-react";
+import { Menu, PanelTop, ShieldCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/stores/authStore";
 import { useChatStore } from "@/stores/chatStore";
 
 interface HeaderProps {
@@ -9,71 +10,59 @@ interface HeaderProps {
 }
 
 export function Header({ onToggleSidebar }: HeaderProps) {
-  const { currentSessionId, sessions } = useChatStore();
-  const [starCount, setStarCount] = React.useState<number | null>(null);
-  const currentSession = React.useMemo(
-    () => sessions.find((session) => session.id === currentSessionId),
-    [sessions, currentSessionId]
-  );
-
-  React.useEffect(() => {
-    let active = true;
-    fetch("https://api.github.com/repos/koawa-hua/koaw.agent")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!active) return;
-        const count = typeof data?.stargazers_count === "number" ? data.stargazers_count : null;
-        setStarCount(count);
-      })
-      .catch(() => {
-        if (active) {
-          setStarCount(null);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const starLabel = React.useMemo(() => {
-    if (starCount === null) return "--";
-    if (starCount < 1000) return String(starCount);
-    const rounded = Math.round((starCount / 1000) * 10) / 10;
-    const text = String(rounded).replace(/\.0$/, "");
-    return `${text}k`;
-  }, [starCount]);
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const { currentSessionId, sessions, isStreaming } = useChatStore();
+  const currentSession = sessions.find((session) => session.id === currentSessionId);
 
   return (
-    <header className="sticky top-0 z-20 bg-white">
-      <div className="flex h-16 items-center justify-between px-6">
-        <div className="flex items-center gap-2">
+    <header className="relative z-20 border-b border-slate-200/70 bg-[#fbfaf7]/90 backdrop-blur-xl">
+      <div className="flex h-[68px] items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggleSidebar}
-            aria-label="切换侧边栏"
-            className="text-gray-500 hover:bg-gray-100 lg:hidden"
+            aria-label="打开会话列表"
+            className="shrink-0 rounded-xl text-slate-600 hover:bg-slate-200/60 lg:hidden"
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <p className="text-base font-medium text-gray-900">
-            {currentSession?.title || "新对话"}
-          </p>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="truncate text-[15px] font-semibold tracking-[-0.01em] text-slate-900">
+                {currentSession?.title || "新对话"}
+              </h1>
+              {isStreaming ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-semibold text-teal-700">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-teal-500" />
+                  生成中
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-0.5 hidden text-xs text-slate-500 sm:block">
+              基于企业知识库生成答案，请核对引用来源
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <a
-            href="https://github.com/koawa-hua/koaw.agent"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
-            aria-label="打开 GitHub 仓库"
-          >
-            <Github className="h-4 w-4" />
-            <span className="font-medium">Star</span>
-            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-              {starLabel}
-            </span>
-          </a>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-3 py-1.5 text-xs font-medium text-emerald-700 md:inline-flex">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            知识库已连接
+          </span>
+          {user?.role === "admin" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 rounded-xl border-slate-200 bg-white/80 px-3 text-slate-700 shadow-sm hover:bg-white"
+              onClick={() => navigate("/admin")}
+            >
+              <PanelTop className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">管理控制台</span>
+              <span className="sm:hidden">管理</span>
+            </Button>
+          ) : null}
         </div>
       </div>
     </header>

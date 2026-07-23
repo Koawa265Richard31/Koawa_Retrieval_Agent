@@ -197,18 +197,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
     } catch (error) {
       toast.error((error as Error).message || "加载消息失败");
     } finally {
-      if (get().currentSessionId !== sessionId) {
+      if (get().currentSessionId === sessionId) {
+        set({
+          isLoading: false,
+          isStreaming: false,
+          streamTaskId: null,
+          streamAbort: null,
+          streamingMessageId: null,
+          cancelRequested: false
+        });
+      } else {
         set({ isLoading: false });
-        return;
       }
-      set({
-        isLoading: false,
-        isStreaming: false,
-        streamTaskId: null,
-        streamAbort: null,
-        streamingMessageId: null,
-        cancelRequested: false
-      });
     }
   },
   updateSessionTitle: (sessionId, title) => {

@@ -1,7 +1,6 @@
 import * as React from "react";
-import { Brain, Lightbulb, Send, Square } from "lucide-react";
+import { BrainCircuit, CornerDownLeft, Send, Square } from "lucide-react";
 
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/stores/chatStore";
 
@@ -20,26 +19,19 @@ export function ChatInput() {
   } = useChatStore();
 
   const focusInput = React.useCallback(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.focus({ preventScroll: true });
+    textareaRef.current?.focus({ preventScroll: true });
   }, []);
 
   const adjustHeight = React.useCallback(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    const next = Math.min(el.scrollHeight, 160);
-    el.style.height = `${next}px`;
+    const element = textareaRef.current;
+    if (!element) return;
+    element.style.height = "auto";
+    element.style.height = `${Math.min(element.scrollHeight, 180)}px`;
   }, []);
 
+  React.useEffect(adjustHeight, [value, adjustHeight]);
   React.useEffect(() => {
-    adjustHeight();
-  }, [value, adjustHeight]);
-
-  React.useEffect(() => {
-    if (!inputFocusKey) return;
-    focusInput();
+    if (inputFocusKey) focusInput();
   }, [inputFocusKey, focusInput]);
 
   const handleSubmit = async () => {
@@ -48,112 +40,95 @@ export function ChatInput() {
       focusInput();
       return;
     }
-    if (!value.trim()) return;
-    const next = value;
+    const question = value.trim();
+    if (!question) return;
     setValue("");
-    focusInput();
-    await sendMessage(next);
+    await sendMessage(question);
     focusInput();
   };
 
   const hasContent = value.trim().length > 0;
 
   return (
-    <div className="space-y-4">
+    <div>
       <div
         className={cn(
-          "relative flex flex-col rounded-2xl border bg-white px-4 pt-3 pb-2 transition-all duration-200",
+          "rounded-2xl border bg-white p-2 shadow-[0_12px_32px_-20px_rgba(15,23,42,.45)] transition",
           isFocused
-            ? "border-[#D4D4D4] shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
-            : "border-[#E5E5E5] hover:border-[#D4D4D4]"
+            ? "border-teal-600/50 ring-4 ring-teal-600/[0.07]"
+            : "border-slate-200 hover:border-slate-300"
         )}
       >
-        <div className="relative">
-          <Textarea
-            ref={textareaRef}
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            placeholder={deepThinkingEnabled ? "输入需要深度分析的问题..." : "输入你的问题..."}
-            className="max-h-40 min-h-[44px] w-full resize-none border-0 bg-transparent px-2 pt-2 pb-2 pr-2 text-[15px] text-[#333333] shadow-none placeholder:text-[#999999] focus-visible:ring-0"
-            rows={1}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            onCompositionStart={() => {
-              isComposingRef.current = true;
-            }}
-            onCompositionEnd={() => {
-              isComposingRef.current = false;
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                const nativeEvent = event.nativeEvent as KeyboardEvent;
-                if (nativeEvent.isComposing || isComposingRef.current || nativeEvent.keyCode === 229) {
-                  return;
-                }
-                event.preventDefault();
-                handleSubmit();
-              }
-            }}
-            aria-label="聊天输入框"
-          />
-          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[10px] bg-gradient-to-b from-white/0 via-white/40 to-white/90" />
-        </div>
-        <div className="relative mt-2 flex items-center">
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder={deepThinkingEnabled ? "描述需要深入分析的业务问题…" : "询问企业知识库…"}
+          rows={1}
+          className="max-h-[180px] min-h-[54px] w-full resize-none bg-transparent px-3 py-3 text-[15px] leading-6 text-slate-800 outline-none placeholder:text-slate-400"
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          onCompositionStart={() => {
+            isComposingRef.current = true;
+          }}
+          onCompositionEnd={() => {
+            isComposingRef.current = false;
+          }}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" || event.shiftKey) return;
+            const nativeEvent = event.nativeEvent as KeyboardEvent;
+            if (nativeEvent.isComposing || isComposingRef.current || nativeEvent.keyCode === 229)
+              return;
+            event.preventDefault();
+            handleSubmit();
+          }}
+          aria-label="聊天输入框"
+        />
+
+        <div className="flex items-center gap-2 px-1 pb-1">
           <button
             type="button"
             onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
             disabled={isStreaming}
             aria-pressed={deepThinkingEnabled}
             className={cn(
-              "absolute left-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
+              "inline-flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-medium transition",
               deepThinkingEnabled
-                ? "border-[#BFDBFE] bg-[#DBEAFE] text-[#2563EB]"
-                : "border-transparent bg-[#F5F5F5] text-[#999999] hover:bg-[#EEEEEE]",
+                ? "bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-200"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200",
               isStreaming && "cursor-not-allowed opacity-60"
             )}
           >
-            <span className="inline-flex items-center gap-2">
-              <Brain className={cn("h-3.5 w-3.5", deepThinkingEnabled && "text-[#3B82F6]")} />
-              深度思考
-              {deepThinkingEnabled ? (
-                <span className="h-2 w-2 rounded-full bg-[#3B82F6] animate-pulse" />
-              ) : null}
-            </span>
+            <BrainCircuit className="h-4 w-4" />
+            深度思考
+            {deepThinkingEnabled ? <span className="h-1.5 w-1.5 rounded-full bg-teal-500" /> : null}
           </button>
+
+          <span className="ml-auto hidden items-center gap-1.5 text-[11px] text-slate-400 sm:inline-flex">
+            <CornerDownLeft className="h-3.5 w-3.5" />
+            Enter 发送 · Shift + Enter 换行
+          </span>
+
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!hasContent && !isStreaming}
             aria-label={isStreaming ? "停止生成" : "发送消息"}
             className={cn(
-              "ml-auto rounded-full p-2.5 transition-all duration-200",
+              "ml-1 flex h-9 w-9 items-center justify-center rounded-xl transition",
               isStreaming
-                ? "bg-[#FEE2E2] text-[#EF4444] hover:bg-[#FECACA]"
+                ? "bg-rose-100 text-rose-600 hover:bg-rose-200"
                 : hasContent
-                  ? "bg-[#3B82F6] text-white hover:bg-[#2563EB]"
-                  : "cursor-not-allowed bg-[#F5F5F5] text-[#CCCCCC]"
+                  ? "bg-[#0f766e] text-white shadow-sm hover:bg-[#115e59]"
+                  : "cursor-not-allowed bg-slate-100 text-slate-300"
             )}
           >
-            {isStreaming ? <Square className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+            {isStreaming ? <Square className="h-3.5 w-3.5" /> : <Send className="h-4 w-4" />}
           </button>
         </div>
       </div>
-      {deepThinkingEnabled ? (
-        <p className="text-xs text-[#2563EB]">
-          <span className="inline-flex items-center gap-1.5">
-            <Lightbulb className="h-3.5 w-3.5" />
-            深度思考模式已开启，AI将进行更深入的分析推理
-          </span>
-        </p>
-      ) : null}
-      <p className="text-center text-xs text-[#999999]">
-        <kbd className="rounded bg-[#F5F5F5] px-1.5 py-0.5 text-[#666666]">Enter</kbd> 发送
-        <span className="px-1.5">·</span>
-        <kbd className="rounded bg-[#F5F5F5] px-1.5 py-0.5 text-[#666666]">
-          Shift + Enter
-        </kbd>{" "}
-        换行
-        {isStreaming ? <span className="ml-2 animate-pulse-soft">生成中...</span> : null}
+      <p className="mt-2 text-center text-[11px] text-slate-400">
+        AI 生成内容仅供参考，关键结论请结合引用文档核验
       </p>
     </div>
   );

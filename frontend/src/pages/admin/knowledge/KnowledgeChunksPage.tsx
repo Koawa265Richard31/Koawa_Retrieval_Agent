@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CircleHelp, PenSquare, Plus, RefreshCw, ShieldCheck, ShieldX, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -58,7 +58,7 @@ export function KnowledgeChunksPage() {
 
   const selectedList = useMemo(() => Array.from(selectedIds), [selectedIds]);
 
-  const loadDocument = async () => {
+  const loadDocument = useCallback(async () => {
     if (!docId) return;
     try {
       const data = await getDocument(docId);
@@ -67,9 +67,9 @@ export function KnowledgeChunksPage() {
       toast.error(getErrorMessage(error, "加载文档失败"));
       console.error(error);
     }
-  };
+  }, [docId]);
 
-  const loadChunks = async (current = pageNo, enabled = enabledFilter) => {
+  const loadChunks = useCallback(async (current = pageNo, enabled = enabledFilter) => {
     if (!docId) return;
     setLoading(true);
     try {
@@ -85,11 +85,11 @@ export function KnowledgeChunksPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [docId, enabledFilter, pageNo]);
 
   useEffect(() => {
     loadDocument();
-  }, [docId]);
+  }, [loadDocument]);
 
   useEffect(() => {
     if (kbId) {
@@ -99,7 +99,7 @@ export function KnowledgeChunksPage() {
 
   useEffect(() => {
     loadChunks();
-  }, [docId, pageNo, enabledFilter]);
+  }, [loadChunks]);
 
   useEffect(() => {
     setSelectedIds(new Set());

@@ -1,11 +1,17 @@
-// @ts-nocheck
-/* eslint-disable */
-
 import * as React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Check, Copy, ImageIcon } from "lucide-react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
+import bash from "react-syntax-highlighter/dist/esm/languages/prism/bash";
+import css from "react-syntax-highlighter/dist/esm/languages/prism/css";
+import java from "react-syntax-highlighter/dist/esm/languages/prism/java";
+import javascript from "react-syntax-highlighter/dist/esm/languages/prism/javascript";
+import json from "react-syntax-highlighter/dist/esm/languages/prism/json";
+import markup from "react-syntax-highlighter/dist/esm/languages/prism/markup";
+import python from "react-syntax-highlighter/dist/esm/languages/prism/python";
+import sql from "react-syntax-highlighter/dist/esm/languages/prism/sql";
+import typescript from "react-syntax-highlighter/dist/esm/languages/prism/typescript";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +22,16 @@ interface MarkdownRendererProps {
   content: string;
 }
 
+SyntaxHighlighter.registerLanguage("bash", bash);
+SyntaxHighlighter.registerLanguage("css", css);
+SyntaxHighlighter.registerLanguage("html", markup);
+SyntaxHighlighter.registerLanguage("java", java);
+SyntaxHighlighter.registerLanguage("javascript", javascript);
+SyntaxHighlighter.registerLanguage("json", json);
+SyntaxHighlighter.registerLanguage("python", python);
+SyntaxHighlighter.registerLanguage("sql", sql);
+SyntaxHighlighter.registerLanguage("typescript", typescript);
+
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   const theme = useThemeStore((state) => state.theme);
 
@@ -23,13 +39,13 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       components={{
-        code({ inline, className, children, node, ...props }) {
+        code({ className, children, node, ...props }) {
+          void node;
           const match = /language-(\w+)/.exec(className || "");
           const language = match?.[1] || "text";
           const value = String(children).replace(/\n$/, "");
 
-          // 判断是否为内联代码：inline 为 true 或者没有换行符
-          if (inline || !value.includes('\n')) {
+          if (!className || !value.includes("\n")) {
             return (
               <code
                 className={cn(
@@ -73,29 +89,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
             </div>
           );
         },
-        img({ src, alt, ...props }) {
-          const [hasError, setHasError] = React.useState(false);
-
-          if (hasError) {
-            return (
-              <div className="my-3 flex items-center gap-2 text-sm text-[#999999]">
-                <ImageIcon className="h-4 w-4" />
-                <span>图片加载失败</span>
-              </div>
-            );
-          }
-
-          return (
-            <img
-              src={src}
-              alt=""
-              className="my-3 max-w-full rounded-lg"
-              onError={() => setHasError(true)}
-              loading="lazy"
-              {...props}
-            />
-          );
-        },
+        img: MarkdownImage,
         a({ children, ...props }) {
           return (
             <a
@@ -111,7 +105,10 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         table({ children, ...props }) {
           return (
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-[#d0d7de] rounded-md dark:border-[#30363d]" {...props}>
+              <table
+                className="w-full border-collapse border border-[#d0d7de] rounded-md dark:border-[#30363d]"
+                {...props}
+              >
                 {children}
               </table>
             </div>
@@ -126,14 +123,20 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         },
         th({ children, ...props }) {
           return (
-            <th className="border-b border-[#d0d7de] border-r border-r-[#d0d7de] px-3 py-2 text-left text-sm font-semibold text-[#24292f] last:border-r-0 dark:border-[#30363d] dark:border-r-[#30363d] dark:text-[#c9d1d9]" {...props}>
+            <th
+              className="border-b border-[#d0d7de] border-r border-r-[#d0d7de] px-3 py-2 text-left text-sm font-semibold text-[#24292f] last:border-r-0 dark:border-[#30363d] dark:border-r-[#30363d] dark:text-[#c9d1d9]"
+              {...props}
+            >
               {children}
             </th>
           );
         },
         td({ children, ...props }) {
           return (
-            <td className="border-b border-[#d0d7de] border-r border-r-[#d0d7de] px-3 py-2.5 text-sm text-[#24292f] last:border-r-0 dark:border-[#30363d] dark:border-r-[#30363d] dark:text-[#c9d1d9]" {...props}>
+            <td
+              className="border-b border-[#d0d7de] border-r border-r-[#d0d7de] px-3 py-2.5 text-sm text-[#24292f] last:border-r-0 dark:border-[#30363d] dark:border-r-[#30363d] dark:text-[#c9d1d9]"
+              {...props}
+            >
               {children}
             </td>
           );
@@ -167,6 +170,30 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     >
       {content}
     </ReactMarkdown>
+  );
+}
+
+function MarkdownImage({ src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
+  const [hasError, setHasError] = React.useState(false);
+
+  if (hasError) {
+    return (
+      <span className="my-3 flex items-center gap-2 text-sm text-slate-400">
+        <ImageIcon className="h-4 w-4" />
+        图片加载失败
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt || ""}
+      className="my-3 max-w-full rounded-lg"
+      onError={() => setHasError(true)}
+      loading="lazy"
+      {...props}
+    />
   );
 }
 

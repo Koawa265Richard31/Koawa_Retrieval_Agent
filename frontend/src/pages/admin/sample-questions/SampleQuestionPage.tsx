@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -57,7 +57,7 @@ export function SampleQuestionPage() {
   }>({ open: false, mode: "create", item: null });
   const [form, setForm] = useState(emptyForm);
 
-  const loadQuestions = async (current = pageNo, keywordValue = keyword) => {
+  const loadQuestions = useCallback(async (current = pageNo, keywordValue = keyword) => {
     try {
       setLoading(true);
       const data = await getSampleQuestionsPage(current, PAGE_SIZE, keywordValue || undefined);
@@ -68,11 +68,11 @@ export function SampleQuestionPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [keyword, pageNo]);
 
   useEffect(() => {
     loadQuestions();
-  }, [pageNo, keyword]);
+  }, [loadQuestions]);
 
   useEffect(() => {
     if (!dialogState.open) {

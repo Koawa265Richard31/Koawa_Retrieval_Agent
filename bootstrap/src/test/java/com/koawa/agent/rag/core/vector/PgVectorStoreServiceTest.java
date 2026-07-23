@@ -25,6 +25,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.List;
 import java.util.Map;
 
+@org.junit.jupiter.api.Tag("integration")
 @SpringBootTest
 public class PgVectorStoreServiceTest {
 

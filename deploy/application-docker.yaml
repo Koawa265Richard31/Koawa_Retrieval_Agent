@@ -1,0 +1,115 @@
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    username: ${POSTGRES_USER:ragent}
+    password: ${POSTGRES_PASSWORD}
+    url: jdbc:postgresql://postgres:5432/${POSTGRES_DB:ragent}?client_encoding=UTF8
+    hikari:
+      connection-timeout: 5000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      maximum-pool-size: 5
+      minimum-idle: 1
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: ${REDIS_PASSWORD}
+
+rocketmq:
+  name-server: rmqnamesrv:9876
+  producer:
+    group: koawa-agent-producer-docker-pg
+    send-message-timeout: 3000
+
+agent:
+  runtime:
+    enabled: ${AGENT_ENABLED:false}
+    rollout-percentage: ${AGENT_ROLLOUT_PERCENTAGE:0}
+    max-steps: ${AGENT_MAX_STEPS:8}
+    turn-timeout: ${AGENT_TURN_TIMEOUT:120s}
+    allowed-tool-ids:
+      - weather_query
+      - sales_query
+      - ticket_query
+
+rag:
+  vector:
+    type: pg
+  default:
+    collection-name: rag_default_store
+    dimension: 1536
+    metric-type: COSINE
+    sse-timeout-ms: 180000
+  rate-limit:
+    global:
+      enabled: true
+      max-concurrent: 2
+      max-wait-seconds: 15
+      lease-seconds: 30
+      poll-interval-ms: 200
+  semaphore:
+    document-upload:
+      name: rag:document:upload
+      max-concurrent: 1
+      max-wait-seconds: 5
+      lease-seconds: 300
+  knowledge:
+    schedule:
+      scan-delay-ms: 15000
+      lock-seconds: 900
+      batch-size: 5
+      min-interval-seconds: 60
+  rerank:
+    # 当前代码只有百炼和 noop RerankClient；接入 SiliconFlowRerankClient 前先关闭。
+    enabled: false
+  mcp:
+    request-timeout: 10s
+    servers:
+      - name: bundled
+        url: http://mcp-server:9099
+
+ai:
+  providers:
+    siliconflow:
+      url: https://api.siliconflow.cn
+      api-key: ${SILICONFLOW_API_KEY}
+      endpoints:
+        chat: /v1/chat/completions
+        embedding: /v1/embeddings
+        rerank: /v1/rerank
+  chat:
+    default-model: siliconflow-chat
+    deep-thinking-model: siliconflow-chat
+    candidates:
+      - id: siliconflow-chat
+        provider: siliconflow
+        model: ${SILICONFLOW_CHAT_MODEL:deepseek-ai/DeepSeek-V3.2}
+        supports-thinking: true
+        priority: 1
+  embedding:
+    default-model: siliconflow-embedding
+    candidates:
+      - id: siliconflow-embedding
+        provider: siliconflow
+        model: ${SILICONFLOW_EMBEDDING_MODEL:Qwen/Qwen3-Embedding-8B}
+        dimension: ${rag.default.dimension}
+        priority: 1
+  rerank:
+    default-model: rerank-noop
+    candidates:
+      - id: rerank-noop
+        provider: noop
+        model: noop
+        priority: 1
+
+rustfs:
+  url: http://rustfs:9000
+  access-key-id: ${RUSTFS_ACCESS_KEY}
+  secret-access-key: ${RUSTFS_SECRET_KEY}
+
+app:
+  eval:
+    enabled: false

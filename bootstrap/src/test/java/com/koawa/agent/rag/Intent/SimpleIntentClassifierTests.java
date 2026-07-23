@@ -34,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Slf4j
+@org.junit.jupiter.api.Tag("integration")
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class SimpleIntentClassifierTests {

@@ -40,7 +40,15 @@ dist/
 .env
 .env.*
 .env.local
+!.env.example
+!**/.env.example
+deploy/runtime/
+output/
 *.tsbuildinfo
+
+### Python ###
+__pycache__/
+*.py[cod]
 
 ### Local assistant/tool state ###
 .claude/settings.local.json
