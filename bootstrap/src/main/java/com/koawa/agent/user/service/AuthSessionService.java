@@ -17,15 +17,21 @@
 
 package com.koawa.agent.user.service;
 
-import com.koawa.agent.user.controller.request.LoginRequest;
-import com.koawa.agent.user.controller.request.RegisterRequest;
-import com.koawa.agent.user.controller.vo.LoginVO;
+import cn.dev33.satoken.stp.StpUtil;
+import org.springframework.stereotype.Component;
 
-public interface AuthService {
+/**
+ * Sa-Token 会话操作适配器。
+ */
+@Component
+public class AuthSessionService {
 
-    LoginVO login(LoginRequest requestParam);
+    public String login(String loginId) {
+        StpUtil.login(loginId);
+        return StpUtil.getTokenValue();
+    }
 
-    LoginVO register(RegisterRequest requestParam);
-
-    void logout();
+    public void logout() {
+        StpUtil.logout();
+    }
 }

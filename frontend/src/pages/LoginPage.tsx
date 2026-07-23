@@ -36,29 +36,42 @@ const capabilities = [
   }
 ];
 
-export function LoginPage() {
+function AuthPage({ mode }: { mode: "login" | "register" }) {
   const navigate = useNavigate();
-  const { login, isLoading } = useAuthStore();
+  const { login, register, isLoading } = useAuthStore();
+  const isRegister = mode === "register";
   const [showPassword, setShowPassword] = React.useState(false);
   const [remember, setRemember] = React.useState(true);
-  const [form, setForm] = React.useState({ username: "admin", password: "" });
+  const [form, setForm] = React.useState({
+    username: isRegister ? "" : "admin",
+    password: "",
+    confirmPassword: ""
+  });
   const [error, setError] = React.useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
-    if (!form.username.trim() || !form.password.trim()) {
+    if (!form.username.trim() || !form.password) {
       setError("请输入用户名和密码。");
       return;
     }
+    if (isRegister && form.password !== form.confirmPassword) {
+      setError("两次输入的密码不一致。");
+      return;
+    }
     try {
-      await login(form.username.trim(), form.password.trim());
-      if (!remember) {
+      if (isRegister) {
+        await register(form.username.trim(), form.password, form.confirmPassword);
+      } else {
+        await login(form.username.trim(), form.password);
+      }
+      if (!isRegister && !remember) {
         // 预留仅会话级登录态能力。
       }
       navigate("/chat");
     } catch (err) {
-      setError((err as Error).message || "登录失败，请稍后重试。");
+      setError((err as Error).message || `${isRegister ? "注册" : "登录"}失败，请稍后重试。`);
     }
   };
 
@@ -141,10 +154,12 @@ export function LoginPage() {
                 Secure workspace
               </p>
               <h2 className="mt-3 text-3xl font-semibold tracking-[-0.025em] text-slate-950">
-                登录知识工作台
+                {isRegister ? "创建个人账号" : "登录知识工作台"}
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                使用管理员分配的企业账号继续访问。
+                {isRegister
+                  ? "注册后将以普通成员身份进入知识工作台。"
+                  : "使用你的企业账号继续访问。"}
               </p>
             </div>
 
@@ -183,7 +198,7 @@ export function LoginPage() {
                       setForm((prev) => ({ ...prev, password: event.target.value }))
                     }
                     className="h-12 rounded-xl border-slate-300 bg-white pl-11 pr-11 shadow-sm focus-visible:ring-teal-700"
-                    autoComplete="current-password"
+                    autoComplete={isRegister ? "new-password" : "current-password"}
                   />
                   <button
                     type="button"
@@ -196,16 +211,47 @@ export function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 text-slate-600">
-                  <Checkbox
-                    checked={remember}
-                    onCheckedChange={(value) => setRemember(Boolean(value))}
-                  />
-                  保持登录
-                </label>
-                <span className="text-xs text-slate-400">账号由管理员维护</span>
-              </div>
+              {isRegister ? (
+                <div className="space-y-2">
+                  <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">
+                    确认密码
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      id="confirmPassword"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="请再次输入密码"
+                      value={form.confirmPassword}
+                      onChange={(event) =>
+                        setForm((prev) => ({ ...prev, confirmPassword: event.target.value }))
+                      }
+                      className="h-12 rounded-xl border-slate-300 bg-white pl-11 shadow-sm focus-visible:ring-teal-700"
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    用户名使用 3-32 位字母、数字、下划线或连字符；密码至少 8 位。
+                  </p>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between text-sm">
+                  <label className="flex items-center gap-2 text-slate-600">
+                    <Checkbox
+                      checked={remember}
+                      onCheckedChange={(value) => setRemember(Boolean(value))}
+                    />
+                    保持登录
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/register")}
+                    className="text-xs font-medium text-teal-700 hover:text-teal-900"
+                  >
+                    创建账号
+                  </button>
+                </div>
+              )}
 
               {error ? (
                 <p
@@ -221,17 +267,44 @@ export function LoginPage() {
                 className="h-12 w-full rounded-xl bg-[#0f766e] text-white shadow-[0_12px_28px_-12px_rgba(15,118,110,.8)] hover:bg-[#115e59]"
                 disabled={isLoading}
               >
-                {isLoading ? "正在验证..." : "进入工作台"}
+                {isLoading
+                  ? isRegister
+                    ? "正在创建..."
+                    : "正在验证..."
+                  : isRegister
+                    ? "创建并进入工作台"
+                    : "进入工作台"}
                 {!isLoading ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
               </Button>
             </form>
 
             <p className="mt-7 text-center text-xs leading-5 text-slate-400">
-              登录即表示你同意遵守企业数据安全与知识访问规范
+              {isRegister ? (
+                <>
+                  已有账号？{" "}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/login")}
+                    className="font-medium text-teal-700 hover:text-teal-900"
+                  >
+                    返回登录
+                  </button>
+                </>
+              ) : (
+                "登录即表示你同意遵守企业数据安全与知识访问规范"
+              )}
             </p>
           </div>
         </section>
       </div>
     </main>
   );
+}
+
+export function LoginPage() {
+  return <AuthPage mode="login" />;
+}
+
+export function RegisterPage() {
+  return <AuthPage mode="register" />;
 }

@@ -18,6 +18,7 @@
 package com.koawa.agent.user.controller;
 
 import com.koawa.agent.user.controller.request.LoginRequest;
+import com.koawa.agent.user.controller.request.RegisterRequest;
 import com.koawa.agent.user.controller.vo.LoginVO;
 import com.koawa.agent.framework.convention.Result;
 import com.koawa.agent.framework.web.Results;
@@ -43,6 +44,14 @@ public class AuthController {
     @PostMapping("/auth/login")
     public Result<LoginVO> login(@RequestBody LoginRequest requestParam) {
         return Results.success(authService.login(requestParam));
+    }
+
+    /**
+     * 用户注册接口。注册成功后直接建立登录会话。
+     */
+    @PostMapping("/auth/register")
+    public Result<LoginVO> register(@RequestBody RegisterRequest requestParam) {
+        return Results.success(authService.register(requestParam));
     }
 
     /**

@@ -23,6 +23,7 @@ import com.koawa.agent.user.dao.entity.UserDO;
 import com.koawa.agent.user.dao.mapper.UserMapper;
 import com.koawa.agent.framework.context.LoginUser;
 import com.koawa.agent.framework.context.UserContext;
+import com.koawa.agent.framework.exception.ClientException;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -71,6 +72,10 @@ public class UserContextInterceptor implements HandlerInterceptor {
 
         String loginId = StpUtil.getLoginIdAsString();
         UserDO user = userMapper.selectById(loginId);
+        if (user == null) {
+            StpUtil.logout();
+            throw new ClientException("用户不存在或已停用，请重新登录");
+        }
 
         UserContext.set(
                 LoginUser.builder()

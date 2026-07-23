@@ -6,6 +6,9 @@ import { useAuthStore } from "@/stores/authStore";
 const LoginPage = React.lazy(() =>
   import("@/pages/LoginPage").then((module) => ({ default: module.LoginPage }))
 );
+const RegisterPage = React.lazy(() =>
+  import("@/pages/LoginPage").then((module) => ({ default: module.RegisterPage }))
+);
 const ChatPage = React.lazy(() =>
   import("@/pages/ChatPage").then((module) => ({ default: module.ChatPage }))
 );
@@ -144,6 +147,10 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <RedirectIfAuth>{lazyPage(<LoginPage />)}</RedirectIfAuth>
+  },
+  {
+    path: "/register",
+    element: <RedirectIfAuth>{lazyPage(<RegisterPage />)}</RedirectIfAuth>
   },
   {
     path: "/chat",

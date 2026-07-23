@@ -15,17 +15,19 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.user.service;
+package com.koawa.agent.user.controller.request;
 
-import com.koawa.agent.user.controller.request.LoginRequest;
-import com.koawa.agent.user.controller.request.RegisterRequest;
-import com.koawa.agent.user.controller.vo.LoginVO;
+import lombok.Data;
 
-public interface AuthService {
+/**
+ * 用户注册请求。
+ */
+@Data
+public class RegisterRequest {
 
-    LoginVO login(LoginRequest requestParam);
+    private String username;
 
-    LoginVO register(RegisterRequest requestParam);
+    private String password;
 
-    void logout();
+    private String confirmPassword;
 }
