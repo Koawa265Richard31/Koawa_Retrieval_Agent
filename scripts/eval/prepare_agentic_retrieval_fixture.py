@@ -131,19 +131,21 @@ def page_data(base_url: str, path: str, token: str) -> dict[str, Any]:
     return data
 
 
-def find_or_create_kb(base_url: str, token: str) -> str:
-    query = urllib.parse.urlencode({"name": FIXTURE_NAME, "current": 1, "size": 20})
+def find_or_create_kb(
+    base_url: str, token: str, fixture_name: str, collection_name: str
+) -> str:
+    query = urllib.parse.urlencode({"name": fixture_name, "current": 1, "size": 20})
     records = page_data(base_url, f"/knowledge-base?{query}", token).get("records", [])
     for record in records:
-        if record.get("name") == FIXTURE_NAME:
+        if record.get("name") == fixture_name:
             return str(record["id"])
     result = request_json(
         f"{base_url}/knowledge-base",
         method="POST",
         payload={
-            "name": FIXTURE_NAME,
+            "name": fixture_name,
             "embeddingModel": "siliconflow-embedding",
-            "collectionName": COLLECTION_NAME,
+            "collectionName": collection_name,
         },
         token=token,
     )
@@ -190,6 +192,8 @@ def parse_args() -> argparse.Namespace:
         default=Path("resources/eval/agentic-retrieval/v1/cases.json"),
     )
     parser.add_argument("--timeout-seconds", type=float, default=600)
+    parser.add_argument("--knowledge-base-name", default=FIXTURE_NAME)
+    parser.add_argument("--collection-name", default=COLLECTION_NAME)
     return parser.parse_args()
 
 
@@ -208,7 +212,8 @@ def main() -> int:
         payload={"username": "admin", "password": password},
     )
     token = str(login["data"]["token"])
-    kb_id = find_or_create_kb(base_url, token)
+    kb_id = find_or_create_kb(
+        base_url, token, args.knowledge_base_name, args.collection_name)
     existing = existing_documents(base_url, kb_id, token)
     dataset = json.loads(dataset_path.read_text(encoding="utf-8"))
     pending: list[str] = []

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "name": "gakumas-agentic-demo-v1",
+  "documents": [
+    {"path": "resources/demo/gakumas-kb/wikipedia/01-学园偶像大师.md", "access": "public"},
+    {"path": "resources/demo/gakumas-kb/wikipedia/02-偶像大师系列.md", "access": "public"},
+    {"path": "resources/demo/gakumas-kb/wikipedia/03-長月葵.md", "access": "public"},
+    {"path": "resources/demo/gakumas-kb/wikipedia/05-薄井友里.md", "access": "public"},
+    {"path": "resources/demo/gakumas-kb/synthetic/contest-rules-v1.md", "access": "public"},
+    {"path": "resources/demo/gakumas-kb/synthetic/contest-rules-v2.md", "access": "public"},
+    {"path": "resources/demo/gakumas-kb/synthetic/event-and-reward.md", "access": "public"}
+  ],
+  "restrictedDocuments": [
+    {
+      "path": "resources/demo/gakumas-kb/synthetic/restricted-producer-notes.md",
+      "access": "admin-only",
+      "mustUseSeparateKnowledgeBase": true
+    }
+  ],
+  "evaluationCases": "resources/eval/agentic-retrieval/v1/gakumas-questions.json"
+}
