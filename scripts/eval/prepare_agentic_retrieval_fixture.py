@@ -160,6 +160,38 @@ def existing_documents(base_url: str, kb_id: str, token: str) -> dict[str, dict]
     return {str(record["docName"]): record for record in records}
 
 
+def flatten_intents(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    flattened: list[dict[str, Any]] = []
+    for node in nodes:
+        flattened.append(node)
+        flattened.extend(flatten_intents(node.get("children") or []))
+    return flattened
+
+
+def ensure_intent(
+    base_url: str,
+    token: str,
+    kb_id: str,
+    intent: dict[str, Any] | None,
+) -> None:
+    if not intent:
+        return
+    tree = request_json(f"{base_url}/intent-tree/trees", token=token)
+    nodes = flatten_intents(tree.get("data") or [])
+    if any(node.get("intentCode") == intent["intentCode"] for node in nodes):
+        print(f"INTENT={intent['intentCode']} STATUS=reused")
+        return
+    payload = dict(intent)
+    payload["kbId"] = kb_id
+    request_json(
+        f"{base_url}/intent-tree",
+        method="POST",
+        payload=payload,
+        token=token,
+    )
+    print(f"INTENT={intent['intentCode']} STATUS=created")
+
+
 def wait_for_index(base_url: str, doc_id: str, token: str, deadline: float) -> None:
     while time.monotonic() < deadline:
         result = request_json(
@@ -216,6 +248,7 @@ def main() -> int:
         base_url, token, args.knowledge_base_name, args.collection_name)
     existing = existing_documents(base_url, kb_id, token)
     dataset = json.loads(dataset_path.read_text(encoding="utf-8"))
+    ensure_intent(base_url, token, kb_id, dataset.get("intent"))
     pending: list[str] = []
     for document in dataset["documents"]:
         file_path = root / document["path"]

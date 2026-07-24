@@ -1,6 +1,23 @@
 {
   "schemaVersion": 1,
   "name": "gakumas-agentic-demo-v1",
+  "intent": {
+    "intentCode": "demo-gakumas",
+    "name": "学园偶像大师演示知识",
+    "level": 0,
+    "parentCode": null,
+    "description": "学园偶像大师的作品背景、角色与声优，以及演示用练习赛规则、版本差异、活动条件和奖励。",
+    "examples": [
+      "学园偶像大师的故事舞台是什么",
+      "花海咲季的声优是谁",
+      "新版练习赛规则有什么变化",
+      "新账号如何参加初星联合演出"
+    ],
+    "topK": 8,
+    "kind": 0,
+    "sortOrder": 900,
+    "enabled": 1
+  },
   "documents": [
     {"path": "resources/demo/gakumas-kb/wikipedia/01-学园偶像大师.md", "access": "public"},
     {"path": "resources/demo/gakumas-kb/wikipedia/02-偶像大师系列.md", "access": "public"},
