@@ -231,4 +231,24 @@ public class ThreadPoolExecutorConfig {
         );
         return TtlExecutors.getTtlExecutor(executor);
     }
+
+    /**
+     * Agentic Retrieval shadow evaluator. Rejection skips observation and
+     * must never execute on the user request thread.
+     */
+    @Bean
+    public Executor agenticRetrievalShadowExecutor() {
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                1,
+                Math.max(2, CPU_COUNT >> 1),
+                60,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(100),
+                ThreadFactoryBuilder.create()
+                        .setNamePrefix("agentic_retrieval_shadow_")
+                        .build(),
+                new ThreadPoolExecutor.AbortPolicy()
+        );
+        return TtlExecutors.getTtlExecutor(executor);
+    }
 }

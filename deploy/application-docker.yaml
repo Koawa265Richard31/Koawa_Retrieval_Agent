@@ -36,6 +36,11 @@ agent:
       - ticket_query
 
 rag:
+  agentic-retrieval:
+    shadow-enabled: ${RAG_AGENTIC_RETRIEVAL_SHADOW_ENABLED:false}
+    evaluator-timeout: ${RAG_AGENTIC_RETRIEVAL_EVALUATOR_TIMEOUT:8s}
+    max-evidence-items: ${RAG_AGENTIC_RETRIEVAL_MAX_EVIDENCE_ITEMS:20}
+    max-evidence-chars: ${RAG_AGENTIC_RETRIEVAL_MAX_EVIDENCE_CHARS:1200}
   vector:
     type: pg
   default:

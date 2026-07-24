@@ -37,6 +37,13 @@ docker compose logs -f app
 
 首次创建 PostgreSQL 数据目录时会自动执行 `schema_pg.sql` 和 `init_data_pg.sql`。已有数据目录不会重复执行；数据库结构升级应使用独立迁移脚本，不能靠删除数据卷重建。
 
+从 v1.2 升级到包含 Agentic Retrieval Trace 的版本时，先执行：
+
+```bash
+docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+  -f /dev/stdin < ../resources/database/upgrade_v1.2_to_v1.3.sql
+```
+
 应用地址：`http://<server-ip>:9090/api/koawa-agent`。
 
 ## 3. 资源边界

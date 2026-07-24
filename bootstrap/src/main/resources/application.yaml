@@ -49,6 +49,11 @@ agent:
     allowed-tool-ids: []
 
 rag:
+  agentic-retrieval:
+    shadow-enabled: false
+    evaluator-timeout: 8s
+    max-evidence-items: 20
+    max-evidence-chars: 1200
   vector:
     type: pg  # 可选 milvus / pg
 

@@ -693,6 +693,9 @@ userId 兜底
 
 ### Phase AR1：领域模型与 Shadow Evidence Evaluation
 
+状态：已完成（2026-07-24）。实现与验收记录见
+[`AGENTIC_RETRIEVAL_AR1.md`](./AGENTIC_RETRIEVAL_AR1.md)。
+
 #### 目标
 
 建立 EvidenceLedger 和证据评估能力，但不影响线上回答。
