@@ -26,7 +26,7 @@ public record RetrievalBudget(
         Duration timeout) {
 
     public static RetrievalBudget defaults() {
-        return new RetrievalBudget(2, 6, 40, Duration.ofSeconds(8));
+        return new RetrievalBudget(2, 6, 40, Duration.ofSeconds(120));
     }
 
     public RetrievalBudget {

@@ -53,9 +53,9 @@ rag:
     mode: off
     rollout-percentage: 0
     shadow-enabled: false
-    evaluator-timeout: 8s
-    planner-timeout: 8s
-    timeout: 8s
+    evaluator-timeout: 45s
+    planner-timeout: 30s
+    timeout: 120s
     max-iterations: 2
     max-sub-queries: 6
     max-retrieved-chunks: 40

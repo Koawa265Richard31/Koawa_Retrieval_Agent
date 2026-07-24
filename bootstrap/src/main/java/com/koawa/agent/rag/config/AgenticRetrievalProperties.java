@@ -34,9 +34,9 @@ public class AgenticRetrievalProperties {
      * Compatibility switch used by AR1/AR2 deployments. Prefer {@link #mode}.
      */
     private boolean shadowEnabled = false;
-    private Duration evaluatorTimeout = Duration.ofSeconds(8);
-    private Duration plannerTimeout = Duration.ofSeconds(8);
-    private Duration timeout = Duration.ofSeconds(8);
+    private Duration evaluatorTimeout = Duration.ofSeconds(45);
+    private Duration plannerTimeout = Duration.ofSeconds(30);
+    private Duration timeout = Duration.ofSeconds(120);
     private int maxIterations = 2;
     private int maxSubQueries = 6;
     private int maxRetrievedChunks = 40;
