@@ -25,7 +25,7 @@ import com.koawa.agent.infra.chat.LLMService;
 import com.koawa.agent.infra.chat.StreamCallback;
 import com.koawa.agent.infra.chat.StreamCancellationHandle;
 import com.koawa.agent.rag.core.guidance.GuidanceDecision;
-import com.koawa.agent.rag.core.agentic.AgenticRetrievalShadowService;
+import com.koawa.agent.rag.core.agentic.AgenticRetrievalGateway;
 import com.koawa.agent.rag.core.guidance.IntentGuidanceService;
 import com.koawa.agent.rag.core.intent.IntentResolver;
 import com.koawa.agent.rag.core.memory.ConversationMemoryService;
@@ -68,7 +68,7 @@ public class StreamChatPipeline {
     private final IntentResolver intentResolver;
     private final IntentGuidanceService guidanceService;
     private final RetrievalEngine retrievalEngine;
-    private final AgenticRetrievalShadowService agenticRetrievalShadowService;
+    private final AgenticRetrievalGateway agenticRetrievalGateway;
     private final LLMService llmService;
     private final RAGPromptService promptBuilder;
     private final PromptTemplateLoader promptTemplateLoader;
@@ -97,11 +97,8 @@ public class StreamChatPipeline {
 
         //检索知识库/MCP 上下文
         RetrievalContext retrievalCtx = retrieve(ctx);
-        agenticRetrievalShadowService.submit(
-                ctx.getTaskId(),
-                ctx.getSubIntents(),
-                retrievalCtx,
-                searchProperties.getDefaultTopK());
+        retrievalCtx = agenticRetrievalGateway.route(
+                ctx, retrievalCtx, searchProperties.getDefaultTopK());
         //如果没检索到内容，直接返回无结果提示
         if (handleEmptyRetrieval(ctx, retrievalCtx)) {
             return;

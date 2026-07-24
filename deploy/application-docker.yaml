@@ -37,6 +37,8 @@ agent:
 
 rag:
   agentic-retrieval:
+    mode: ${RAG_AGENTIC_RETRIEVAL_MODE:off}
+    rollout-percentage: ${RAG_AGENTIC_RETRIEVAL_ROLLOUT_PERCENTAGE:0}
     shadow-enabled: ${RAG_AGENTIC_RETRIEVAL_SHADOW_ENABLED:false}
     evaluator-timeout: ${RAG_AGENTIC_RETRIEVAL_EVALUATOR_TIMEOUT:8s}
     planner-timeout: ${RAG_AGENTIC_RETRIEVAL_PLANNER_TIMEOUT:8s}

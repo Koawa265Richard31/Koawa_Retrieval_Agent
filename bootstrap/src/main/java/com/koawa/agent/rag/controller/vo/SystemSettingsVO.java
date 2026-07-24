@@ -151,6 +151,16 @@ public class SystemSettingsVO {
         private Integer titleMaxLength;
     }
 
+    @Data
+    @Builder
+    public static class AgenticRetrievalSettings {
+        private String mode;
+        private Integer rolloutPercentage;
+        private Integer maxIterations;
+        private Long timeoutMs;
+        private Boolean fallbackToSinglePass;
+    }
+
     @Setter
     @Getter
     public static class RagSettings {
@@ -159,13 +169,16 @@ public class SystemSettingsVO {
         private QueryRewriteSettings queryRewrite;
         private RateLimitSettings rateLimit;
         private MemorySettings memory;
+        private AgenticRetrievalSettings agenticRetrieval;
 
         public RagSettings(DefaultSettings defaultConfig, QueryRewriteSettings queryRewrite,
-                           RateLimitSettings rateLimit, MemorySettings memory) {
+                           RateLimitSettings rateLimit, MemorySettings memory,
+                           AgenticRetrievalSettings agenticRetrieval) {
             this.defaultConfig = defaultConfig;
             this.queryRewrite = queryRewrite;
             this.rateLimit = rateLimit;
             this.memory = memory;
+            this.agenticRetrieval = agenticRetrieval;
         }
 
         public static RagSettingsBuilder builder() {
@@ -177,6 +190,7 @@ public class SystemSettingsVO {
             private QueryRewriteSettings queryRewrite;
             private RateLimitSettings rateLimit;
             private MemorySettings memory;
+            private AgenticRetrievalSettings agenticRetrieval;
 
             public RagSettingsBuilder defaultConfig(DefaultSettings defaultConfig) {
                 this.defaultConfig = defaultConfig;
@@ -198,8 +212,16 @@ public class SystemSettingsVO {
                 return this;
             }
 
+            public RagSettingsBuilder agenticRetrieval(
+                    AgenticRetrievalSettings agenticRetrieval) {
+                this.agenticRetrieval = agenticRetrieval;
+                return this;
+            }
+
             public RagSettings build() {
-                return new RagSettings(defaultConfig, queryRewrite, rateLimit, memory);
+                return new RagSettings(
+                        defaultConfig, queryRewrite, rateLimit, memory,
+                        agenticRetrieval);
             }
         }
     }

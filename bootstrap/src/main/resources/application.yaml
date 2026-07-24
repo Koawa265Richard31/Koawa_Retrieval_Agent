@@ -50,6 +50,8 @@ agent:
 
 rag:
   agentic-retrieval:
+    mode: off
+    rollout-percentage: 0
     shadow-enabled: false
     evaluator-timeout: 8s
     planner-timeout: 8s

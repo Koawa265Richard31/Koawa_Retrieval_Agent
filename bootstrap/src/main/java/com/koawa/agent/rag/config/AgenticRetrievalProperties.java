@@ -28,6 +28,11 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "rag.agentic-retrieval")
 public class AgenticRetrievalProperties {
 
+    private Mode mode = Mode.OFF;
+    private int rolloutPercentage = 0;
+    /**
+     * Compatibility switch used by AR1/AR2 deployments. Prefer {@link #mode}.
+     */
     private boolean shadowEnabled = false;
     private Duration evaluatorTimeout = Duration.ofSeconds(8);
     private Duration plannerTimeout = Duration.ofSeconds(8);
@@ -37,4 +42,14 @@ public class AgenticRetrievalProperties {
     private int maxRetrievedChunks = 40;
     private int maxEvidenceItems = 20;
     private int maxEvidenceChars = 1200;
+
+    public Mode effectiveMode() {
+        return mode == Mode.OFF && shadowEnabled ? Mode.SHADOW : mode;
+    }
+
+    public enum Mode {
+        OFF,
+        SHADOW,
+        ACTIVE
+    }
 }

@@ -1,0 +1,22 @@
+[
+  {"id":"s01","label":"simple","question":"退款规则是什么","rewrittenParts":1,"resolvedParts":1},
+  {"id":"s02","label":"simple","question":"如何重置密码","rewrittenParts":1,"resolvedParts":1},
+  {"id":"s03","label":"simple","question":"部署需要多少内存","rewrittenParts":1,"resolvedParts":1},
+  {"id":"s04","label":"simple","question":"知识库支持哪些格式","rewrittenParts":1,"resolvedParts":1},
+  {"id":"s05","label":"simple","question":"管理员如何创建用户","rewrittenParts":1,"resolvedParts":1},
+  {"id":"s06","label":"simple","question":"上传文件大小限制是多少","rewrittenParts":1,"resolvedParts":1},
+  {"id":"s07","label":"simple","question":"如何删除会话","rewrittenParts":1,"resolvedParts":1},
+  {"id":"s08","label":"simple","question":"向量维度是多少","rewrittenParts":1,"resolvedParts":1},
+  {"id":"s09","label":"simple","question":"系统支持流式回答吗","rewrittenParts":1,"resolvedParts":1},
+  {"id":"s10","label":"simple","question":"怎样查看检索日志","rewrittenParts":1,"resolvedParts":1},
+  {"id":"c01","label":"complex","question":"比较标准版和企业版权限并说明升级步骤","rewrittenParts":3,"resolvedParts":3},
+  {"id":"c02","label":"complex","question":"先确认部署要求再给出故障恢复流程","rewrittenParts":2,"resolvedParts":2},
+  {"id":"c03","label":"complex","question":"分别说明管理员和普通用户的知识库权限","rewrittenParts":2,"resolvedParts":2},
+  {"id":"c04","label":"complex","question":"退款条件是什么且审批失败后如何申诉","rewrittenParts":2,"resolvedParts":2},
+  {"id":"c05","label":"complex","question":"对比两种向量库并给出迁移注意事项","rewrittenParts":3,"resolvedParts":3},
+  {"id":"c06","label":"complex","question":"汇总安装前置条件、配置步骤和验收方法","rewrittenParts":3,"resolvedParts":3},
+  {"id":"c07","label":"complex","question":"登录失败可能有哪些原因并分别如何处理","rewrittenParts":2,"resolvedParts":2},
+  {"id":"c08","label":"complex","question":"根据权限模型判断谁能审批并说明依据","rewrittenParts":2,"resolvedParts":2},
+  {"id":"c09","label":"complex","question":"查出当前版本限制再比较下一版本变化","rewrittenParts":2,"resolvedParts":2},
+  {"id":"c10","label":"complex","question":"同时给出备份、恢复和回滚流程","rewrittenParts":3,"resolvedParts":3}
+]

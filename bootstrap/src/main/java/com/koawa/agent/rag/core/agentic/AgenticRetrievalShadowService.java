@@ -17,7 +17,6 @@
 
 package com.koawa.agent.rag.core.agentic;
 
-import com.koawa.agent.rag.config.AgenticRetrievalProperties;
 import com.koawa.agent.rag.dto.RetrievalContext;
 import com.koawa.agent.rag.dto.SubQuestionIntent;
 import lombok.extern.slf4j.Slf4j;
@@ -32,15 +31,12 @@ import java.util.concurrent.RejectedExecutionException;
 @Component
 public class AgenticRetrievalShadowService {
 
-    private final AgenticRetrievalProperties properties;
     private final AgenticRetrievalShadowRunner runner;
     private final Executor shadowExecutor;
 
     public AgenticRetrievalShadowService(
-            AgenticRetrievalProperties properties,
             AgenticRetrievalShadowRunner runner,
             @Qualifier("agenticRetrievalShadowExecutor") Executor shadowExecutor) {
-        this.properties = properties;
         this.runner = runner;
         this.shadowExecutor = shadowExecutor;
     }
@@ -50,12 +46,6 @@ public class AgenticRetrievalShadowService {
             List<SubQuestionIntent> subIntents,
             RetrievalContext context,
             int topK) {
-        if (!properties.isShadowEnabled()) {
-            return;
-        }
-        if (subIntents == null || subIntents.size() < 2) {
-            return;
-        }
         try {
             shadowExecutor.execute(() -> {
                 try {

@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "cases": 20,
+  "matrix": {
+    "trueSimple": 10,
+    "falseComplex": 0,
+    "falseSimple": 0,
+    "trueComplex": 10
+  },
+  "simpleFalsePositiveRate": 0.0,
+  "complexFalseNegativeRate": 0.0,
+  "admission": {
+    "simpleFalsePositiveRateBelow10Percent": true
+  },
+  "results": [
+    {
+      "id": "s01",
+      "actual": "simple",
+      "predicted": "simple"
+    },
+    {
+      "id": "s02",
+      "actual": "simple",
+      "predicted": "simple"
+    },
+    {
+      "id": "s03",
+      "actual": "simple",
+      "predicted": "simple"
+    },
+    {
+      "id": "s04",
+      "actual": "simple",
+      "predicted": "simple"
+    },
+    {
+      "id": "s05",
+      "actual": "simple",
+      "predicted": "simple"
+    },
+    {
+      "id": "s06",
+      "actual": "simple",
+      "predicted": "simple"
+    },
+    {
+      "id": "s07",
+      "actual": "simple",
+      "predicted": "simple"
+    },
+    {
+      "id": "s08",
+      "actual": "simple",
+      "predicted": "simple"
+    },
+    {
+      "id": "s09",
+      "actual": "simple",
+      "predicted": "simple"
+    },
+    {
+      "id": "s10",
+      "actual": "simple",
+      "predicted": "simple"
+    },
+    {
+      "id": "c01",
+      "actual": "complex",
+      "predicted": "complex"
+    },
+    {
+      "id": "c02",
+      "actual": "complex",
+      "predicted": "complex"
+    },
+    {
+      "id": "c03",
+      "actual": "complex",
+      "predicted": "complex"
+    },
+    {
+      "id": "c04",
+      "actual": "complex",
+      "predicted": "complex"
+    },
+    {
+      "id": "c05",
+      "actual": "complex",
+      "predicted": "complex"
+    },
+    {
+      "id": "c06",
+      "actual": "complex",
+      "predicted": "complex"
+    },
+    {
+      "id": "c07",
+      "actual": "complex",
+      "predicted": "complex"
+    },
+    {
+      "id": "c08",
+      "actual": "complex",
+      "predicted": "complex"
+    },
+    {
+      "id": "c09",
+      "actual": "complex",
+      "predicted": "complex"
+    },
+    {
+      "id": "c10",
+      "actual": "complex",
+      "predicted": "complex"
+    }
+  ]
+}

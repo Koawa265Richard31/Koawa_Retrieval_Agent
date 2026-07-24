@@ -21,6 +21,7 @@ import com.koawa.agent.framework.convention.Result;
 import com.koawa.agent.framework.web.Results;
 import com.koawa.agent.infra.config.AIModelProperties;
 import com.koawa.agent.rag.config.MemoryProperties;
+import com.koawa.agent.rag.config.AgenticRetrievalProperties;
 import com.koawa.agent.rag.config.RAGConfigProperties;
 import com.koawa.agent.rag.config.RAGDefaultProperties;
 import com.koawa.agent.rag.config.RAGRateLimitProperties;
@@ -51,6 +52,7 @@ public class RAGSettingsController {
     private final RAGRateLimitProperties ragRateLimitProperties;
     private final MemoryProperties memoryProperties;
     private final AIModelProperties aiModelProperties;
+    private final AgenticRetrievalProperties agenticRetrievalProperties;
 
     @Value("${spring.servlet.multipart.max-file-size:50MB}")
     private DataSize maxFileSize;
@@ -83,6 +85,13 @@ public class RAGSettingsController {
                                         .build())
                                 .build())
                         .memory(toMemorySettings(memoryProperties))
+                        .agenticRetrieval(SystemSettingsVO.AgenticRetrievalSettings.builder()
+                                .mode(agenticRetrievalProperties.effectiveMode().name())
+                                .rolloutPercentage(agenticRetrievalProperties.getRolloutPercentage())
+                                .maxIterations(agenticRetrievalProperties.getMaxIterations())
+                                .timeoutMs(agenticRetrievalProperties.getTimeout().toMillis())
+                                .fallbackToSinglePass(true)
+                                .build())
                         .build())
                 .ai(toAISettings(aiModelProperties))
                 .build();
