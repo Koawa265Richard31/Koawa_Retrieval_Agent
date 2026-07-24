@@ -189,6 +189,7 @@ services:
       AGENT_ROLLOUT_PERCENTAGE: ${AGENT_ROLLOUT_PERCENTAGE:-0}
       AGENT_MAX_STEPS: ${AGENT_MAX_STEPS:-8}
       AGENT_TURN_TIMEOUT: ${AGENT_TURN_TIMEOUT:-120s}
+      APP_EVAL_ENABLED: ${APP_EVAL_ENABLED:-false}
     depends_on:
       postgres:
         condition: service_healthy

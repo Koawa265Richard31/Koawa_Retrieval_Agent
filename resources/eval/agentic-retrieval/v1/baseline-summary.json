@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "ragent-agentic-retrieval-v1",
+  "executed_on": "2026-07-24",
+  "case_count": 25,
+  "successful_case_count": 25,
+  "error_count": 0,
+  "answerable_case_count": 22,
+  "refusal_case_count": 3,
+  "recall_at_5": 1.0,
+  "mrr_at_5": 0.9772727272727273,
+  "all_reference_docs_hit_rate": 1.0,
+  "no_answer_retrieval_empty_rate": 0.0,
+  "average_latency_ms": 10454.24,
+  "p95_latency_ms": 18415.0,
+  "average_sub_intent_count": 1.12,
+  "model_call_count": null,
+  "token_usage": null,
+  "by_complexity": {
+    "simple": {
+      "case_count": 5,
+      "recall_at_5": 1.0,
+      "mrr_at_5": 0.9,
+      "average_latency_ms": 8987.4,
+      "average_sub_intent_count": 1.0
+    },
+    "agentic": {
+      "case_count": 20,
+      "recall_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "no_answer_retrieval_empty_rate": 0.0,
+      "average_latency_ms": 10820.95,
+      "average_sub_intent_count": 1.15
+    }
+  },
+  "limitations": [
+    "Citation hit rate uses all-reference-doc-hit as a retrieval-stage proxy.",
+    "Actual model call count and provider token usage are not exposed by the current trace.",
+    "Document-level recall is saturated by the nine-document fixture."
+  ]
+}

@@ -1,0 +1,559 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "ragent-agentic-retrieval-v1",
+  "description": "基于仓库内企业知识文档构造的复杂、多部分和多跳检索评测集。",
+  "documents": [
+    {
+      "doc_id": "招聘信息",
+      "path": "resources/docs/knowledge/group/hr/招聘信息.md"
+    },
+    {
+      "doc_id": "员工培训",
+      "path": "resources/docs/knowledge/group/hr/员工培训.md"
+    },
+    {
+      "doc_id": "人事制度",
+      "path": "resources/docs/knowledge/group/hr/人事制度.md"
+    },
+    {
+      "doc_id": "公司规章制度",
+      "path": "resources/docs/knowledge/group/hr/公司规章制度.md"
+    },
+    {
+      "doc_id": "薪资与福利政策",
+      "path": "resources/docs/knowledge/group/hr/薪资与福利政策.md"
+    },
+    {
+      "doc_id": "IT支持",
+      "path": "resources/docs/knowledge/group/it/IT支持.md"
+    },
+    {
+      "doc_id": "OA系统数据安全规范文档",
+      "path": "resources/docs/knowledge/biz/biz-oa/OA系统数据安全规范文档.md"
+    },
+    {
+      "doc_id": "互联网保险系统数据安全规范",
+      "path": "resources/docs/knowledge/biz/biz-ins/互联网保险系统数据安全规范.md"
+    },
+    {
+      "doc_id": "开票信息",
+      "path": "resources/docs/knowledge/group/group-finance/开票信息.md"
+    }
+  ],
+  "cases": [
+    {
+      "id": "AR-C001",
+      "category": "cross_document_onboarding",
+      "complexity": "agentic",
+      "question": "一名 Java 后端新员工下周一入职，请汇总报到当天、电脑准备、账号初始设置以及入职后一个月内需要完成的关键事项。",
+      "expected_subquestions": [
+        "报到当天需要办理哪些事项",
+        "新员工电脑由谁在什么时间准备",
+        "新员工账号和初始密码如何处理",
+        "入职后一个月内有哪些管理节点"
+      ],
+      "reference_doc_ids": [
+        "招聘信息",
+        "IT支持"
+      ],
+      "required_facts": [
+        "HR 在入职前提交设备需求，IT 按岗位准备电脑",
+        "报到当天完成身份、合同或资料核验以及基础入职手续",
+        "初始账号或密码应由本人按安全流程激活或修改",
+        "入职后一个月包含融入、培训或阶段沟通节点"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C002",
+      "category": "cross_document_career",
+      "complexity": "agentic",
+      "question": "试用期工程师希望转正后一年内从 P5 晋升 P6，他现在要准备哪些转正材料，转正评审看什么，晋升又需要积累哪些能力和成果？",
+      "expected_subquestions": [
+        "转正需要哪些员工侧材料",
+        "转正评审关注哪些维度",
+        "P5 到 P6 的晋升条件是什么",
+        "一年内可执行的晋升准备动作有哪些"
+      ],
+      "reference_doc_ids": [
+        "人事制度",
+        "员工培训"
+      ],
+      "required_facts": [
+        "转正需要工作总结及相关成果材料",
+        "经理从成果、能力、态度或价值观等维度评估",
+        "晋升关注绩效、专业能力、影响力或业务贡献",
+        "晋升准备案例包含关键项目、技术分享和绩效要求"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C003",
+      "category": "cross_section_overtime",
+      "complexity": "agentic",
+      "question": "员工周五加班到次日零点，应该如何认定加班、次日最晚几点到岗，并说明调休和加班费分别怎么处理？",
+      "expected_subquestions": [
+        "加班如何申请和认定",
+        "加班到次日零点后的弹性到岗时间",
+        "休息日加班如何调休",
+        "哪些情况应支付加班费"
+      ],
+      "reference_doc_ids": [
+        "人事制度",
+        "公司规章制度"
+      ],
+      "required_facts": [
+        "加班原则上先审批后加班并保留记录",
+        "工作持续到次日零点及以后，登记确认后次日最晚十三点到岗",
+        "休息日加班通常优先安排调休",
+        "法定节假日加班通常按规定支付加班工资"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C004",
+      "category": "cross_document_security_incident",
+      "complexity": "agentic",
+      "question": "员工收到疑似钓鱼邮件并打开了附件，员工本人应立即做什么，公司后续应如何调查、留痕和决定是否进入违纪处理流程？",
+      "expected_subquestions": [
+        "员工遇到钓鱼邮件和可疑附件如何处置",
+        "IT 或安全团队需要收集哪些信息",
+        "安全事件如何留痕和升级",
+        "员工行为是否进入违纪处理应遵循什么流程"
+      ],
+      "reference_doc_ids": [
+        "IT支持",
+        "公司规章制度"
+      ],
+      "required_facts": [
+        "停止继续操作并向 IT 或安全渠道报告",
+        "保留邮件、发件人、附件和终端等排查信息",
+        "调查过程需要记录并按影响升级",
+        "违纪处理需要调查、沟通、审批或书面留档，不能直接下结论"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C005",
+      "category": "cross_document_offboarding",
+      "complexity": "agentic",
+      "question": "一名能够访问 OA 敏感数据的员工准备离职，请同时说明员工离职手续和系统侧账号、Token、权限及共享资源的回收要求。",
+      "expected_subquestions": [
+        "员工离职需要提前多久提出并办理哪些手续",
+        "离职账号何时停用",
+        "Token 和权限如何回收",
+        "共享资源和特权访问如何处理"
+      ],
+      "reference_doc_ids": [
+        "人事制度",
+        "OA系统数据安全规范文档"
+      ],
+      "required_facts": [
+        "员工按离职流程提交申请并完成交接",
+        "离职应触发账号停用",
+        "会话 Token、权限或密钥需要吊销或回收",
+        "共享资源和高权限访问必须纳入离职回收"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C006",
+      "category": "cross_document_recruitment",
+      "complexity": "agentic",
+      "question": "业务部门计划新增一个 P5-P6 岗位，从岗位申请、预算复核到 Offer 薪资审批，分别需要哪些角色参与，并受哪些预算和公平性约束？",
+      "expected_subquestions": [
+        "岗位申请需要提交哪些信息",
+        "岗位由哪些角色审核和审批",
+        "预算如何复核",
+        "Offer 薪资受哪些薪酬和公平性约束"
+      ],
+      "reference_doc_ids": [
+        "招聘信息",
+        "薪资与福利政策"
+      ],
+      "required_facts": [
+        "岗位申请包含级别、职责、资格和预算薪资范围",
+        "HRBP、部门或 BU 负责人参与审核审批",
+        "财务或 HR 规划团队进行预算复核",
+        "Offer 不应突破预算和薪酬带，并考虑内部公平"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C007",
+      "category": "cross_document_salary_overtime",
+      "complexity": "agentic",
+      "question": "员工发现工资单少了休息日加班补偿，他应在多久内通过什么流程提出异议，核查时需要结合哪些加班认定和补偿规则？",
+      "expected_subquestions": [
+        "薪资异议提交时限和入口是什么",
+        "异议描述需要包含什么",
+        "休息日加班如何认定",
+        "调休和加班费如何选择"
+      ],
+      "reference_doc_ids": [
+        "薪资与福利政策",
+        "人事制度"
+      ],
+      "required_facts": [
+        "员工应在五个工作日内发起薪资异议单",
+        "异议应具体说明缺失补贴或加班费等问题",
+        "加班需要审批和可追溯记录",
+        "休息日加班优先调休，无法安排时按制度处理加班费"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C008",
+      "category": "cross_document_remote_access",
+      "complexity": "agentic",
+      "question": "员工在家通过个人网络访问 OA 高敏感数据，需要先排查哪些 VPN 问题，并满足哪些身份认证、设备可信和最小权限要求？",
+      "expected_subquestions": [
+        "家庭网络下 VPN 连接失败如何排查",
+        "高敏感数据访问需要什么认证",
+        "设备和网络环境如何参与风险判断",
+        "最小权限和细粒度授权如何落实"
+      ],
+      "reference_doc_ids": [
+        "IT支持",
+        "OA系统数据安全规范文档"
+      ],
+      "required_facts": [
+        "可通过更换网络、检查客户端或收集错误信息排查 VPN",
+        "高敏感访问需要统一身份和多因素认证",
+        "设备可信度、访问位置或风险参与动态授权",
+        "访问遵循最小权限并可细化到数据或附件范围"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C009",
+      "category": "cross_system_comparison",
+      "complexity": "agentic",
+      "question": "比较 OA 系统与互联网保险系统在账号生命周期、敏感访问认证和离职回收方面的共同要求，并指出保险场景额外需要回收什么。",
+      "expected_subquestions": [
+        "OA 系统如何管理账号生命周期",
+        "保险系统如何管理账号生命周期",
+        "两个系统对敏感访问认证的共同要求",
+        "保险场景离职回收的额外对象"
+      ],
+      "reference_doc_ids": [
+        "OA系统数据安全规范文档",
+        "互联网保险系统数据安全规范"
+      ],
+      "required_facts": [
+        "两个系统都强调统一身份、MFA 和账号生命周期联动",
+        "调岗需要权限重算或回收",
+        "离职需要停用账号和吊销会话凭据",
+        "保险场景还明确回收第三方密钥与共享资源"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C010",
+      "category": "cross_system_recovery",
+      "complexity": "agentic",
+      "question": "比较 OA 与互联网保险系统的备份容灾要求：需要覆盖哪些数据、如何验证恢复能力，以及互联网保险为什么还要特别关注业务连续性？",
+      "expected_subquestions": [
+        "OA 系统备份和容灾覆盖什么",
+        "保险系统备份和容灾覆盖什么",
+        "两个系统如何通过演练验证恢复能力",
+        "保险业务连续性有哪些特殊风险"
+      ],
+      "reference_doc_ids": [
+        "OA系统数据安全规范文档",
+        "互联网保险系统数据安全规范"
+      ],
+      "required_facts": [
+        "两个系统都要求备份、容灾和定期恢复演练",
+        "恢复能力需要通过成功率或恢复时间等指标验证",
+        "备份本身不能替代恢复验证",
+        "保险业务覆盖投保、理赔、资金等连续业务链路"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C011",
+      "category": "cross_system_incident",
+      "complexity": "agentic",
+      "question": "OA 与互联网保险系统发生高等级数据安全事件时，响应、取证、复盘和改进有哪些共同步骤，又应分别关注哪些业务影响？",
+      "expected_subquestions": [
+        "OA 安全事件如何分级响应",
+        "保险安全事件如何分级响应",
+        "共同的取证复盘步骤是什么",
+        "两个系统分别关注哪些业务影响"
+      ],
+      "reference_doc_ids": [
+        "OA系统数据安全规范文档",
+        "互联网保险系统数据安全规范"
+      ],
+      "required_facts": [
+        "事件需要分级、隔离、调查取证和通知",
+        "处置过程和证据需要留存",
+        "复盘需要形成整改和验证闭环",
+        "保险场景需关注投保、理赔、资金或合作方链路影响"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C012",
+      "category": "single_document_multi_section",
+      "complexity": "agentic",
+      "question": "互联网保险平台要导出理赔和健康数据给合作方，导出前、导出中和导出后分别要实施哪些审批、脱敏、限流、水印、审计和追踪措施？",
+      "expected_subquestions": [
+        "导出前如何审批和确认最小数据范围",
+        "导出内容如何脱敏",
+        "导出过程如何限流和控制渠道",
+        "导出后如何通过水印审计追踪责任"
+      ],
+      "reference_doc_ids": [
+        "互联网保险系统数据安全规范"
+      ],
+      "required_facts": [
+        "导出前需要审批并遵循最小必要原则",
+        "敏感字段需要脱敏或受控展示",
+        "导出需要限流、受控渠道或 DLP",
+        "水印和审计用于事后追踪"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C013",
+      "category": "single_document_multi_hop",
+      "complexity": "agentic",
+      "question": "反欺诈模型阈值调整导致大量误拒赔，如何从根因、紧急处置、版本审批、灰度回滚和后续模型风险治理形成闭环？",
+      "expected_subquestions": [
+        "误拒赔的直接根因是什么",
+        "事故发生后如何紧急处置",
+        "模型和阈值变更如何审批",
+        "如何通过灰度回滚和评估防止复发"
+      ],
+      "reference_doc_ids": [
+        "互联网保险系统数据安全规范"
+      ],
+      "required_facts": [
+        "根因包括缺少版本化、审批或有效灰度",
+        "应回滚阈值并处理受影响样本或客户",
+        "模型规则变更纳入 MRM 审批",
+        "需要灰度发布、回滚、偏差评估和持续纠偏"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C014",
+      "category": "single_document_policy_reasoning",
+      "complexity": "agentic",
+      "question": "OA 用户需要批量导出含薪资字段的报表并通过移动端查看，系统应如何组合字段级授权、动态风险判断、导出治理和移动端安全控制？",
+      "expected_subquestions": [
+        "薪资字段如何做细粒度授权",
+        "哪些上下文用于动态风险判断",
+        "批量导出需要哪些治理措施",
+        "移动端访问需要哪些额外控制"
+      ],
+      "reference_doc_ids": [
+        "OA系统数据安全规范文档"
+      ],
+      "required_facts": [
+        "RBAC 与 ABAC 组合控制字段级访问",
+        "设备、地域、时间和风险分值参与动态裁决",
+        "导出需要审批、限流、水印或 DLP",
+        "移动端需要可信设备、加密或零信任访问控制"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C015",
+      "category": "cross_section_leave",
+      "complexity": "agentic",
+      "question": "员工年底还有年假和调休余额，他申请休假时要走什么流程，这两类余额如何使用，哪些清零或有效期信息不能在现有制度下直接下确定结论？",
+      "expected_subquestions": [
+        "年假申请流程是什么",
+        "调休申请流程是什么",
+        "年假余额如何结转或清零",
+        "调休有效期是否有明确口径"
+      ],
+      "reference_doc_ids": [
+        "人事制度"
+      ],
+      "required_facts": [
+        "休假需要在系统申请并由直属经理审批",
+        "调休由已认定加班产生并按流程使用",
+        "文档中的部分清零或有效期属于可配置项",
+        "缺少最终公司口径时应明确说明不能确定"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C016",
+      "category": "multi_entity_lookup",
+      "complexity": "agentic",
+      "question": "请分别给出快手科技、快手西湖分公司和快手余杭分公司的开票主体信息，并提醒财务在开票时不要混淆哪些字段。",
+      "expected_subquestions": [
+        "快手科技的开票信息是什么",
+        "快手西湖分公司的开票信息是什么",
+        "快手余杭分公司的开票信息是什么",
+        "三个主体有哪些容易混淆的字段"
+      ],
+      "reference_doc_ids": [
+        "开票信息"
+      ],
+      "required_facts": [
+        "分别返回三个主体的企业名称",
+        "分别返回三个主体的税号等开票字段",
+        "分公司与主体信息不能混用",
+        "回答应按主体清晰分组"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C017",
+      "category": "cross_document_training_budget",
+      "complexity": "agentic",
+      "question": "部门一边要招聘新人一边要安排入职培训，招聘预算和培训预算分别由谁规划或复核，执行时如何确保人员、课程和时间节点衔接？",
+      "expected_subquestions": [
+        "招聘人数和预算由谁规划",
+        "岗位预算由谁复核",
+        "培训需求和预算由谁汇总",
+        "新员工入职培训如何组织并衔接入职节点"
+      ],
+      "reference_doc_ids": [
+        "招聘信息",
+        "员工培训"
+      ],
+      "required_facts": [
+        "HR 规划团队与业务部门确认招聘需求和预算",
+        "财务或 HR 规划团队参与岗位预算复核",
+        "HR 或 L&D 汇总培训需求并制定计划预算",
+        "入职培训需要协调讲师、课程、通知和反馈"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-C018",
+      "category": "no_answer_financial",
+      "complexity": "agentic",
+      "question": "公司 2026 年第三季度还剩多少招聘预算和培训预算，是否足够新增 30 名员工并为每人采购一台一万元的电脑？",
+      "expected_subquestions": [
+        "第三季度招聘预算余额是多少",
+        "第三季度培训预算余额是多少",
+        "新增三十名员工的总人力成本是多少",
+        "电脑采购预算是否足够"
+      ],
+      "reference_doc_ids": [],
+      "required_facts": [],
+      "should_refuse": true,
+      "refusal_reason": "文档只有流程和原则，没有实际预算余额、招聘总成本或设备采购单价。"
+    },
+    {
+      "id": "AR-C019",
+      "category": "no_answer_security_status",
+      "complexity": "agentic",
+      "question": "请列出昨天 OA 系统所有高危登录事件的用户姓名、来源 IP、处置人和当前工单状态，并判断是否已经全部关闭。",
+      "expected_subquestions": [
+        "昨天有哪些高危登录事件",
+        "涉及哪些用户和来源 IP",
+        "每个事件由谁处置",
+        "相关工单是否全部关闭"
+      ],
+      "reference_doc_ids": [],
+      "required_facts": [],
+      "should_refuse": true,
+      "refusal_reason": "知识文档描述安全规范，不包含实时审计日志、人员信息和工单状态。"
+    },
+    {
+      "id": "AR-C020",
+      "category": "no_answer_policy_version",
+      "complexity": "agentic",
+      "question": "现行制度最终规定年假和调休分别在每年哪一天清零，2026 年是否有特殊延期通知，并给出通知发布人和审批编号。",
+      "expected_subquestions": [
+        "年假最终清零日期是什么",
+        "调休最终清零日期是什么",
+        "2026 年是否有延期通知",
+        "通知发布人和审批编号是什么"
+      ],
+      "reference_doc_ids": [],
+      "required_facts": [],
+      "should_refuse": true,
+      "refusal_reason": "文档将清零和有效期标记为可配置项，也没有 2026 年通知、发布人或审批编号。"
+    },
+    {
+      "id": "AR-S001",
+      "category": "simple_lookup",
+      "complexity": "simple",
+      "question": "公司标准工作时间是几点到几点？",
+      "expected_subquestions": [
+        "查询标准工作时间"
+      ],
+      "reference_doc_ids": [
+        "公司规章制度"
+      ],
+      "required_facts": [
+        "标准工作时间的起止时间"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-S002",
+      "category": "simple_lookup",
+      "complexity": "simple",
+      "question": "新员工入职培训包含哪些主要课程？",
+      "expected_subquestions": [
+        "查询新员工入职培训课程"
+      ],
+      "reference_doc_ids": [
+        "员工培训"
+      ],
+      "required_facts": [
+        "入职培训的主要课程"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-S003",
+      "category": "simple_lookup",
+      "complexity": "simple",
+      "question": "忘记办公系统密码应该怎么办？",
+      "expected_subquestions": [
+        "查询办公系统密码重置方式"
+      ],
+      "reference_doc_ids": [
+        "IT支持"
+      ],
+      "required_facts": [
+        "密码重置渠道或步骤"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-S004",
+      "category": "simple_lookup",
+      "complexity": "simple",
+      "question": "员工工资通常在每月哪一天发放？",
+      "expected_subquestions": [
+        "查询工资发放日期"
+      ],
+      "reference_doc_ids": [
+        "薪资与福利政策"
+      ],
+      "required_facts": [
+        "工资发放日期"
+      ],
+      "should_refuse": false
+    },
+    {
+      "id": "AR-S005",
+      "category": "simple_lookup",
+      "complexity": "simple",
+      "question": "快手科技有限公司的纳税人识别号是什么？",
+      "expected_subquestions": [
+        "查询快手科技有限公司纳税人识别号"
+      ],
+      "reference_doc_ids": [
+        "开票信息"
+      ],
+      "required_facts": [
+        "快手科技有限公司纳税人识别号"
+      ],
+      "should_refuse": false
+    }
+  ]
+}
