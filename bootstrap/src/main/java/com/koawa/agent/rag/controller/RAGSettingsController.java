@@ -91,6 +91,12 @@ public class RAGSettingsController {
                                 .maxIterations(agenticRetrievalProperties.getMaxIterations())
                                 .timeoutMs(agenticRetrievalProperties.getTimeout().toMillis())
                                 .fallbackToSinglePass(true)
+                                .fullDocumentExpansionEnabled(
+                                        agenticRetrievalProperties
+                                                .isFullDocumentExpansionEnabled())
+                                .maxFullDocumentChars(
+                                        agenticRetrievalProperties
+                                                .getMaxFullDocumentChars())
                                 .build())
                         .build())
                 .ai(toAISettings(aiModelProperties))

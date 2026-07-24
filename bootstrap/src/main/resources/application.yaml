@@ -61,6 +61,8 @@ rag:
     max-retrieved-chunks: 40
     max-evidence-items: 20
     max-evidence-chars: 1200
+    full-document-expansion-enabled: true
+    max-full-document-chars: 12000
   vector:
     type: pg  # 可选 milvus / pg
 

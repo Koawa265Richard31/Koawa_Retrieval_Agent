@@ -159,6 +159,8 @@ public class SystemSettingsVO {
         private Integer maxIterations;
         private Long timeoutMs;
         private Boolean fallbackToSinglePass;
+        private Boolean fullDocumentExpansionEnabled;
+        private Integer maxFullDocumentChars;
     }
 
     @Setter

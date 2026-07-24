@@ -62,7 +62,8 @@ class DefaultAgenticRetrievalOrchestratorTests {
                 planner,
                 retrievalExecutor,
                 taskManager,
-                properties);
+                properties,
+                mock(FullDocumentExpander.class));
     }
 
     @Test

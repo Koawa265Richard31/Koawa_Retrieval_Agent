@@ -32,6 +32,7 @@ public class AgenticRetrievalGateway {
     private final AgenticRetrievalRouteDecider routeDecider;
     private final AgenticRetrievalShadowService shadowService;
     private final AgenticRetrievalOrchestrator orchestrator;
+    private final EvidenceContextPresenter evidencePresenter;
 
     public RetrievalContext route(
             StreamChatContext chat,
@@ -52,13 +53,16 @@ public class AgenticRetrievalGateway {
         }
         try {
             AgenticRetrievalResult result = orchestrator.execute(
-                    chat.getTaskId(), chat.getSubIntents(), singlePass, topK);
+                    chat.getTaskId(), chat.getSubIntents(), singlePass, topK,
+                    new RetrievalAccessPrincipal(
+                            chat.getUserId(), chat.getUsername(), chat.getUserRole()));
             if (isFailure(result.stopReason()) || result.retrievalContext() == null) {
                 log.warn("Agentic Retrieval active fallback: taskId={}, reason={}",
                         chat.getTaskId(), result.stopReason());
                 return singlePass;
             }
-            return result.retrievalContext();
+            RetrievalContext presented = evidencePresenter.present(result);
+            return presented == null ? singlePass : presented;
         } catch (RuntimeException exception) {
             log.warn("Agentic Retrieval active fallback after exception: taskId={}, reason={}",
                     chat.getTaskId(), exception.getMessage());

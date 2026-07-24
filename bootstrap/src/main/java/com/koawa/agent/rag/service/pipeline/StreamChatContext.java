@@ -41,6 +41,8 @@ public class StreamChatContext {
     private final String taskId;
     private final boolean deepThinking;
     private final String userId;
+    private final String username;
+    private final String userRole;
     private final StreamCallback callback;
 
     // ==================== 管道中填充的中间状态 ====================

@@ -52,6 +52,7 @@ public class DefaultAgenticRetrievalOrchestrator implements AgenticRetrievalOrch
     private final AgenticRetrievalIterationExecutor retrievalExecutor;
     private final StreamTaskManager taskManager;
     private final AgenticRetrievalProperties properties;
+    private final FullDocumentExpander documentExpander;
 
     @Override
     @RagTraceNode(name = "agentic-retrieval-orchestrator", type = "RETRIEVAL_ITERATION")
@@ -60,6 +61,16 @@ public class DefaultAgenticRetrievalOrchestrator implements AgenticRetrievalOrch
             List<SubQuestionIntent> subIntents,
             RetrievalContext initialContext,
             int topK) {
+        return execute(taskId, subIntents, initialContext, topK, null);
+    }
+
+    @Override
+    public AgenticRetrievalResult execute(
+            String taskId,
+            List<SubQuestionIntent> subIntents,
+            RetrievalContext initialContext,
+            int topK,
+            RetrievalAccessPrincipal principal) {
         RetrievalBudget budget = budget();
         Instant startedAt = Instant.now();
         Instant deadline = startedAt.plus(budget.timeout());
@@ -83,6 +94,25 @@ public class DefaultAgenticRetrievalOrchestrator implements AgenticRetrievalOrch
                     false);
         }
         ledger = applyEvaluation(ledger, evaluation);
+        if (!evaluation.sufficient()
+                && requestsFullDocumentContext(evaluation)) {
+            List<EvidenceItem> expanded = expandDocuments(
+                    ledger, evaluation, principal, budget.maxRetrievedChunks());
+            if (!expanded.isEmpty()) {
+                ledger = ledger.merge(expanded, null);
+                try {
+                    evaluation = evidenceEvaluator.evaluate(seed.plan(), ledger, deadline);
+                    ledger = applyEvaluation(ledger, evaluation);
+                } catch (RuntimeException exception) {
+                    return result(
+                            initialContext, ledger,
+                            failureReason(
+                                    exception, deadline,
+                                    RetrievalStopReason.EVALUATION_FAILED),
+                            1, false);
+                }
+            }
+        }
         if (evaluation.sufficient()) {
             return result(initialContext, ledger, RetrievalStopReason.SUFFICIENT, 1, true);
         }
@@ -174,6 +204,39 @@ public class DefaultAgenticRetrievalOrchestrator implements AgenticRetrievalOrch
                         : RetrievalStopReason.BUDGET_EXHAUSTED,
                 2,
                 evaluation.sufficient());
+    }
+
+    private boolean requestsFullDocumentContext(EvidenceEvaluation evaluation) {
+        return properties.isFullDocumentExpansionEnabled()
+                && evaluation.gaps().stream()
+                .flatMap(gap -> gap.missingFacts().stream())
+                .anyMatch("FULL_DOCUMENT_CONTEXT"::equalsIgnoreCase);
+    }
+
+    private List<EvidenceItem> expandDocuments(
+            EvidenceLedger ledger,
+            EvidenceEvaluation evaluation,
+            RetrievalAccessPrincipal principal,
+            int maximumChunks) {
+        Set<String> requestedTasks = evaluation.gaps().stream()
+                .filter(gap -> gap.missingFacts().stream()
+                        .anyMatch("FULL_DOCUMENT_CONTEXT"::equalsIgnoreCase))
+                .map(RetrievalGap::taskId)
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+        Map<String, EvidenceItem> additions = new LinkedHashMap<>();
+        for (EvidenceItem hit : ledger.evidence()) {
+            if (!requestedTasks.contains(hit.taskId())) {
+                continue;
+            }
+            FullDocumentExpansion expansion = documentExpander.expand(hit, principal);
+            expansion.evidence().forEach(
+                    item -> additions.putIfAbsent(item.deduplicationKey(), item));
+            if (ledger.evidence().size() + additions.size() >= maximumChunks) {
+                break;
+            }
+        }
+        int remaining = Math.max(0, maximumChunks - ledger.evidence().size());
+        return additions.values().stream().limit(remaining).toList();
     }
 
     private RetrievalBudget budget() {

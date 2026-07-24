@@ -17,25 +17,9 @@
 
 package com.koawa.agent.rag.core.agentic;
 
-import com.koawa.agent.rag.dto.RetrievalContext;
-import com.koawa.agent.rag.dto.SubQuestionIntent;
+import com.koawa.agent.knowledge.dao.entity.KnowledgeBaseDO;
 
-import java.util.List;
+public interface DocumentAccessPolicy {
 
-public interface AgenticRetrievalOrchestrator {
-
-    AgenticRetrievalResult execute(
-            String taskId,
-            List<SubQuestionIntent> subIntents,
-            RetrievalContext initialContext,
-            int topK);
-
-    default AgenticRetrievalResult execute(
-            String taskId,
-            List<SubQuestionIntent> subIntents,
-            RetrievalContext initialContext,
-            int topK,
-            RetrievalAccessPrincipal principal) {
-        return execute(taskId, subIntents, initialContext, topK);
-    }
+    boolean canRead(RetrievalAccessPrincipal principal, KnowledgeBaseDO knowledgeBase);
 }

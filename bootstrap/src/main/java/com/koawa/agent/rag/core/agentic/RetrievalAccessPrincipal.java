@@ -17,25 +17,20 @@
 
 package com.koawa.agent.rag.core.agentic;
 
-import com.koawa.agent.rag.dto.RetrievalContext;
-import com.koawa.agent.rag.dto.SubQuestionIntent;
+public record RetrievalAccessPrincipal(
+        String userId,
+        String username,
+        String role) {
 
-import java.util.List;
+    public boolean identified() {
+        return hasText(userId) || hasText(username);
+    }
 
-public interface AgenticRetrievalOrchestrator {
+    public boolean administrator() {
+        return "admin".equalsIgnoreCase(role);
+    }
 
-    AgenticRetrievalResult execute(
-            String taskId,
-            List<SubQuestionIntent> subIntents,
-            RetrievalContext initialContext,
-            int topK);
-
-    default AgenticRetrievalResult execute(
-            String taskId,
-            List<SubQuestionIntent> subIntents,
-            RetrievalContext initialContext,
-            int topK,
-            RetrievalAccessPrincipal principal) {
-        return execute(taskId, subIntents, initialContext, topK);
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

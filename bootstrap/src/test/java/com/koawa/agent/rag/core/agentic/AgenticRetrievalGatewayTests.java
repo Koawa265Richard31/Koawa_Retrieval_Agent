@@ -40,7 +40,8 @@ class AgenticRetrievalGatewayTests {
             mock(AgenticRetrievalOrchestrator.class);
     private final AgenticRetrievalGateway gateway =
             new AgenticRetrievalGateway(
-                    routeDecider, shadowService, orchestrator);
+                    routeDecider, shadowService, orchestrator,
+                    new EvidenceContextPresenter(new EvidenceCitationMapper()));
 
     @Test
     void shadowKeepsSinglePassAnswerContext() {
@@ -51,7 +52,7 @@ class AgenticRetrievalGatewayTests {
 
         assertSame(single, result);
         verify(shadowService).submit(any(), any(), any(), anyInt());
-        verify(orchestrator, never()).execute(any(), any(), any(), anyInt());
+        verify(orchestrator, never()).execute(any(), any(), any(), anyInt(), any());
     }
 
     @Test
@@ -59,7 +60,7 @@ class AgenticRetrievalGatewayTests {
         RetrievalContext single = RetrievalContext.builder().kbContext("single").build();
         RetrievalContext enhanced = RetrievalContext.builder().kbContext("enhanced").build();
         route(AgenticRetrievalProperties.Mode.ACTIVE);
-        when(orchestrator.execute(any(), any(), any(), anyInt()))
+        when(orchestrator.execute(any(), any(), any(), anyInt(), any()))
                 .thenReturn(new AgenticRetrievalResult(
                         enhanced, null, RetrievalStopReason.SUFFICIENT, 2, true));
 
@@ -70,7 +71,7 @@ class AgenticRetrievalGatewayTests {
     void activeFailureFallsBackToSinglePass() {
         RetrievalContext single = RetrievalContext.builder().kbContext("single").build();
         route(AgenticRetrievalProperties.Mode.ACTIVE);
-        when(orchestrator.execute(any(), any(), any(), anyInt()))
+        when(orchestrator.execute(any(), any(), any(), anyInt(), any()))
                 .thenReturn(new AgenticRetrievalResult(
                         null, null, RetrievalStopReason.TIMEOUT, 1, false));
 
@@ -81,7 +82,7 @@ class AgenticRetrievalGatewayTests {
     void activeExceptionFallsBackToSinglePass() {
         RetrievalContext single = RetrievalContext.builder().kbContext("single").build();
         route(AgenticRetrievalProperties.Mode.ACTIVE);
-        when(orchestrator.execute(any(), any(), any(), anyInt()))
+        when(orchestrator.execute(any(), any(), any(), anyInt(), any()))
                 .thenThrow(new RuntimeException("provider unavailable"));
 
         assertSame(single, gateway.route(chat(), single, 5));

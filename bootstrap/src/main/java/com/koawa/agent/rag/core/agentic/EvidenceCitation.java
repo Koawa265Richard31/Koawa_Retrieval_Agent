@@ -17,25 +17,10 @@
 
 package com.koawa.agent.rag.core.agentic;
 
-import com.koawa.agent.rag.dto.RetrievalContext;
-import com.koawa.agent.rag.dto.SubQuestionIntent;
-
-import java.util.List;
-
-public interface AgenticRetrievalOrchestrator {
-
-    AgenticRetrievalResult execute(
-            String taskId,
-            List<SubQuestionIntent> subIntents,
-            RetrievalContext initialContext,
-            int topK);
-
-    default AgenticRetrievalResult execute(
-            String taskId,
-            List<SubQuestionIntent> subIntents,
-            RetrievalContext initialContext,
-            int topK,
-            RetrievalAccessPrincipal principal) {
-        return execute(taskId, subIntents, initialContext, topK);
-    }
+public record EvidenceCitation(
+        String citationId,
+        String chunkId,
+        String documentId,
+        String sourceTitle,
+        String sourceUri) {
 }

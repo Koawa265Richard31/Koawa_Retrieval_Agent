@@ -69,6 +69,8 @@ public class RAGChatServiceImpl implements RAGChatService {
 
         String taskId = IdUtil.getSnowflakeNextIdStr();
         String userId = UserContext.getUserId();
+        String username = UserContext.getUsername();
+        String userRole = UserContext.getRole();
 
         //这里不是直接往前端写内容，而是创建一个 StreamCallback。后面 LLM 每吐出一段内容，都会通过这个 callback 推给前端。
         StreamCallback callback =
@@ -93,6 +95,8 @@ public class RAGChatServiceImpl implements RAGChatService {
                                 taskId,
                                 deepThinking,
                                 userId,
+                                username,
+                                userRole,
                                 traceAware
                         )
                 )
@@ -105,6 +109,8 @@ public class RAGChatServiceImpl implements RAGChatService {
             String taskId,
             Boolean deepThinking,
             String userId,
+            String username,
+            String userRole,
             StreamCallback callback
     ) {
         boolean useAgent = agentRouteDecider.shouldUseAgent(
@@ -134,6 +140,8 @@ public class RAGChatServiceImpl implements RAGChatService {
                 .taskId(taskId)
                 .deepThinking(Boolean.TRUE.equals(deepThinking))
                 .userId(userId)
+                .username(username)
+                .userRole(userRole)
                 .callback(callback)
                 .build();
 

@@ -42,6 +42,8 @@ public class AgenticRetrievalProperties {
     private int maxRetrievedChunks = 40;
     private int maxEvidenceItems = 20;
     private int maxEvidenceChars = 1200;
+    private boolean fullDocumentExpansionEnabled = true;
+    private int maxFullDocumentChars = 12000;
 
     public Mode effectiveMode() {
         return mode == Mode.OFF && shadowEnabled ? Mode.SHADOW : mode;

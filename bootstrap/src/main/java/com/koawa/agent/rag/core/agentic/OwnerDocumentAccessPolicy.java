@@ -17,25 +17,24 @@
 
 package com.koawa.agent.rag.core.agentic;
 
-import com.koawa.agent.rag.dto.RetrievalContext;
-import com.koawa.agent.rag.dto.SubQuestionIntent;
+import com.koawa.agent.knowledge.dao.entity.KnowledgeBaseDO;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
+@Component
+public class OwnerDocumentAccessPolicy implements DocumentAccessPolicy {
 
-public interface AgenticRetrievalOrchestrator {
-
-    AgenticRetrievalResult execute(
-            String taskId,
-            List<SubQuestionIntent> subIntents,
-            RetrievalContext initialContext,
-            int topK);
-
-    default AgenticRetrievalResult execute(
-            String taskId,
-            List<SubQuestionIntent> subIntents,
-            RetrievalContext initialContext,
-            int topK,
-            RetrievalAccessPrincipal principal) {
-        return execute(taskId, subIntents, initialContext, topK);
+    @Override
+    public boolean canRead(
+            RetrievalAccessPrincipal principal,
+            KnowledgeBaseDO knowledgeBase) {
+        if (principal == null || !principal.identified() || knowledgeBase == null) {
+            return false;
+        }
+        if (principal.administrator()) {
+            return true;
+        }
+        String owner = knowledgeBase.getCreatedBy();
+        return owner != null && (owner.equals(principal.username())
+                || owner.equals(principal.userId()));
     }
 }

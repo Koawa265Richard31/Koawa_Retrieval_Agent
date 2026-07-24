@@ -43,6 +43,9 @@ public class LlmEvidenceEvaluator implements EvidenceEvaluator {
             Use only supplied evidence. Assess every task exactly once and never
             invent a taskId. A task is SUPPORTED only when all requiredFacts are
             directly supported. Conflicting sources must be CONFLICTED.
+            When a hit document is relevant but surrounding document context is
+            explicitly required, include the exact missingFacts marker
+            FULL_DOCUMENT_CONTEXT. Do not use that marker for ordinary missing facts.
             """;
 
     private final LLMService llmService;

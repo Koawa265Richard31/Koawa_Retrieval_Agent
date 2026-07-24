@@ -19,6 +19,7 @@ package com.koawa.agent.rag.dto;
 
 import cn.hutool.core.util.StrUtil;
 import com.koawa.agent.framework.convention.RetrievedChunk;
+import com.koawa.agent.rag.core.agentic.EvidenceCitation;
 import lombok.Builder;
 import lombok.Data;
 
@@ -46,6 +47,10 @@ public class RetrievalContext {
      * 意图 ID -> 分片列表
      */
     private Map<String, List<RetrievedChunk>> intentChunks;
+
+    private List<EvidenceCitation> citations;
+
+    private List<String> conflictedTaskIds;
 
     /**
      * 是否存在 MCP 上下文
