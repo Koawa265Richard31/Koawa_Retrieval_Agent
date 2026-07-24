@@ -77,6 +77,36 @@ public class EvalResponse {
     private List<String> intentLeafIds;
 
     /**
+     * 本次评测实际执行的检索模式：single 或 active
+     */
+    private String evaluationMode;
+
+    /**
+     * 生产复杂度规则是否会把该请求路由到 Agentic Retrieval
+     */
+    private boolean wouldRouteAgentic;
+
+    private int complexityScore;
+
+    private List<String> complexityReasons;
+
+    private String agenticStopReason;
+
+    private Integer agenticIterations;
+
+    private Boolean agenticSufficient;
+
+    private boolean agenticFallbackToSinglePass;
+
+    private List<String> citationIds;
+
+    private List<String> citationChunkIds;
+
+    private List<String> conflictedTaskIds;
+
+    private long initialRetrievalLatencyMs;
+
+    /**
      * 总耗时（毫秒）
      */
     private long latencyMs;

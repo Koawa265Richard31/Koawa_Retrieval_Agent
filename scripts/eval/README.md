@@ -74,3 +74,34 @@ output/eval/agentic-retrieval/baseline.md
 
 AR0 不评估最终答案文本。`required_facts` 的语义证据覆盖将在 AR1 的
 `EvidenceEvaluator` 中实现。
+
+## 学园偶像大师 Single Pass / Agentic 对比
+
+先通过 fixture 脚本幂等导入演示知识库，再启动启用了评测入口的新版本应用：
+
+```powershell
+python scripts/eval/prepare_agentic_retrieval_fixture.py `
+  --dataset resources/eval/agentic-retrieval/v1/gakumas-fixture.json `
+  --knowledge-base-name gakumas-agentic-demo-v1 `
+  --collection-name gakumas-agentic-demo-v1
+
+python scripts/eval/run_gakumas_agentic_comparison.py
+```
+
+脚本从 `resources/eval/agentic-retrieval/v1/gakumas-questions.json` 读取固定的
+5 条问题，并对每条问题分别调用：
+
+```text
+GET /rag/eval?question=<问题>&mode=single
+GET /rag/eval?question=<问题>&mode=active
+```
+
+默认报告写入：
+
+```text
+resources/eval/agentic-retrieval/v1/gakumas-comparison-summary.json
+```
+
+该报告比较来源召回、延迟、Agentic 回退、复杂问题路由和引用目录一致性。
+它不生成最终答案，因此不能替代事实句引用正确率验收；脚本使用管理员账号，
+ACL 用例也只保留在数据集中，普通用户拒绝访问必须另行回归。

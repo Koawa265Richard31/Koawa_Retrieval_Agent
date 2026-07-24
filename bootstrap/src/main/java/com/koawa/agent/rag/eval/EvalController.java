@@ -19,12 +19,22 @@ package com.koawa.agent.rag.eval;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.koawa.agent.framework.context.UserContext;
 import com.koawa.agent.framework.convention.RetrievedChunk;
+import com.koawa.agent.framework.exception.ClientException;
 import com.koawa.agent.knowledge.dao.entity.KnowledgeChunkDO;
 import com.koawa.agent.knowledge.dao.entity.KnowledgeDocumentDO;
 import com.koawa.agent.knowledge.dao.mapper.KnowledgeChunkMapper;
 import com.koawa.agent.knowledge.dao.mapper.KnowledgeDocumentMapper;
 import com.koawa.agent.rag.config.SearchChannelProperties;
+import com.koawa.agent.rag.core.agentic.AgenticRetrievalOrchestrator;
+import com.koawa.agent.rag.core.agentic.AgenticRetrievalResult;
+import com.koawa.agent.rag.core.agentic.EvidenceCitation;
+import com.koawa.agent.rag.core.agentic.EvidenceContextPresenter;
+import com.koawa.agent.rag.core.agentic.RetrievalAccessPrincipal;
+import com.koawa.agent.rag.core.agentic.RetrievalComplexityDecider;
+import com.koawa.agent.rag.core.agentic.RetrievalComplexityDecision;
+import com.koawa.agent.rag.core.agentic.RetrievalStopReason;
 import com.koawa.agent.rag.core.intent.IntentResolver;
 import com.koawa.agent.rag.core.retrieve.RetrievalEngine;
 import com.koawa.agent.rag.core.rewrite.QueryRewriteService;
@@ -44,6 +54,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -60,19 +71,65 @@ public class EvalController {
     private final SearchChannelProperties searchProperties;
     private final KnowledgeChunkMapper knowledgeChunkMapper;
     private final KnowledgeDocumentMapper knowledgeDocumentMapper;
+    private final RetrievalComplexityDecider complexityDecider;
+    private final AgenticRetrievalOrchestrator agenticRetrievalOrchestrator;
+    private final EvidenceContextPresenter evidenceContextPresenter;
 
     @GetMapping("/rag/eval")
-    public Result<EvalResponse> chat(@RequestParam String question) {
+    public Result<EvalResponse> chat(
+            @RequestParam String question,
+            @RequestParam(defaultValue = "single") String mode) {
         long start = System.currentTimeMillis();
+        String evaluationMode = normalizeMode(mode);
 
         RewriteResult rewriteResult = queryRewriteService.rewriteWithSplit(question, List.of());
         List<SubQuestionIntent> subIntents = intentResolver.resolve(rewriteResult);
-        RetrievalContext rc = retrievalEngine.retrieve(subIntents, searchProperties.getDefaultTopK());
+        RetrievalComplexityDecision complexity = complexityDecider.decide(rewriteResult, subIntents);
+        RetrievalContext singlePass = retrievalEngine.retrieve(
+                subIntents, searchProperties.getDefaultTopK());
+        long initialLatencyMs = System.currentTimeMillis() - start;
 
-        return Results.success(buildResponse(rc, subIntents, System.currentTimeMillis() - start));
+        RetrievalContext selected = singlePass;
+        AgenticRetrievalResult agenticResult = null;
+        boolean fallback = false;
+        if ("active".equals(evaluationMode)) {
+            try {
+                agenticResult = agenticRetrievalOrchestrator.execute(
+                        "eval-" + UUID.randomUUID(),
+                        subIntents,
+                        singlePass,
+                        searchProperties.getDefaultTopK(),
+                        currentPrincipal());
+                if (agenticResult == null || agenticResult.retrievalContext() == null
+                        || isFailure(agenticResult.stopReason())) {
+                    fallback = true;
+                } else {
+                    RetrievalContext presented = evidenceContextPresenter.present(agenticResult);
+                    if (presented == null) {
+                        fallback = true;
+                    } else {
+                        selected = presented;
+                    }
+                }
+            } catch (RuntimeException exception) {
+                fallback = true;
+            }
+        }
+
+        return Results.success(buildResponse(
+                selected, subIntents, evaluationMode, complexity, agenticResult,
+                fallback, initialLatencyMs, System.currentTimeMillis() - start));
     }
 
-    private EvalResponse buildResponse(RetrievalContext rc, List<SubQuestionIntent> subIntents, long latencyMs) {
+    private EvalResponse buildResponse(
+            RetrievalContext rc,
+            List<SubQuestionIntent> subIntents,
+            String evaluationMode,
+            RetrievalComplexityDecision complexity,
+            AgenticRetrievalResult agenticResult,
+            boolean fallback,
+            long initialLatencyMs,
+            long latencyMs) {
         List<RetrievedChunk> uniqueChunks = flattenChunks(rc);
         List<String> chunkIds = uniqueChunks.stream()
                 .map(RetrievedChunk::getId)
@@ -97,8 +154,53 @@ public class EvalController {
                 .hasKb(rc != null && rc.hasKb())
                 .subIntents(extractSubIntents(subIntents))
                 .intentLeafIds(extractTopLeafIds(subIntents))
+                .evaluationMode(evaluationMode)
+                .wouldRouteAgentic(complexity.complex())
+                .complexityScore(complexity.score())
+                .complexityReasons(complexity.reasons())
+                .agenticStopReason(agenticResult == null || agenticResult.stopReason() == null
+                        ? null : agenticResult.stopReason().name())
+                .agenticIterations(agenticResult == null ? null : agenticResult.iterationCount())
+                .agenticSufficient(agenticResult == null ? null : agenticResult.sufficient())
+                .agenticFallbackToSinglePass(fallback)
+                .citationIds(extractCitations(rc, true))
+                .citationChunkIds(extractCitations(rc, false))
+                .conflictedTaskIds(rc == null || rc.getConflictedTaskIds() == null
+                        ? Collections.emptyList() : rc.getConflictedTaskIds())
+                .initialRetrievalLatencyMs(initialLatencyMs)
                 .latencyMs(latencyMs)
                 .build();
+    }
+
+    private String normalizeMode(String mode) {
+        String normalized = StrUtil.blankToDefault(mode, "single").trim().toLowerCase();
+        if (!"single".equals(normalized) && !"active".equals(normalized)) {
+            throw new ClientException("评测模式仅支持 single 或 active");
+        }
+        return normalized;
+    }
+
+    private RetrievalAccessPrincipal currentPrincipal() {
+        return new RetrievalAccessPrincipal(
+                UserContext.getUserId(), UserContext.getUsername(), UserContext.getRole());
+    }
+
+    private boolean isFailure(RetrievalStopReason reason) {
+        return reason == RetrievalStopReason.CANCELLED
+                || reason == RetrievalStopReason.TIMEOUT
+                || reason == RetrievalStopReason.PLANNING_FAILED
+                || reason == RetrievalStopReason.RETRIEVAL_FAILED
+                || reason == RetrievalStopReason.EVALUATION_FAILED;
+    }
+
+    private List<String> extractCitations(RetrievalContext rc, boolean ids) {
+        if (rc == null || CollUtil.isEmpty(rc.getCitations())) {
+            return Collections.emptyList();
+        }
+        return rc.getCitations().stream()
+                .map(ids ? EvidenceCitation::citationId : EvidenceCitation::chunkId)
+                .filter(StrUtil::isNotBlank)
+                .toList();
     }
 
     /**
