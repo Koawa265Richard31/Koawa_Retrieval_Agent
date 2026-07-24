@@ -5,7 +5,7 @@ spring:
   datasource:
     username: ${POSTGRES_USER:ragent}
     password: ${POSTGRES_PASSWORD}
-    url: jdbc:postgresql://postgres:5432/${POSTGRES_DB:ragent}?client_encoding=UTF8
+    url: jdbc:postgresql://${POSTGRES_HOST:postgres}:${POSTGRES_PORT:5432}/${POSTGRES_DB:ragent}?client_encoding=UTF8
     hikari:
       connection-timeout: 5000
       idle-timeout: 300000

@@ -75,3 +75,24 @@ docker compose up -d
 ```
 
 不要使用 `docker compose down -v`：本配置使用 bind mount，数据仍在 `RAGENT_DATA_ROOT`，但该命令容易形成错误的“数据已清理”预期。
+
+## 6. 本地应用复用生产 PostgreSQL
+
+生产 PostgreSQL 只发布到服务器的 `127.0.0.1:5432`，禁止直接开放公网。
+本地 `deploy/.env` 使用以下覆盖项：
+
+```dotenv
+POSTGRES_HOST=host.docker.internal
+POSTGRES_PORT=15432
+```
+
+确认 SSH 配置中存在 `jd-ecs` 后运行：
+
+```powershell
+pwsh -File deploy/start-local-shared-db.ps1
+```
+
+脚本会建立 `127.0.0.1:15432 → jd-ecs:127.0.0.1:5432` SSH 隧道，
+并使用 `--no-deps` 重建本地 app，避免启动本地 PostgreSQL。隧道进程退出或电脑
+重启后需要重新运行脚本。本地开发会直接写入生产数据，执行清理、迁移或测试前必须
+先确认影响范围。
