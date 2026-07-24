@@ -21,6 +21,7 @@ import com.koawa.agent.framework.convention.ChatMessage;
 import com.koawa.agent.infra.chat.StreamCallback;
 import com.koawa.agent.rag.core.rewrite.RewriteResult;
 import com.koawa.agent.rag.dto.SubQuestionIntent;
+import com.koawa.agent.rag.service.ChatExecutionMode;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,6 +41,7 @@ public class StreamChatContext {
     private final String conversationId;
     private final String taskId;
     private final boolean deepThinking;
+    private final ChatExecutionMode executionMode;
     private final String userId;
     private final String username;
     private final String userRole;

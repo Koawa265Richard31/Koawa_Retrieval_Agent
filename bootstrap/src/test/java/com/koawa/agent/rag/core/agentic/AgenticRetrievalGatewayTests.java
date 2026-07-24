@@ -19,6 +19,7 @@ package com.koawa.agent.rag.core.agentic;
 
 import com.koawa.agent.rag.config.AgenticRetrievalProperties;
 import com.koawa.agent.rag.dto.RetrievalContext;
+import com.koawa.agent.rag.service.ChatExecutionMode;
 import com.koawa.agent.rag.service.pipeline.StreamChatContext;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +29,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class AgenticRetrievalGatewayTests {
@@ -88,6 +90,35 @@ class AgenticRetrievalGatewayTests {
         assertSame(single, gateway.route(chat(), single, 5));
     }
 
+    @Test
+    void forcedRagBypassesAgenticRouting() {
+        RetrievalContext single = RetrievalContext.builder().kbContext("single").build();
+
+        assertSame(single, gateway.route(chat(ChatExecutionMode.RAG), single, 5));
+
+        verifyNoAgenticRouting();
+    }
+
+    @Test
+    void forcedAgenticRunsActiveEvenWithoutRouteDecision() {
+        RetrievalContext single = RetrievalContext.builder().kbContext("single").build();
+        RetrievalContext enhanced = RetrievalContext.builder().kbContext("enhanced").build();
+        when(orchestrator.execute(any(), any(), any(), anyInt(), any()))
+                .thenReturn(new AgenticRetrievalResult(
+                        enhanced, null, RetrievalStopReason.SUFFICIENT, 1, true));
+
+        assertSame(
+                enhanced,
+                gateway.route(chat(ChatExecutionMode.AGENTIC), single, 5));
+        verify(routeDecider, never()).decide(any(), any(), any(), any());
+    }
+
+    private void verifyNoAgenticRouting() {
+        verify(routeDecider, never()).decide(any(), any(), any(), any());
+        verify(orchestrator, never()).execute(any(), any(), any(), anyInt(), any());
+        verifyNoInteractions(shadowService);
+    }
+
     private void route(AgenticRetrievalProperties.Mode mode) {
         when(routeDecider.decide(any(), any(), any(), any()))
                 .thenReturn(new AgenticRetrievalRouteDecision(
@@ -98,10 +129,15 @@ class AgenticRetrievalGatewayTests {
     }
 
     private StreamChatContext chat() {
+        return chat(ChatExecutionMode.AUTO);
+    }
+
+    private StreamChatContext chat(ChatExecutionMode executionMode) {
         return StreamChatContext.builder()
                 .taskId("task")
                 .conversationId("conversation")
                 .userId("user")
+                .executionMode(executionMode)
                 .build();
     }
 }

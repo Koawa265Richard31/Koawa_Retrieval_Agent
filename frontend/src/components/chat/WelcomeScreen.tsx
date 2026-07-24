@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { listSampleQuestions } from "@/services/sampleQuestionService";
 import { useChatStore } from "@/stores/chatStore";
+import { ExecutionModeSelect } from "@/components/chat/ExecutionModeSelect";
 
 type PromptPreset = {
   id?: string;
@@ -195,6 +196,7 @@ export function WelcomeScreen() {
                 <BrainCircuit className="h-4 w-4" />
                 深度思考
               </button>
+              <ExecutionModeSelect />
               <span className="ml-auto hidden text-[11px] text-slate-400 sm:block">
                 Enter 发送 · Shift + Enter 换行
               </span>

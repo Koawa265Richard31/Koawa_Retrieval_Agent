@@ -17,10 +17,12 @@
 
 package com.koawa.agent.rag.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.koawa.agent.framework.convention.Result;
 import com.koawa.agent.framework.idempotent.IdempotentSubmit;
 import com.koawa.agent.framework.web.Results;
 import com.koawa.agent.rag.config.RAGDefaultProperties;
+import com.koawa.agent.rag.service.ChatExecutionMode;
 import com.koawa.agent.rag.service.RAGChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,9 +52,15 @@ public class RAGChatController {
     @GetMapping(value = "/rag/v3/chat", produces = "text/event-stream;charset=UTF-8")
     public SseEmitter chat(@RequestParam String question,
                            @RequestParam(required = false) String conversationId,
-                           @RequestParam(required = false, defaultValue = "false") Boolean deepThinking) {
+                           @RequestParam(required = false, defaultValue = "false") Boolean deepThinking,
+                           @RequestParam(required = false, defaultValue = "AUTO") String executionMode) {
+        ChatExecutionMode resolvedMode = ChatExecutionMode.from(executionMode);
+        if (resolvedMode != ChatExecutionMode.AUTO) {
+            StpUtil.checkRole("admin");
+        }
         SseEmitter emitter = new SseEmitter(ragDefaultProperties.getSseTimeoutMs());
-        ragChatService.streamChat(question, conversationId, deepThinking, emitter);
+        ragChatService.streamChat(
+                question, conversationId, deepThinking, resolvedMode, emitter);
         return emitter;
     }
 

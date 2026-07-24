@@ -3,6 +3,7 @@ import { BrainCircuit, CornerDownLeft, Send, Square } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/stores/chatStore";
+import { ExecutionModeSelect } from "@/components/chat/ExecutionModeSelect";
 
 export function ChatInput() {
   const [value, setValue] = React.useState("");
@@ -103,6 +104,8 @@ export function ChatInput() {
             深度思考
             {deepThinkingEnabled ? <span className="h-1.5 w-1.5 rounded-full bg-teal-500" /> : null}
           </button>
+
+          <ExecutionModeSelect />
 
           <span className="ml-auto hidden items-center gap-1.5 text-[11px] text-slate-400 sm:inline-flex">
             <CornerDownLeft className="h-3.5 w-3.5" />

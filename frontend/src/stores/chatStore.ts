@@ -1,7 +1,14 @@
 import { create } from "zustand";
 import { toast } from "sonner";
 
-import type { CompletionPayload, FeedbackValue, Message, MessageDeltaPayload, Session } from "@/types";
+import type {
+  ChatExecutionMode,
+  CompletionPayload,
+  FeedbackValue,
+  Message,
+  MessageDeltaPayload,
+  Session
+} from "@/types";
 import {
   listMessages,
   listSessions,
@@ -23,6 +30,7 @@ interface ChatState {
   isStreaming: boolean;
   isCreatingNew: boolean;
   deepThinkingEnabled: boolean;
+  executionMode: ChatExecutionMode;
   thinkingStartAt: number | null;
   streamTaskId: string | null;
   streamAbort: (() => void) | null;
@@ -35,6 +43,7 @@ interface ChatState {
   selectSession: (sessionId: string) => Promise<void>;
   updateSessionTitle: (sessionId: string, title: string) => void;
   setDeepThinkingEnabled: (enabled: boolean) => void;
+  setExecutionMode: (mode: ChatExecutionMode) => void;
   sendMessage: (content: string) => Promise<void>;
   cancelGeneration: () => void;
   appendStreamContent: (delta: string) => void;
@@ -81,6 +90,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isStreaming: false,
   isCreatingNew: false,
   deepThinkingEnabled: false,
+  executionMode: "AUTO",
   thinkingStartAt: null,
   streamTaskId: null,
   streamAbort: null,
@@ -221,11 +231,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setDeepThinkingEnabled: (enabled) => {
     set({ deepThinkingEnabled: enabled });
   },
+  setExecutionMode: (mode) => {
+    set({ executionMode: mode });
+  },
   sendMessage: async (content) => {
     const trimmed = content.trim();
     if (!trimmed) return;
     if (get().isStreaming) return;
     const deepThinkingEnabled = get().deepThinkingEnabled;
+    const executionMode = get().executionMode;
     const inputFocusKey = Date.now();
 
     const userMessage: Message = {
@@ -262,7 +276,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const query = buildQuery({
       question: trimmed,
       conversationId: conversationId || undefined,
-      deepThinking: deepThinkingEnabled ? true : undefined
+      deepThinking: deepThinkingEnabled ? true : undefined,
+      executionMode
     });
     const url = `${API_BASE_URL}/rag/v3/chat${query}`;
     const token = storage.getToken();

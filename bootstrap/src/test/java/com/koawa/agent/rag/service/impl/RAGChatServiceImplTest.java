@@ -26,6 +26,7 @@ import com.koawa.agent.framework.context.LoginUser;
 import com.koawa.agent.framework.context.UserContext;
 import com.koawa.agent.infra.chat.StreamCallback;
 import com.koawa.agent.rag.service.adapter.AgentStreamChatAdapter;
+import com.koawa.agent.rag.service.ChatExecutionMode;
 import com.koawa.agent.rag.core.memory.ConversationMemoryService;
 import com.koawa.agent.rag.service.handler.StreamCallbackFactory;
 import com.koawa.agent.rag.service.handler.StreamTaskManager;
@@ -142,6 +143,7 @@ class RAGChatServiceImplTest {
                 "question",
                 " conversation-1 ",
                 false,
+                ChatExecutionMode.AUTO,
                 emitter
         );
 
@@ -213,6 +215,7 @@ class RAGChatServiceImplTest {
                 "question",
                 "conversation-1",
                 false,
+                ChatExecutionMode.AUTO,
                 emitter
         );
 

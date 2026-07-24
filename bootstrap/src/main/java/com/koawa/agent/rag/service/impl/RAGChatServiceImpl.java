@@ -22,13 +22,14 @@ import cn.hutool.core.util.StrUtil;
 import com.koawa.agent.agent.routing.AgentRouteDecider;
 import com.koawa.agent.framework.context.UserContext;
 import com.koawa.agent.infra.chat.StreamCallback;
-import com.koawa.agent.rag.service.adapter.AgentStreamChatAdapter;
-import com.koawa.agent.rag.service.ratelimit.ChatQueueLimiter;
+import com.koawa.agent.rag.service.ChatExecutionMode;
 import com.koawa.agent.rag.service.RAGChatService;
+import com.koawa.agent.rag.service.adapter.AgentStreamChatAdapter;
 import com.koawa.agent.rag.service.handler.StreamCallbackFactory;
 import com.koawa.agent.rag.service.handler.StreamTaskManager;
 import com.koawa.agent.rag.service.pipeline.StreamChatContext;
 import com.koawa.agent.rag.service.pipeline.StreamChatPipeline;
+import com.koawa.agent.rag.service.ratelimit.ChatQueueLimiter;
 import com.koawa.agent.rag.trace.StreamChatTraceRunner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +60,7 @@ public class RAGChatServiceImpl implements RAGChatService {
             String question,
             String conversationId,
             Boolean deepThinking,
+            ChatExecutionMode executionMode,
             SseEmitter emitter
     ) {
         // 生成会话 ID 和任务 ID
@@ -94,6 +96,7 @@ public class RAGChatServiceImpl implements RAGChatService {
                                 actualConversationId,
                                 taskId,
                                 deepThinking,
+                                executionMode,
                                 userId,
                                 username,
                                 userRole,
@@ -108,15 +111,17 @@ public class RAGChatServiceImpl implements RAGChatService {
             String conversationId,
             String taskId,
             Boolean deepThinking,
+            ChatExecutionMode executionMode,
             String userId,
             String username,
             String userRole,
             StreamCallback callback
     ) {
-        boolean useAgent = agentRouteDecider.shouldUseAgent(
-                conversationId,
-                userId
-        );
+        ChatExecutionMode actualMode = executionMode == null
+                ? ChatExecutionMode.AUTO : executionMode;
+        boolean useAgent = actualMode == ChatExecutionMode.AGENT
+                || (actualMode == ChatExecutionMode.AUTO
+                && agentRouteDecider.shouldUseAgent(conversationId, userId));
 
         if (useAgent && agentStreamChatAdapter.tryExecute(
                 question,
@@ -139,6 +144,7 @@ public class RAGChatServiceImpl implements RAGChatService {
                 .conversationId(conversationId)
                 .taskId(taskId)
                 .deepThinking(Boolean.TRUE.equals(deepThinking))
+                .executionMode(actualMode)
                 .userId(userId)
                 .username(username)
                 .userRole(userRole)

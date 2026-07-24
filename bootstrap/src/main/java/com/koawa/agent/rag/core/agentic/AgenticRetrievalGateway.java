@@ -19,6 +19,7 @@ package com.koawa.agent.rag.core.agentic;
 
 import com.koawa.agent.rag.config.AgenticRetrievalProperties;
 import com.koawa.agent.rag.dto.RetrievalContext;
+import com.koawa.agent.rag.service.ChatExecutionMode;
 import com.koawa.agent.rag.service.pipeline.StreamChatContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,20 @@ public class AgenticRetrievalGateway {
             StreamChatContext chat,
             RetrievalContext singlePass,
             int topK) {
+        ChatExecutionMode executionMode = chat.getExecutionMode() == null
+                ? ChatExecutionMode.AUTO : chat.getExecutionMode();
+        if (executionMode == ChatExecutionMode.RAG
+                || executionMode == ChatExecutionMode.AGENT) {
+            log.info("Agentic Retrieval bypassed by admin execution mode: taskId={}, mode={}",
+                    chat.getTaskId(), executionMode);
+            return singlePass;
+        }
+        if (executionMode == ChatExecutionMode.AGENTIC) {
+            log.info("Agentic Retrieval forced by admin execution mode: taskId={}",
+                    chat.getTaskId());
+            return executeActive(chat, singlePass, topK);
+        }
+
         AgenticRetrievalRouteDecision decision = routeDecider.decide(
                 chat.getConversationId(), chat.getUserId(),
                 chat.getRewriteResult(), chat.getSubIntents());
@@ -51,6 +66,13 @@ public class AgenticRetrievalGateway {
         if (decision.mode() != AgenticRetrievalProperties.Mode.ACTIVE) {
             return singlePass;
         }
+        return executeActive(chat, singlePass, topK);
+    }
+
+    private RetrievalContext executeActive(
+            StreamChatContext chat,
+            RetrievalContext singlePass,
+            int topK) {
         try {
             AgenticRetrievalResult result = orchestrator.execute(
                     chat.getTaskId(), chat.getSubIntents(), singlePass, topK,
