@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -250,5 +251,21 @@ public class ThreadPoolExecutorConfig {
                 new ThreadPoolExecutor.AbortPolicy()
         );
         return TtlExecutors.getTtlExecutor(executor);
+    }
+
+    @Bean
+    public ExecutorService agenticRetrievalIterationThreadPool() {
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                2,
+                Math.max(2, CPU_COUNT >> 1),
+                60,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(20),
+                ThreadFactoryBuilder.create()
+                        .setNamePrefix("agentic_retrieval_iteration_")
+                        .build(),
+                new ThreadPoolExecutor.AbortPolicy()
+        );
+        return TtlExecutors.getTtlExecutorService(executor);
     }
 }

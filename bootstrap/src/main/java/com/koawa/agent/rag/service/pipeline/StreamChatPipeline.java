@@ -97,7 +97,11 @@ public class StreamChatPipeline {
 
         //检索知识库/MCP 上下文
         RetrievalContext retrievalCtx = retrieve(ctx);
-        agenticRetrievalShadowService.submit(ctx.getSubIntents(), retrievalCtx);
+        agenticRetrievalShadowService.submit(
+                ctx.getTaskId(),
+                ctx.getSubIntents(),
+                retrievalCtx,
+                searchProperties.getDefaultTopK());
         //如果没检索到内容，直接返回无结果提示
         if (handleEmptyRetrieval(ctx, retrievalCtx)) {
             return;

@@ -52,6 +52,11 @@ rag:
   agentic-retrieval:
     shadow-enabled: false
     evaluator-timeout: 8s
+    planner-timeout: 8s
+    timeout: 8s
+    max-iterations: 2
+    max-sub-queries: 6
+    max-retrieved-chunks: 40
     max-evidence-items: 20
     max-evidence-chars: 1200
   vector:

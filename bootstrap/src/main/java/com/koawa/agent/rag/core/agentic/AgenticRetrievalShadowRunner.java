@@ -18,88 +18,41 @@
 package com.koawa.agent.rag.core.agentic;
 
 import com.koawa.agent.framework.trace.RagTraceNode;
-import com.koawa.agent.rag.core.intent.NodeScore;
 import com.koawa.agent.rag.dto.RetrievalContext;
 import com.koawa.agent.rag.dto.SubQuestionIntent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AgenticRetrievalShadowRunner {
 
-    private final RetrievalContextEvidenceAdapter adapter;
-    private final LlmEvidenceEvaluator evaluator;
+    private final AgenticRetrievalOrchestrator orchestrator;
 
     @RagTraceNode(name = "agentic-retrieval-shadow", type = "EVIDENCE_EVALUATION")
-    public void evaluate(List<SubQuestionIntent> subIntents, RetrievalContext context) {
-        ShadowPlan shadowPlan = buildPlan(subIntents, context);
-        EvidenceLedger ledger = EvidenceLedger.empty(shadowPlan.plan().tasks())
-                .merge(adapter.adapt(context, shadowPlan.taskIdByIntentId(), 1), null);
-        EvidenceEvaluation evaluation = evaluator.evaluate(shadowPlan.plan(), ledger);
-        Map<String, TaskEvidenceStatus> taskStatuses = new LinkedHashMap<>();
-        evaluation.assessments().forEach(assessment ->
-                taskStatuses.put(assessment.taskId(), assessment.status()));
-        log.info(
-                "Agentic Retrieval shadow completed: sufficient={}, taskStatuses={}, evidence={}, gaps={}, confidence={}",
-                evaluation.sufficient(),
-                taskStatuses,
-                ledger.evidence().size(),
-                evaluation.gaps().size(),
-                evaluation.confidence());
-    }
-
-    private ShadowPlan buildPlan(
+    public void evaluate(
+            String taskId,
             List<SubQuestionIntent> subIntents,
-            RetrievalContext context) {
-        Map<String, String> questionByIntent = new LinkedHashMap<>();
-        if (subIntents != null) {
-            for (SubQuestionIntent subIntent : subIntents) {
-                if (subIntent.nodeScores() == null) {
-                    continue;
-                }
-                for (NodeScore score : subIntent.nodeScores()) {
-                    if (score != null && score.getNode() != null) {
-                        questionByIntent.putIfAbsent(
-                                score.getNode().getId(), subIntent.subQuestion());
-                    }
-                }
-            }
-        }
-        List<RetrievalTask> tasks = new ArrayList<>();
-        Map<String, String> taskIds = new LinkedHashMap<>();
-        if (context != null && context.getIntentChunks() != null) {
-            context.getIntentChunks().keySet().forEach(intentId -> {
-                String taskId = "shadow-" + intentId;
-                String question = questionByIntent.getOrDefault(
-                        intentId, firstQuestion(subIntents));
-                tasks.add(new RetrievalTask(
-                        taskId, question, List.of(), Set.of(question), false));
-                taskIds.put(intentId, taskId);
-            });
-        }
-        return new ShadowPlan(new RetrievalPlan(tasks, "shadow observation"), taskIds);
-    }
-
-    private String firstQuestion(List<SubQuestionIntent> subIntents) {
-        if (subIntents == null || subIntents.isEmpty()
-                || subIntents.get(0).subQuestion() == null
-                || subIntents.get(0).subQuestion().isBlank()) {
-            return "Evaluate retrieved evidence";
-        }
-        return subIntents.get(0).subQuestion();
-    }
-
-    private record ShadowPlan(
-            RetrievalPlan plan,
-            Map<String, String> taskIdByIntentId) {
+            RetrievalContext context,
+            int topK) {
+        AgenticRetrievalResult result = orchestrator.execute(
+                taskId, subIntents, context, topK);
+        Map<String, TaskEvidenceStatus> taskStatuses = new LinkedHashMap<>();
+        result.evidenceLedger().taskStates().forEach(
+                (id, state) -> taskStatuses.put(id, state.status()));
+        log.info(
+                "Agentic Retrieval shadow completed: sufficient={}, stopReason={}, iterations={}, "
+                        + "taskStatuses={}, evidence={}",
+                result.sufficient(),
+                result.stopReason(),
+                result.iterationCount(),
+                taskStatuses,
+                result.evidenceLedger().evidence().size());
     }
 }

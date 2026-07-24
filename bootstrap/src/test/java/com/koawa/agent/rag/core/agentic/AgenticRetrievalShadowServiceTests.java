@@ -43,9 +43,9 @@ class AgenticRetrievalShadowServiceTests {
 
         new AgenticRetrievalShadowService(
                 properties, runner, Runnable::run)
-                .submit(List.of(), RetrievalContext.builder().build());
+                .submit("task", List.of(), RetrievalContext.builder().build(), 5);
 
-        verify(runner, never()).evaluate(any(), any());
+        verify(runner, never()).evaluate(any(), any(), any(), anyInt());
     }
 
     @Test
@@ -61,27 +61,54 @@ class AgenticRetrievalShadowServiceTests {
                 .build();
         new AgenticRetrievalShadowService(
                 properties, runner, directExecutor)
-                .submit(List.of(new SubQuestionIntent("question", List.of())), context);
+                .submit(
+                        "task",
+                        List.of(
+                                new SubQuestionIntent("question-1", List.of()),
+                                new SubQuestionIntent("question-2", List.of())),
+                        context,
+                        5);
 
-        verify(runner).evaluate(any(), any());
+        verify(runner).evaluate(any(), any(), any(), anyInt());
+    }
+
+    @Test
+    void singleSubQuestionDoesNotAddModelCalls() {
+        AgenticRetrievalShadowRunner runner = mock(AgenticRetrievalShadowRunner.class);
+        AgenticRetrievalProperties properties = new AgenticRetrievalProperties();
+        properties.setShadowEnabled(true);
+
+        new AgenticRetrievalShadowService(properties, runner, Runnable::run)
+                .submit(
+                        "task",
+                        List.of(new SubQuestionIntent("simple question", List.of())),
+                        RetrievalContext.builder().build(),
+                        5);
+
+        verify(runner, never()).evaluate(any(), any(), any(), anyInt());
     }
 
     @Test
     void evaluatorFailureIsContainedInsideShadow() {
-        RetrievalContextEvidenceAdapter adapter = mock(RetrievalContextEvidenceAdapter.class);
-        LlmEvidenceEvaluator evaluator = mock(LlmEvidenceEvaluator.class);
-        AgenticRetrievalShadowRunner runner = new AgenticRetrievalShadowRunner(adapter, evaluator);
+        AgenticRetrievalOrchestrator orchestrator = mock(AgenticRetrievalOrchestrator.class);
+        AgenticRetrievalShadowRunner runner = new AgenticRetrievalShadowRunner(orchestrator);
         AgenticRetrievalProperties properties = new AgenticRetrievalProperties();
         properties.setShadowEnabled(true);
         RetrievalContext context = RetrievalContext.builder()
                 .intentChunks(Map.of("intent", List.of()))
                 .build();
-        when(adapter.adapt(any(), any(), anyInt())).thenReturn(List.of());
-        when(evaluator.evaluate(any(), any())).thenThrow(new RuntimeException("model down"));
+        when(orchestrator.execute(any(), any(), any(), anyInt()))
+                .thenThrow(new RuntimeException("model down"));
 
         org.junit.jupiter.api.Assertions.assertDoesNotThrow(
                 () -> new AgenticRetrievalShadowService(
                         properties, runner, Runnable::run)
-                        .submit(List.of(new SubQuestionIntent("question", List.of())), context));
+                        .submit(
+                                "task",
+                                List.of(
+                                        new SubQuestionIntent("question-1", List.of()),
+                                        new SubQuestionIntent("question-2", List.of())),
+                                context,
+                                5));
     }
 }

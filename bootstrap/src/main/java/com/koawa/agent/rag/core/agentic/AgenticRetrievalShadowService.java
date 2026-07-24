@@ -45,14 +45,21 @@ public class AgenticRetrievalShadowService {
         this.shadowExecutor = shadowExecutor;
     }
 
-    public void submit(List<SubQuestionIntent> subIntents, RetrievalContext context) {
+    public void submit(
+            String taskId,
+            List<SubQuestionIntent> subIntents,
+            RetrievalContext context,
+            int topK) {
         if (!properties.isShadowEnabled()) {
+            return;
+        }
+        if (subIntents == null || subIntents.size() < 2) {
             return;
         }
         try {
             shadowExecutor.execute(() -> {
                 try {
-                    runner.evaluate(subIntents, context);
+                    runner.evaluate(taskId, subIntents, context, topK);
                 } catch (Exception exception) {
                     log.warn(
                             "Agentic Retrieval shadow evaluation failed; current answer is unchanged: {}",

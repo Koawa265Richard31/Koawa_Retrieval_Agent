@@ -53,10 +53,21 @@ public class LlmEvidenceEvaluator implements EvidenceEvaluator {
 
     @Override
     public EvidenceEvaluation evaluate(RetrievalPlan plan, EvidenceLedger ledger) {
+        return evaluate(
+                plan,
+                ledger,
+                Instant.now().plus(properties.getEvaluatorTimeout()));
+    }
+
+    public EvidenceEvaluation evaluate(
+            RetrievalPlan plan,
+            EvidenceLedger ledger,
+            Instant overallDeadline) {
         EvidenceEvaluation deterministic = deterministicChecks.evaluate(plan, ledger);
         if (deterministic.sufficient() || ledger.evidence().isEmpty()) {
             return deterministic;
         }
+        Instant componentDeadline = Instant.now().plus(properties.getEvaluatorTimeout());
         ChatRequest request = ChatRequest.builder()
                 .messages(List.of(
                         ChatMessage.system(SYSTEM_PROMPT),
@@ -65,9 +76,13 @@ public class LlmEvidenceEvaluator implements EvidenceEvaluator {
                 .topP(1D)
                 .thinking(false)
                 .maxTokens(1200)
-                .deadlineAt(Instant.now().plus(properties.getEvaluatorTimeout()))
+                .deadlineAt(earlier(componentDeadline, overallDeadline))
                 .build();
         return parser.parse(llmService.chat(request), plan);
+    }
+
+    private Instant earlier(Instant first, Instant second) {
+        return second != null && second.isBefore(first) ? second : first;
     }
 
     private Map<String, Object> buildPayload(RetrievalPlan plan, EvidenceLedger ledger) {

@@ -734,6 +734,9 @@ userId 兜底
 
 ### Phase AR2：一次补检索最小闭环
 
+状态：已完成（2026-07-24）。实现与验收记录见
+[`AGENTIC_RETRIEVAL_AR2.md`](./AGENTIC_RETRIEVAL_AR2.md)。
+
 #### 目标
 
 对证据不足的复杂问题执行最多一次补检索。

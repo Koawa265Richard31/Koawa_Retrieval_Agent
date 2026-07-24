@@ -15,26 +15,19 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.rag.config;
+package com.koawa.agent.rag.core.agentic;
 
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import com.koawa.agent.rag.dto.SubQuestionIntent;
 
-import java.time.Duration;
+import java.util.Map;
 
-@Data
-@Component
-@ConfigurationProperties(prefix = "rag.agentic-retrieval")
-public class AgenticRetrievalProperties {
+public record RetrievalPlanSeed(
+        RetrievalPlan plan,
+        Map<String, String> taskIdByIntentId,
+        Map<String, SubQuestionIntent> intentByTaskId) {
 
-    private boolean shadowEnabled = false;
-    private Duration evaluatorTimeout = Duration.ofSeconds(8);
-    private Duration plannerTimeout = Duration.ofSeconds(8);
-    private Duration timeout = Duration.ofSeconds(8);
-    private int maxIterations = 2;
-    private int maxSubQueries = 6;
-    private int maxRetrievedChunks = 40;
-    private int maxEvidenceItems = 20;
-    private int maxEvidenceChars = 1200;
+    public RetrievalPlanSeed {
+        taskIdByIntentId = Map.copyOf(taskIdByIntentId);
+        intentByTaskId = Map.copyOf(intentByTaskId);
+    }
 }
