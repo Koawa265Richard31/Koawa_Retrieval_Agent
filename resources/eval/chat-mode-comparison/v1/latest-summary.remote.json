@@ -1,0 +1,977 @@
+{
+  "schemaVersion": "1.0",
+  "dataset": "resources/eval/chat-mode-comparison/v1/gakumas-chat-cases.json",
+  "generatedAt": "2026-08-04T15:50:03Z",
+  "summary": {
+    "caseCount": 14,
+    "RAG": {
+      "passCount": 11,
+      "passRate": 0.7857,
+      "avgLatencyMs": 26932,
+      "clarificationCount": 0,
+      "imageFailures": 2
+    },
+    "AGENT": {
+      "passCount": 11,
+      "passRate": 0.7857,
+      "avgLatencyMs": 37247,
+      "clarificationCount": 0,
+      "imageFailures": 2
+    },
+    "agentRegressions": [],
+    "agentWins": [],
+    "avgAgentExtraLatencyMs": 10315
+  },
+  "cases": [
+    {
+      "id": "profile-single-saki-all",
+      "category": "single_profile",
+      "difficulty": "easy",
+      "agentExpectedValue": "none",
+      "question": "花海咲季该角色所有资料",
+      "modes": {
+        "RAG": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 3,
+          "latencyMs": 25896,
+          "answerChars": 681,
+          "preview": "花海咲季是初星学园的新生，曾是一名运动员，好胜心强、讨厌失败，在入学考试中取得了第一名。她自幼聪颖、擅长记忆，可以很好地完成一切事项，被人们称为神童。 ![花海咲季图片1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) ###一、基本信息- **生日**：4月2日（白羊座） - **年龄**：16岁- **身高**：152cm- **体重**：45kg- **三围**：84/55/80- **血型**：A型- **惯用手**：左手- **出身地**：爱知县###二、特长与爱好- **特长**：所有运动、所有家务、按摩- **兴趣**：和别人一决胜负###三、其他设定- **印象色**：![花海咲季图片2](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_86/h_86/50368/43637/2024/5/4/711350.png) #FF4F64- **声优 (CV)**：長月あおい- **玩家爱称**",
+          "error": null
+        },
+        "AGENT": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 4,
+          "latencyMs": 60609,
+          "answerChars": 981,
+          "preview": "根据最新成功检索到的知识库内容，为您提供角色**花海咲季**的全部资料如下： ## 个人信息 - **生日**：4月2日 (白羊座) - **年龄**：16岁 - **身高**：152cm - **体重**：45kg - **三围**：84/55/80 - **血型**：A型 - **惯用手**：左手 - **出身地**：爱知县 ## 特长及爱好 - **特长**：所有运动、所有家务、按摩 - **兴趣**：和别人一决胜负 ## 其他设定 - **印象色**： `#FF4F64` ![图片](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_86/h_86/50368/43637/2024/5/4/711350.png) - **CV (声优)**：長月あおい - **玩家爱称**：小火龙 ## 官方简介 她曾经是一名运动员。好胜心强、讨厌失败。作为新生，她在入学考试中取得了第一名。花海咲季自幼聪颖、擅长记忆、可以很好的完成一切事项，被人们称为神童。妹妹花海佑芽与其关系很好，也是在各种各样的运动上一较高下的宿敌。她比任何人都要看好佑芽的才能的",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "profile-single-temari-all",
+      "category": "single_profile",
+      "difficulty": "easy",
+      "agentExpectedValue": "none",
+      "question": "月村手毬该角色所有资料，图片也要返回",
+      "modes": {
+        "RAG": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 3,
+          "latencyMs": 26997,
+          "answerChars": 671,
+          "preview": "月村手毬是初星学园的一名学生偶像，以下是她的详细资料。 ![月村手毬图片1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/29/552608.png) ###一、个人信息- **生日**：6月3日（双子座） - **年龄**：15岁- **身高**：162cm- **体重**：51kg- **三围**：82/58/86- **血型**：AB型- **惯用手**：右手- **出身地**：京都府###二、特长及爱好- **特长**：唱歌- **兴趣**：品尝美食（目前处于“封印中”的状态） ###三、其他设定- **印象色**：#27B4EB- **声优 (CV)**：小鹿なお- **角色简介**：她曾是中等部（初中）被称为“number one idol”的昔日王牌。外表看上去冷静自律且言行刻薄，实际上是个懒惰爱撒娇的麻烦鬼，具有两面性。她为了告别讨厌的自己，并能一直喜欢自己，决定成为顶尖偶像。 ![月村手毬图片2](https://cdnimg-v2.gamekee.com/w",
+          "error": null
+        },
+        "AGENT": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 3,
+          "latencyMs": 32003,
+          "answerChars": 894,
+          "preview": "根据您关于“月村手毬该角色所有资料，图片也要返回”的请求，本次知识库检索已成功执行。 以下是来自《学园偶像大师》角色资料页的 **月村手毬 (Tsukimura Temari)** 全部信息： ### **基本信息** * **生日：** 6月3日 (双子座) * **年龄：** 15岁 * **身高：** 162cm * **体重：** 51kg * **三围：** 82/58/86 * **血型：** AB型 * **惯用手：** 右手 * **出身地：** 京都府 ### **特长及爱好** * **特长：** 唱歌 * **兴趣：** 品尝美食 (封印中) ### **其他设定** * **印象色：** `#27B4EB` * **声优(CV)：** 小鹿なお * **官网简介：** 在中等部（初中）被称作“number one idol”的昔日王牌。外表看上去是个冷静自律且言行刻薄的少女，实际上是个懒惰且爱撒娇的麻烦鬼。是个有两面性的少女。为了告别讨厌的自己，并能一直喜欢自己，她决定成为顶尖偶像。 ### **角色图片** ![月村手毬 图片 1](https://cdnim",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "profile-image-only-saki",
+      "category": "image_rendering",
+      "difficulty": "easy",
+      "agentExpectedValue": "none",
+      "question": "只返回花海咲季资料里的全部图片，并简短说明每张图片来自哪里",
+      "modes": {
+        "RAG": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 3,
+          "latencyMs": 22150,
+          "answerChars": 382,
+          "preview": "花海咲季资料里的全部图片如下，均来自其角色资料页。 ![花海咲季图片1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) 这是她的证件照，用于展示个人信息。 ![花海咲季图片2](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_86/h_86/50368/43637/2024/5/4/711350.png) 这是她的印象色色块图。 ![花海咲季图片3](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/4/27/216238.png) 这是她的签名图，也附有官网简介。",
+          "error": null
+        },
+        "AGENT": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 3,
+          "latencyMs": 43910,
+          "answerChars": 476,
+          "preview": "根据您的请求，以下是来自“花海咲季”角色资料中的全部图片及简短说明。所有图片均来源于 GameKee 网站上的角色资料页。 1. ![花海咲季 图片 1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) * **说明**：此图为角色的个人证件照。 2. ![花海咲季 图片 2](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_86/h_86/50368/43637/2024/5/4/711350.png) * **说明**：此图为角色设定的印象色图标。 3. ![花海咲季 图片 3](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/4/27/216238.png) * **说明**：此图为角色的官方签名图片。",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "alias-saki-nickname",
+      "category": "alias_resolution",
+      "difficulty": "medium",
+      "agentExpectedValue": "possible",
+      "question": "小火龙是谁？给我她的角色资料和图片",
+      "modes": {
+        "RAG": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 3,
+          "latencyMs": 47243,
+          "answerChars": 714,
+          "preview": "根据现有资料，“小火龙”是玩家对角色**花海咲季**的爱称。以下是她的详细资料和图片。 ###一、个人信息![图片](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) - **生日**：4月2日 (白羊座) - **年龄**：16岁- **身高**：152cm- **体重**：45kg- **三围**：84/55/80- **血型**：A型- **惯用手**：左手- **出身地**：爱知县###二、特长与爱好- **特长**：所有运动、所有家务、按摩- **兴趣**：和别人一决胜负###三、其他设定- **印象色**：![图片](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_86/h_86/50368/43637/2024/5/4/711350.png) #FF4F64- **CV**：長月あおい- **玩家爱称**：小火龙###四、签名与简介![图片](https://cdnimg-v2.gamekee.",
+          "error": null
+        },
+        "AGENT": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 6,
+          "latencyMs": 43460,
+          "answerChars": 1257,
+          "preview": "根据您的问题“小火龙是谁？给我她的角色资料和图片”，并结合此前对话的上下文，我可以确认“小火龙”是手机游戏《ガクマス》（学园偶像大师）中角色**花海咲季**的玩家爱称。本次知识库检索的结果（Observation）完全成功，包含了她详细的资料和多张图片。 ### **角色资料：花海咲季（昵称：小火龙）** #### **个人信息** * **证件照**：![图片](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) * **生日/星座**：4月2日（白羊座） * **年龄**：16岁 * **身高/体重**：152cm / 45kg * **三围**：84/55/80 * **血型**：A型 * **惯用手**：左手 #### **特长及爱好** * **特长**：所有运动、所有家务、按摩 * **兴趣**：和别人一决胜负 * **出身地**：爱知县 #### **其他设定** * **印象色**：![图片](https://cdnimg-v2.gamek",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "compare-saki-temari-basic",
+      "category": "comparison",
+      "difficulty": "medium",
+      "agentExpectedValue": "possible",
+      "question": "对比花海咲季和月村手毬的生日、年龄、身高、体重、血型、特长和兴趣，尽量用表格",
+      "modes": {
+        "RAG": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 2,
+          "latencyMs": 37426,
+          "answerChars": 666,
+          "preview": "花海咲季和月村手毬在基础信息和特长爱好上各有特点，以下是详细的对比。 ###一、花海咲季![花海咲季图片1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) - **生日**：4月2日（白羊座） - **年龄**：16岁- **身高**：152cm- **体重**：45kg- **血型**：A型- **特长**：所有运动、所有家务、按摩- **兴趣**：和别人一决胜负###二、月村手毬![月村手毬图片1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/29/552608.png) - **生日**：6月3日（双子座） - **年龄**：15岁- **身高**：162cm- **体重**：51kg- **血型**：AB型- **特长**：唱歌- **兴趣**：品尝美食（封印中） ###三、对比总结从对比来看，两人在多个维度上存在差异： - **年龄",
+          "error": null
+        },
+        "AGENT": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 0,
+          "latencyMs": 37979,
+          "answerChars": 467,
+          "preview": "根据您的要求和知识库检索结果，以下是花海咲季和月村手毬在生日、年龄、身高、体重、血型、特长及兴趣方面的对比表格： | **项目** | **花海咲季** | **月村手毬** | |---|---|---| | **生日** | 4月2日 (白羊座) | 6月3日 (双子座) | | **年龄** | 16岁 | 15岁 | | **身高** | 152cm | 162cm | | **体重** | 45kg | 51kg | | **血型** | A型 | AB型 | | **特长** | 所有运动、所有家务、按摩 | 唱歌 | | **兴趣** | 和别人一决胜负 | 品尝美食 (封印中) | **说明：** 1. 以上数据全部来自知识库检索到的“花海咲季”与“月村手毬”的官方角色资料页，检索成功，数据完整。 2. 表格严格遵循用户原始问题要求，仅对比指定的生日、年龄、身高、体重、血型、特长和兴趣七个项目。其他信息（如三围、出身地、惯用手等）本次不作展示。 3. 知识库中包含的图片原样保留，以遵循回答规则。",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "relation-saki-yume",
+      "category": "relationship",
+      "difficulty": "medium",
+      "agentExpectedValue": "possible",
+      "question": "花海咲季和花海佑芽是什么关系？把两人的资料、共同点和差异都说清楚，并返回图片",
+      "modes": {
+        "RAG": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 10,
+          "latencyMs": 82475,
+          "answerChars": 2176,
+          "preview": "花海咲季和花海佑芽是关系很好的姐妹，也是在各种运动上相互较量的宿敌。 ##花海咲季的资料![花海咲季图片1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) - **生日**：4月2日（白羊座） - **年龄**：16岁- **身高/体重**：152cm /45kg- **三围**：84/55/80- **血型/惯用手**：A型 /左手- **出身地**：爱知县- **特长**：所有运动、所有家务、按摩- **兴趣**：和别人一决胜负- **CV**：長月あおい- **玩家爱称**：小火龙- **印象色**：![图片](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_86/h_86/50368/43637/2024/5/4/711350.png)#FF4F64**简介**：她曾经是一名运动员，好胜心强、讨厌失败。作为新生，她在入学考试中取得了第一名。自幼聪颖、擅长记忆、可以很好的完成一切事项，被人们称为神童",
+          "error": null
+        },
+        "AGENT": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 5,
+          "latencyMs": 68045,
+          "answerChars": 1905,
+          "preview": "根据知识库检索结果，花海咲季和花海佑芽是**姐妹关系**。花海咲季是姐姐，花海佑芽是妹妹。 以下是两人的详细资料、共同点与差异，并附上相关图片。 ### 花海咲季（姐姐）资料 * **生日：** 4月2日（白羊座） * **年龄：** 16岁 * **身高：** 152cm * **体重：** 45kg * **三围：** 84/55/80 * **血型：** A型 * **惯用手：** 左手 * **出身地：** 爱知县 * **特长：** 所有运动、所有家务、按摩 * **兴趣：** 和别人一决胜负 * **CV：** 長月あおい * **印象色：** #FF4F64 * **玩家爱称：** 小火龙 * **简介：** 曾经是一名运动员。好胜心强、讨厌失败。作为新生，她在入学考试中取得了第一名。自幼聪颖、擅长记忆、可以很好地完成一切事项，被人们称为神童。妹妹花海佑芽与其关系很好，也是在各种各样的运动上一较高下的宿敌。她比任何人都要看好佑芽的才能，同时也对这份才能感到害怕。 ![花海咲季 图片 1](https://cdnimg-v2.gamekee.com/wiki2.0/imag",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "multi-character-height-ranking",
+      "category": "multi_entity_aggregation",
+      "difficulty": "hard",
+      "agentExpectedValue": "yes",
+      "question": "在花海咲季、月村手毬、藤田琴音、十王星南这四人中，按身高从高到低排序，并列出年龄、体重和出身地",
+      "modes": {
+        "RAG": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 4,
+          "latencyMs": 50153,
+          "answerChars": 746,
+          "preview": "根据现有资料，花海咲季、月村手毬、藤田琴音、十王星南四位角色的身高、年龄、体重和出身地信息如下： ###一、花海咲季![花海咲季图片1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) - **身高**：152cm- **年龄**：16岁- **体重**：45kg- **出身地**：爱知县###二、月村手毬![月村手毬图片1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/29/552608.png) - **身高**：162cm- **年龄**：15岁- **体重**：51kg- **出身地**：京都府###三、藤田琴音![藤田琴音图片1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/29/793855.png) - **身高**：15",
+          "error": null
+        },
+        "AGENT": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 4,
+          "latencyMs": 48602,
+          "answerChars": 888,
+          "preview": "根据检索到的角色资料，关于用户指定的四人“花海咲季、月村手毬、藤田琴音、十王星南”，其身高从高到低排序及信息如下： ### 1. 十王星南 * **身高**：170cm * **年龄**：17岁 * **体重**：资料中未提供明确数值（显示为“kg”）。 * **出身地**：东京 * ![十王星南 图片 1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/535344/2024/5/16/792651.png) ### 2. 月村手毬 * **身高**：162cm * **年龄**：15岁 * **体重**：51kg * **出身地**：京都府 * ![月村手毬 图片 1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/29/552608.png) ### 3. 藤田琴音 * **身高**：156cm * **年龄**：15岁 * **体重**：40kg * **出身地**：埼玉县 * ![藤田琴音 ",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "multi-character-cv-index",
+      "category": "multi_entity_aggregation",
+      "difficulty": "hard",
+      "agentExpectedValue": "yes",
+      "question": "整理花海咲季、月村手毬、藤田琴音、花海佑芽、十王星南的 CV、玩家爱称和印象色",
+      "modes": {
+        "RAG": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 1,
+          "latencyMs": 36031,
+          "answerChars": 427,
+          "preview": "根据资料，这五位角色的CV、玩家爱称和印象色信息如下： ###一、花海咲季- **CV**：長月あおい- **玩家爱称**：小火龙- **印象色**：`#FF4F64` ![花海咲季图片2](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_86/h_86/50368/43637/2024/5/4/711350.png) ###二、月村手毬- **CV**：小鹿なお- **玩家爱称**：资料中未提供具体爱称- **印象色**：`#27B4EB` ###三、藤田琴音- **CV**：飯田ヒカル- **玩家爱称**：皮卡丘- **印象色**：`#FFD203` ###四、花海佑芽- **CV**：松田彩音- **玩家爱称**：妹妹- **印象色**：`#F74C2C` ###五、十王星南- **CV**：陽高真白- **玩家爱称**：资料中未提供具体爱称- **印象色**：`#FFAC28`",
+          "error": null
+        },
+        "AGENT": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 5,
+          "latencyMs": 60276,
+          "answerChars": 1059,
+          "preview": "根据成功检索到的知识库内容，已为您整理出花海咲季、月村手毬、藤田琴音、花海佑芽、十王星南五位角色的CV、玩家爱称和印象色信息。 ### **1. 花海咲季** ![花海咲季 图片 1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) * **CV：** 長月あおい * **玩家爱称：** 小火龙 * **印象色：** #FF4F64 ### **2. 月村手毬** ![月村手毬 图片 1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/29/552608.png) * **CV：** 小鹿なお * **玩家爱称：** 资料中未标注 * **印象色：** #27B4EB ### **3. 藤田琴音** ![藤田琴音 图片 1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/5036",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "source-metadata-saki",
+      "category": "metadata",
+      "difficulty": "easy",
+      "agentExpectedValue": "none",
+      "question": "花海咲季这条资料的 GameKee 内容ID、来源链接和页面更新时间是什么？",
+      "modes": {
+        "RAG": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 0,
+          "latencyMs": 16391,
+          "answerChars": 103,
+          "preview": "花海咲季的GameKee内容ID是 **623218**。 来源链接是：https://www.gamekee.com/gakumas/623218.html页面更新时间是 **2024年8月13日**。",
+          "error": null
+        },
+        "AGENT": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 3,
+          "latencyMs": 36901,
+          "answerChars": 494,
+          "preview": "根据成功检索到的知识库内容，“花海咲季”这条资料的完整信息如下： * **GameKee内容ID**：623218 * **来源链接**：https://www.gamekee.com/gakumas/623218.html * **页面更新时间**：2024-08-13T09:54:21+00:00 以下是该页面中包含的“花海咲季”相关图片： ![花海咲季 图片 1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) ![花海咲季 图片 2](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_86/h_86/50368/43637/2024/5/4/711350.png) ![花海咲季 图片 3](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/4/27/216238.png)",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "missing-card-strength",
+      "category": "missing_information",
+      "difficulty": "medium",
+      "agentExpectedValue": "none",
+      "question": "花海咲季的 SSR 卡强度、技能倍率和抽取建议是什么？",
+      "modes": {
+        "RAG": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [
+            "未收录",
+            "没有收录",
+            "未检索到",
+            "没有检索到",
+            "资料中没有",
+            "无法确认",
+            "没有提供",
+            "无法提供",
+            "无法回答",
+            "无法为您提供",
+            "不包含"
+          ],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 3,
+          "latencyMs": 21028,
+          "answerChars": 488,
+          "preview": "根据当前可用的资料，我无法提供关于“花海咲季 SSR卡强度、技能倍率和抽取建议”的具体信息。 现有文档中只包含了花海咲季的角色背景资料和个人信息，例如她的生日、身高、特长、性格以及与妹妹的关系等，但没有涉及任何关于游戏内卡牌强度、技能数据或抽取建议的内容。 ![花海咲季图片1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) ![花海咲季图片2](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_86/h_86/50368/43637/2024/5/4/711350.png) ![花海咲季图片3](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/4/27/216238.png) 关于卡牌的具体数值、强度分析和抽取策略，建议你查阅游戏内的公告、官方社区或专门的强度评测攻略。",
+          "error": null
+        },
+        "AGENT": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [
+            "未收录",
+            "没有收录",
+            "未检索到",
+            "没有检索到",
+            "资料中没有",
+            "无法确认",
+            "没有提供",
+            "无法提供",
+            "无法回答",
+            "无法为您提供",
+            "不包含"
+          ],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 3,
+          "latencyMs": 63245,
+          "answerChars": 929,
+          "preview": "根据本次提供的**Agent执行结果**，关于您的问题“花海咲季的 SSR 卡强度、技能倍率和抽取建议是什么？”，**仍然无法给出具体答案**。 **核心原因：** 1. **工具执行成功，但内容不匹配**：`RETRIEVE_KB` 检索是成功的（`success: true`），返回了包含“花海咲季”在内的多个角色资料。 2. **返回的证据未包含所需信息**：所有返回内容均来自游戏的角色资料页，采集范围明确为“角色资料页；默认不采集评论区、社区帖、外链剧情正文”。因此，内容仅限于角色的**背景设定、个人信息和官方简介**，如下图所示。 ![花海咲季 图片 1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) ![花海咲季 图片 2](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_86/h_86/50368/43637/2024/5/4/711350.png) ![花海咲季 图片 3](https:/",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "out-of-scope-story",
+      "category": "missing_information",
+      "difficulty": "medium",
+      "agentExpectedValue": "none",
+      "question": "花海咲季在主线剧情第三章具体说了哪些台词？",
+      "modes": {
+        "RAG": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [
+            "未收录",
+            "没有收录",
+            "未检索到",
+            "没有检索到",
+            "资料中没有",
+            "无法确认",
+            "没有提供",
+            "无法提供",
+            "无法回答",
+            "无法为您提供"
+          ],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 0,
+          "latencyMs": 11065,
+          "answerChars": 15,
+          "preview": "未检索到与问题相关的文档内容。",
+          "error": null
+        },
+        "AGENT": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [
+            "未收录",
+            "没有收录",
+            "未检索到",
+            "没有检索到",
+            "资料中没有",
+            "无法确认",
+            "没有提供",
+            "无法提供",
+            "无法回答",
+            "无法为您提供"
+          ],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 0,
+          "latencyMs": 26245,
+          "answerChars": 15,
+          "preview": "未检索到与问题相关的文档内容。",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "orthography-himezaki",
+      "category": "orthography",
+      "difficulty": "medium",
+      "agentExpectedValue": "possible",
+      "question": "姫崎莉波的角色资料和图片",
+      "modes": {
+        "RAG": {
+          "passed": false,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": false,
+            "requiredTermsPresent": false,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": false
+          },
+          "missingEntities": [
+            "姫崎莉波"
+          ],
+          "missingRequiredTerms": [
+            "姫崎莉波"
+          ],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 0,
+          "latencyMs": 73,
+          "answerChars": 15,
+          "preview": "未检索到与问题相关的文档内容。",
+          "error": null
+        },
+        "AGENT": {
+          "passed": false,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": false,
+            "requiredTermsPresent": false,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": false
+          },
+          "missingEntities": [
+            "姫崎莉波"
+          ],
+          "missingRequiredTerms": [
+            "姫崎莉波"
+          ],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 0,
+          "latencyMs": 61,
+          "answerChars": 15,
+          "preview": "未检索到与问题相关的文档内容。",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "newer-character-amenoya-tsubame",
+      "category": "new_character",
+      "difficulty": "medium",
+      "agentExpectedValue": "possible",
+      "question": "雨夜燕的角色资料，包含图片、CV、生日、身高体重和来源",
+      "modes": {
+        "RAG": {
+          "passed": false,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": false,
+            "requiredTermsPresent": false,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": false
+          },
+          "missingEntities": [
+            "雨夜",
+            "燕"
+          ],
+          "missingRequiredTerms": [
+            "681855",
+            "雨夜",
+            "燕"
+          ],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 0,
+          "latencyMs": 63,
+          "answerChars": 15,
+          "preview": "未检索到与问题相关的文档内容。",
+          "error": null
+        },
+        "AGENT": {
+          "passed": false,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": false,
+            "requiredTermsPresent": false,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": false
+          },
+          "missingEntities": [
+            "雨夜",
+            "燕"
+          ],
+          "missingRequiredTerms": [
+            "681855",
+            "雨夜",
+            "燕"
+          ],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 0,
+          "latencyMs": 63,
+          "answerChars": 15,
+          "preview": "未检索到与问题相关的文档内容。",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "all-characters-list",
+      "category": "broad_list",
+      "difficulty": "hard",
+      "agentExpectedValue": "yes",
+      "question": "当前知识库里收录了哪些学园偶像大师角色？只列角色名和 GameKee 内容ID",
+      "modes": {
+        "RAG": {
+          "passed": false,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": false,
+            "requiredTermsPresent": false,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [
+            "花海咲季",
+            "月村手毬",
+            "藤田琴音",
+            "有村麻央",
+            "葛城莉莉娅",
+            "仓本千奈",
+            "紫云清夏",
+            "篠泽广",
+            "姫崎莉波",
+            "花海佑芽",
+            "秦谷美铃",
+            "十王星南",
+            "雨夜"
+          ],
+          "missingRequiredTerms": [
+            "623218",
+            "623555",
+            "623551",
+            "624398",
+            "624399",
+            "624402",
+            "618476",
+            "624400",
+            "618473",
+            "623552",
+            "622416",
+            "624860",
+            "681855"
+          ],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 0,
+          "latencyMs": 61,
+          "answerChars": 15,
+          "preview": "未检索到与问题相关的文档内容。",
+          "error": null
+        },
+        "AGENT": {
+          "passed": false,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": false,
+            "requiredTermsPresent": false,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [
+            "花海咲季",
+            "月村手毬",
+            "藤田琴音",
+            "有村麻央",
+            "葛城莉莉娅",
+            "仓本千奈",
+            "紫云清夏",
+            "篠泽广",
+            "姫崎莉波",
+            "花海佑芽",
+            "秦谷美铃",
+            "十王星南",
+            "雨夜"
+          ],
+          "missingRequiredTerms": [
+            "623218",
+            "623555",
+            "623551",
+            "624398",
+            "624399",
+            "624402",
+            "618476",
+            "624400",
+            "618473",
+            "623552",
+            "622416",
+            "624860",
+            "681855"
+          ],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 0,
+          "latencyMs": 61,
+          "answerChars": 15,
+          "preview": "未检索到与问题相关的文档内容。",
+          "error": null
+        }
+      }
+    }
+  ]
+}

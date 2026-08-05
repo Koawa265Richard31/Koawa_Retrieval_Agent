@@ -132,6 +132,36 @@ class AgentStreamChatAdapterTest {
     }
 
     @Test
+    void shouldRequestRagFallbackForAnyClarification() {
+        when(agentChatService.chat(
+                "question",
+                "conversation-1",
+                "task-1",
+                "user-1"
+        )).thenReturn(new AgentRunResult(
+                "conversation-1",
+                "task-1",
+                AgentStopReason.ASK_CLARIFICATION,
+                3,
+                0,
+                null,
+                "请补充问题",
+                null
+        ));
+
+        boolean delivered = adapter.tryExecute(
+                "question",
+                "conversation-1",
+                "task-1",
+                "user-1",
+                callback
+        );
+
+        assertFalse(delivered);
+        verifyNoInteractions(memoryService, callback);
+    }
+
+    @Test
     void shouldRequestOldRagFallbackForTimeout(CapturedOutput output) {
         when(agentChatService.chat(
                 "question",

@@ -60,6 +60,11 @@ public class SearchContext {
     private int topK;
 
     /**
+     * 显式限定的知识库向量集合。非空时不能访问其他集合。
+     */
+    private String collectionName;
+
+    /**
      * 扩展元数据
      */
     @Builder.Default

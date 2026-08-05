@@ -26,18 +26,21 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class ChatExecutionModeTests {
 
     @Test
-    void blankDefaultsToAuto() {
-        assertEquals(ChatExecutionMode.AUTO, ChatExecutionMode.from(null));
-        assertEquals(ChatExecutionMode.AUTO, ChatExecutionMode.from(" "));
+    void blankDefaultsToRag() {
+        assertEquals(ChatExecutionMode.RAG, ChatExecutionMode.from(null));
+        assertEquals(ChatExecutionMode.RAG, ChatExecutionMode.from(" "));
     }
 
     @Test
     void acceptsCaseInsensitiveMode() {
-        assertEquals(ChatExecutionMode.AGENTIC, ChatExecutionMode.from("agentic"));
+        assertEquals(ChatExecutionMode.AGENT, ChatExecutionMode.from("agent"));
+        assertEquals(ChatExecutionMode.RAG, ChatExecutionMode.from("rag"));
     }
 
     @Test
-    void rejectsUnknownMode() {
+    void rejectsUnknownOrRemovedModes() {
         assertThrows(ClientException.class, () -> ChatExecutionMode.from("unknown"));
+        assertThrows(ClientException.class, () -> ChatExecutionMode.from("auto"));
+        assertThrows(ClientException.class, () -> ChatExecutionMode.from("agentic"));
     }
 }

@@ -110,8 +110,12 @@ rag:
       - name: default
         url: http://localhost:9099
 
-  search:
-    channels:
+    search:
+      context:
+        # The answer model receives at most this much KB evidence; chunks stay atomic.
+        max-tokens: 6000
+        max-images: 3
+      channels:
       vector-global:
         confidence-threshold: 0.6
         top-k-multiplier: 3

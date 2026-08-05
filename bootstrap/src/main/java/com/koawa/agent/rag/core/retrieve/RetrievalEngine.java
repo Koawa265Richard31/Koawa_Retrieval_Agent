@@ -75,6 +75,13 @@ public class RetrievalEngine {
      */
     @RagTraceNode(name = "retrieval-engine", type = "RETRIEVE")
     public RetrievalContext retrieve(List<SubQuestionIntent> subIntents, int topK) {
+        return retrieve(subIntents, topK, null);
+    }
+
+    /**
+     * 在指定集合内检索；未指定时保持现有多知识库全局检索行为。
+     */
+    public RetrievalContext retrieve(List<SubQuestionIntent> subIntents, int topK, String collectionName) {
         if (CollUtil.isEmpty(subIntents)) {
             return RetrievalContext.builder()
                     .intentChunks(Map.of())
@@ -88,7 +95,8 @@ public class RetrievalEngine {
                             try {
                                 return buildSubQuestionContext(
                                         si,
-                                        resolveSubQuestionTopK(si, finalTopK)
+                                        resolveSubQuestionTopK(si, finalTopK),
+                                        collectionName
                                 );
                             } catch (Exception e) {
                                 log.error("子问题上下文构建失败，降级为空上下文，question：{}", si.subQuestion(), e);
@@ -145,11 +153,12 @@ public class RetrievalEngine {
                 .build();
     }
 
-    private SubQuestionContext buildSubQuestionContext(SubQuestionIntent intent, int topK) {
+    private SubQuestionContext buildSubQuestionContext(
+            SubQuestionIntent intent, int topK, String collectionName) {
         List<NodeScore> kbIntents = NodeScoreFilters.kb(intent.nodeScores());
         List<NodeScore> mcpIntents = NodeScoreFilters.mcp(intent.nodeScores());
 
-        KbResult kbResult = retrieveAndRerank(intent, kbIntents, topK);
+        KbResult kbResult = retrieveAndRerank(intent, kbIntents, topK, collectionName);
 
         String mcpContext = CollUtil.isNotEmpty(mcpIntents)
                 ? executeMcpAndMerge(intent.subQuestion(), mcpIntents)
@@ -196,10 +205,12 @@ public class RetrievalEngine {
         return contextFormatter.formatMcpContext(toolResults, mcpIntents);
     }
 
-    private KbResult retrieveAndRerank(SubQuestionIntent intent, List<NodeScore> kbIntents, int topK) {
+    private KbResult retrieveAndRerank(
+            SubQuestionIntent intent, List<NodeScore> kbIntents, int topK, String collectionName) {
         // 使用多通道检索引擎（是否启用全局检索由置信度阈值决定）
         List<SubQuestionIntent> subIntents = List.of(intent);
-        List<RetrievedChunk> chunks = multiChannelRetrievalEngine.retrieveKnowledgeChannels(subIntents, topK);
+        List<RetrievedChunk> chunks = multiChannelRetrievalEngine.retrieveKnowledgeChannels(
+                subIntents, topK, collectionName);
 
         if (CollUtil.isEmpty(chunks)) {
             return KbResult.empty();

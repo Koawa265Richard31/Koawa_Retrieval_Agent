@@ -105,3 +105,43 @@ resources/eval/agentic-retrieval/v1/gakumas-comparison-summary.json
 该报告比较来源召回、延迟、Agentic 回退、复杂问题路由和引用目录一致性。
 它不生成最终答案，因此不能替代事实句引用正确率验收；脚本使用管理员账号，
 ACL 用例也只保留在数据集中，普通用户拒绝访问必须另行回归。
+
+## RAG / Agent Loop 最终回答对照
+
+用于比较对外聊天模式 `RAG` 与完整 `AGENT` loop 的最终回答质量：
+
+```powershell
+python scripts/eval/run_chat_mode_comparison.py --validate-only
+
+python scripts/eval/run_chat_mode_comparison.py `
+  --base-url http://127.0.0.1:9090/api/koawa-agent
+```
+
+默认测试集：
+
+```text
+resources/eval/chat-mode-comparison/v1/gakumas-chat-cases.json
+```
+
+默认报告：
+
+```text
+resources/eval/chat-mode-comparison/v1/latest-summary.json
+```
+
+该脚本直接调用 SSE 聊天入口 `/rag/v3/chat`，分别传：
+
+```text
+executionMode=RAG
+executionMode=AGENT
+```
+
+每条用例会检查：
+
+- 是否收到 `[DONE]`；
+- 是否要求澄清；
+- 必含角色/事实词是否出现；
+- 禁止编造词是否出现；
+- Markdown 图片数量是否达到预期；
+- 两种模式的延迟差异；
+- Agent 相对 RAG 的退化用例和胜出用例。

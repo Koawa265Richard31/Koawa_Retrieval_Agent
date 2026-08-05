@@ -80,6 +80,20 @@ public final class AgentStreamChatAdapter {
             return true;
         }
 
+        if (shouldFallbackForClarification(result)) {
+            log.warn(
+                    "Agent 要求澄清，回退 RAG，"
+                            + "conversationId={}，taskId={}",
+                    conversationId,
+                    taskId
+            );
+            logRunSummary(
+                    conversationId, taskId, result,
+                    "FALLBACK_REQUESTED", true, false, startedAtNanos
+            );
+            return false;
+        }
+
         if (!isDeliverable(result)) {
             log.warn(
                     "Agent 未产生可交付结果，回退旧 RAG，"
@@ -132,15 +146,13 @@ public final class AgentStreamChatAdapter {
     }
 
     private boolean isDeliverable(AgentRunResult result) {
-        boolean completed =
-                result.stopReason() ==
-                        AgentStopReason.FINAL_ANSWER
-                || result.stopReason() ==
-                        AgentStopReason.ASK_CLARIFICATION;
-
-        return completed
+        return result.stopReason() == AgentStopReason.FINAL_ANSWER
                 && result.content() != null
                 && !result.content().isBlank();
+    }
+
+    private boolean shouldFallbackForClarification(AgentRunResult result) {
+        return result.stopReason() == AgentStopReason.ASK_CLARIFICATION;
     }
 
     private void logRunSummary(

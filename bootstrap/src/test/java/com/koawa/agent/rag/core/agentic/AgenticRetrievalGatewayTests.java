@@ -17,119 +17,42 @@
 
 package com.koawa.agent.rag.core.agentic;
 
-import com.koawa.agent.rag.config.AgenticRetrievalProperties;
 import com.koawa.agent.rag.dto.RetrievalContext;
 import com.koawa.agent.rag.service.ChatExecutionMode;
 import com.koawa.agent.rag.service.pipeline.StreamChatContext;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 class AgenticRetrievalGatewayTests {
 
-    private final AgenticRetrievalRouteDecider routeDecider =
-            mock(AgenticRetrievalRouteDecider.class);
-    private final AgenticRetrievalShadowService shadowService =
-            mock(AgenticRetrievalShadowService.class);
-    private final AgenticRetrievalOrchestrator orchestrator =
-            mock(AgenticRetrievalOrchestrator.class);
-    private final AgenticRetrievalGateway gateway =
-            new AgenticRetrievalGateway(
-                    routeDecider, shadowService, orchestrator,
-                    new EvidenceContextPresenter(new EvidenceCitationMapper()));
+    private final AgenticRetrievalGateway gateway = new AgenticRetrievalGateway();
 
     @Test
-    void shadowKeepsSinglePassAnswerContext() {
+    void ragModeBypassesAgenticRouting() {
         RetrievalContext single = RetrievalContext.builder().kbContext("single").build();
-        route(AgenticRetrievalProperties.Mode.SHADOW);
 
-        RetrievalContext result = gateway.route(chat(), single, 5);
+        RetrievalContext result = gateway.route(chat(ChatExecutionMode.RAG), single, 5);
 
         assertSame(single, result);
-        verify(shadowService).submit(any(), any(), any(), anyInt());
-        verify(orchestrator, never()).execute(any(), any(), any(), anyInt(), any());
     }
 
     @Test
-    void activeUsesAgenticContextOnNonFailureStop() {
+    void agentModeBypassesAgenticRouting() {
         RetrievalContext single = RetrievalContext.builder().kbContext("single").build();
-        RetrievalContext enhanced = RetrievalContext.builder().kbContext("enhanced").build();
-        route(AgenticRetrievalProperties.Mode.ACTIVE);
-        when(orchestrator.execute(any(), any(), any(), anyInt(), any()))
-                .thenReturn(new AgenticRetrievalResult(
-                        enhanced, null, RetrievalStopReason.SUFFICIENT, 2, true));
 
-        assertSame(enhanced, gateway.route(chat(), single, 5));
+        RetrievalContext result = gateway.route(chat(ChatExecutionMode.AGENT), single, 5);
+
+        assertSame(single, result);
     }
 
     @Test
-    void activeFailureFallsBackToSinglePass() {
-        RetrievalContext single = RetrievalContext.builder().kbContext("single").build();
-        route(AgenticRetrievalProperties.Mode.ACTIVE);
-        when(orchestrator.execute(any(), any(), any(), anyInt(), any()))
-                .thenReturn(new AgenticRetrievalResult(
-                        null, null, RetrievalStopReason.TIMEOUT, 1, false));
-
-        assertSame(single, gateway.route(chat(), single, 5));
-    }
-
-    @Test
-    void activeExceptionFallsBackToSinglePass() {
-        RetrievalContext single = RetrievalContext.builder().kbContext("single").build();
-        route(AgenticRetrievalProperties.Mode.ACTIVE);
-        when(orchestrator.execute(any(), any(), any(), anyInt(), any()))
-                .thenThrow(new RuntimeException("provider unavailable"));
-
-        assertSame(single, gateway.route(chat(), single, 5));
-    }
-
-    @Test
-    void forcedRagBypassesAgenticRouting() {
+    void nullModeDefaultsToRagAndBypassesAgenticRouting() {
         RetrievalContext single = RetrievalContext.builder().kbContext("single").build();
 
-        assertSame(single, gateway.route(chat(ChatExecutionMode.RAG), single, 5));
+        RetrievalContext result = gateway.route(chat(null), single, 5);
 
-        verifyNoAgenticRouting();
-    }
-
-    @Test
-    void forcedAgenticRunsActiveEvenWithoutRouteDecision() {
-        RetrievalContext single = RetrievalContext.builder().kbContext("single").build();
-        RetrievalContext enhanced = RetrievalContext.builder().kbContext("enhanced").build();
-        when(orchestrator.execute(any(), any(), any(), anyInt(), any()))
-                .thenReturn(new AgenticRetrievalResult(
-                        enhanced, null, RetrievalStopReason.SUFFICIENT, 1, true));
-
-        assertSame(
-                enhanced,
-                gateway.route(chat(ChatExecutionMode.AGENTIC), single, 5));
-        verify(routeDecider, never()).decide(any(), any(), any(), any());
-    }
-
-    private void verifyNoAgenticRouting() {
-        verify(routeDecider, never()).decide(any(), any(), any(), any());
-        verify(orchestrator, never()).execute(any(), any(), any(), anyInt(), any());
-        verifyNoInteractions(shadowService);
-    }
-
-    private void route(AgenticRetrievalProperties.Mode mode) {
-        when(routeDecider.decide(any(), any(), any(), any()))
-                .thenReturn(new AgenticRetrievalRouteDecision(
-                        mode,
-                        new RetrievalComplexityDecision(true, 4, java.util.List.of()),
-                        1,
-                        "selected"));
-    }
-
-    private StreamChatContext chat() {
-        return chat(ChatExecutionMode.AUTO);
+        assertSame(single, result);
     }
 
     private StreamChatContext chat(ChatExecutionMode executionMode) {

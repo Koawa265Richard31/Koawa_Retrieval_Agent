@@ -1,0 +1,183 @@
+{
+  "schemaVersion": "1.0",
+  "dataset": "resources/eval/chat-mode-comparison/v1/gakumas-chat-cases.json",
+  "generatedAt": "2026-08-04T15:31:39Z",
+  "summary": {
+    "caseCount": 2,
+    "RAG": {
+      "passCount": 1,
+      "passRate": 0.5,
+      "avgLatencyMs": 16086,
+      "clarificationCount": 0,
+      "imageFailures": 0
+    },
+    "AGENT": {
+      "passCount": 1,
+      "passRate": 0.5,
+      "avgLatencyMs": 51701,
+      "clarificationCount": 0,
+      "imageFailures": 0
+    },
+    "agentRegressions": [
+      "out-of-scope-story"
+    ],
+    "agentWins": [
+      "missing-card-strength"
+    ],
+    "avgAgentExtraLatencyMs": 35615
+  },
+  "cases": [
+    {
+      "id": "missing-card-strength",
+      "category": "missing_information",
+      "difficulty": "medium",
+      "agentExpectedValue": "none",
+      "question": "花海咲季的 SSR 卡强度、技能倍率和抽取建议是什么？",
+      "modes": {
+        "RAG": {
+          "passed": false,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": false,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [
+            "未收录",
+            "没有收录",
+            "未检索到",
+            "资料中没有",
+            "无法确认",
+            "没有提供",
+            "无法提供",
+            "无法回答",
+            "不包含"
+          ],
+          "requiredAnyHit": false,
+          "forbiddenHits": [],
+          "imageCount": 0,
+          "latencyMs": 15273,
+          "answerChars": 151,
+          "preview": "根据提供的文档内容，目前没有检索到关于花海咲季的“SSR卡强度”、“技能倍率”或“抽取建议”相关的信息。 文档中主要收录了花海咲季及其他角色的基础资料、背景介绍和图片，并未涉及游戏内卡牌的具体数值、强度分析或抽取策略。 如果您需要了解这方面的信息，建议查阅游戏内的卡牌详情页面或相关的玩家社区攻略。",
+          "error": null
+        },
+        "AGENT": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [
+            "未收录",
+            "没有收录",
+            "未检索到",
+            "资料中没有",
+            "无法确认",
+            "没有提供",
+            "无法提供",
+            "无法回答",
+            "不包含"
+          ],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 3,
+          "latencyMs": 36424,
+          "answerChars": 903,
+          "preview": "根据检索到的Agent执行结果，我目前**无法提供**关于“花海咲季的SSR卡强度、技能倍率和抽取建议”的具体信息。 ### 原因说明： 1. **信息缺失**：本次成功检索到的知识库内容（来自GameKee的角色资料页）**只包含**花海咲季及其相关角色的**基础个人信息、设定和官方简介**，并没有涉及任何关于游戏中SSR卡牌、技能倍率、强度分析或抽取建议等内容。 2. **检索范围限制**：提供的内容明确说明“采集范围：角色资料页”，不包含游戏攻略、数值分析或卡牌评测等板块。 ### 现有信息总结： 成功检索到的内容仅能确认以下关于**花海咲季**的基础资料： * **生日**：4月2日 * **年龄**：16岁 * **身高**：152cm * **特长**：所有运动、家务、按摩 * **兴趣**：和别人一决胜负 * **CV**：長月あおい * **官方简介**：曾为运动员，好胜心强，入学考试第一名，被称为神童，与妹妹花海佑芽是宿敌。 相关图片： ![花海咲季 图片 1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_",
+          "error": null
+        }
+      }
+    },
+    {
+      "id": "out-of-scope-story",
+      "category": "missing_information",
+      "difficulty": "medium",
+      "agentExpectedValue": "none",
+      "question": "花海咲季在主线剧情第三章具体说了哪些台词？",
+      "modes": {
+        "RAG": {
+          "passed": true,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": true,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [
+            "未收录",
+            "没有收录",
+            "未检索到",
+            "资料中没有",
+            "无法确认",
+            "没有提供"
+          ],
+          "requiredAnyHit": true,
+          "forbiddenHits": [],
+          "imageCount": 0,
+          "latencyMs": 16899,
+          "answerChars": 15,
+          "preview": "未检索到与问题相关的文档内容。",
+          "error": null
+        },
+        "AGENT": {
+          "passed": false,
+          "checks": {
+            "done": true,
+            "noError": true,
+            "notClarification": true,
+            "entitiesPresent": true,
+            "requiredTermsPresent": true,
+            "requiredTermGroupsPresent": true,
+            "requiredAnyPresent": false,
+            "forbiddenTermsAbsent": true,
+            "imageCountEnough": true
+          },
+          "missingEntities": [],
+          "missingRequiredTerms": [],
+          "missingRequiredTermGroups": [],
+          "requiredAny": [
+            "未收录",
+            "没有收录",
+            "未检索到",
+            "资料中没有",
+            "无法确认",
+            "没有提供"
+          ],
+          "requiredAnyHit": false,
+          "forbiddenHits": [],
+          "imageCount": 3,
+          "latencyMs": 66978,
+          "answerChars": 746,
+          "preview": "**回答：** 根据您的问题“**花海咲季在主线剧情第三章具体说了哪些台词？**”与本次Agent的检索执行结果，我无法为您提供具体的台词内容。 **原因说明：** 1. **检索结果数据范围不匹配**：本次工具执行成功（`success: true`）检索到了关于角色“花海咲季”的基础资料，包括其图片、个人信息、设定和官网简介。 - 相关图片已成功获取，根据规则必须保留，如下： ![花海咲季 图片 1](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png) ![花海咲季 图片 2](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_86/h_86/50368/43637/2024/5/4/711350.png) ![花海咲季 图片 3](https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/4/27/216238.",
+          "error": null
+        }
+      }
+    }
+  ]
+}

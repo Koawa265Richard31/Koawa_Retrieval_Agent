@@ -32,6 +32,7 @@ public interface RAGChatService {
      * @param conversationId 会话 ID（可选，空时创建新会话）
      * @param deepThinking   是否开启深度思考模式
      * @param executionMode  本次请求的执行模式
+     * @param collectionName 限定检索的向量集合（可选）
      * @param emitter        SSE 发射器
      */
     void streamChat(
@@ -39,6 +40,7 @@ public interface RAGChatService {
             String conversationId,
             Boolean deepThinking,
             ChatExecutionMode executionMode,
+            String collectionName,
             SseEmitter emitter);
 
     /**

@@ -18,6 +18,7 @@
 package com.koawa.agent.rag.core.retrieve.channel;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.koawa.agent.framework.convention.RetrievedChunk;
 import com.koawa.agent.knowledge.dao.entity.KnowledgeBaseDO;
@@ -113,7 +114,9 @@ public class VectorGlobalSearchChannel implements SearchChannel {
             log.info("执行向量全局检索，问题：{}", context.getMainQuestion());
 
             // 获取所有 KB 类型的 collection
-            List<String> collections = getAllKBCollections();
+            List<String> collections = StrUtil.isNotBlank(context.getCollectionName())
+                    ? List.of(context.getCollectionName())
+                    : getAllKBCollections();
 
             if (collections.isEmpty()) {
                 log.warn("未找到任何 KB collection，跳过全局检索");

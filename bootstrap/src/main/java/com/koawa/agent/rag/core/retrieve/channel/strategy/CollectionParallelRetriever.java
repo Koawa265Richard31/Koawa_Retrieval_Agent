@@ -42,18 +42,13 @@ public class CollectionParallelRetriever extends AbstractParallelRetriever<Strin
 
     @Override
     protected List<RetrievedChunk> createRetrievalTask(String question, String collectionName, int topK) {
-        try {
-            return retrieverService.retrieve(
-                    RetrieveRequest.builder()
-                            .collectionName(collectionName)
-                            .query(question)
-                            .topK(topK)
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error("在 collection {} 中检索失败，错误: {}", collectionName, e.getMessage(), e);
-            return List.of();
-        }
+        return retrieverService.retrieve(
+                RetrieveRequest.builder()
+                        .collectionName(collectionName)
+                        .query(question)
+                        .topK(topK)
+                        .build()
+        );
     }
 
     @Override

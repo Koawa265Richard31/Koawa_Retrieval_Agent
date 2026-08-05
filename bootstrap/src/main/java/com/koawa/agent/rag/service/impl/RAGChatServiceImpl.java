@@ -19,7 +19,6 @@ package com.koawa.agent.rag.service.impl;
 
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
-import com.koawa.agent.agent.routing.AgentRouteDecider;
 import com.koawa.agent.framework.context.UserContext;
 import com.koawa.agent.infra.chat.StreamCallback;
 import com.koawa.agent.rag.service.ChatExecutionMode;
@@ -52,7 +51,6 @@ public class RAGChatServiceImpl implements RAGChatService {
     private final StreamCallbackFactory callbackFactory;
     private final StreamChatTraceRunner traceRunner;
     private final StreamTaskManager taskManager;
-    private final AgentRouteDecider agentRouteDecider;
     private final AgentStreamChatAdapter agentStreamChatAdapter;
 
     @Override
@@ -61,6 +59,7 @@ public class RAGChatServiceImpl implements RAGChatService {
             String conversationId,
             Boolean deepThinking,
             ChatExecutionMode executionMode,
+            String collectionName,
             SseEmitter emitter
     ) {
         // 生成会话 ID 和任务 ID
@@ -97,6 +96,7 @@ public class RAGChatServiceImpl implements RAGChatService {
                                 taskId,
                                 deepThinking,
                                 executionMode,
+                                collectionName,
                                 userId,
                                 username,
                                 userRole,
@@ -112,16 +112,15 @@ public class RAGChatServiceImpl implements RAGChatService {
             String taskId,
             Boolean deepThinking,
             ChatExecutionMode executionMode,
+            String collectionName,
             String userId,
             String username,
             String userRole,
             StreamCallback callback
     ) {
         ChatExecutionMode actualMode = executionMode == null
-                ? ChatExecutionMode.AUTO : executionMode;
-        boolean useAgent = actualMode == ChatExecutionMode.AGENT
-                || (actualMode == ChatExecutionMode.AUTO
-                && agentRouteDecider.shouldUseAgent(conversationId, userId));
+                ? ChatExecutionMode.RAG : executionMode;
+        boolean useAgent = actualMode == ChatExecutionMode.AGENT;
 
         if (useAgent && agentStreamChatAdapter.tryExecute(
                 question,
@@ -145,6 +144,7 @@ public class RAGChatServiceImpl implements RAGChatService {
                 .taskId(taskId)
                 .deepThinking(Boolean.TRUE.equals(deepThinking))
                 .executionMode(actualMode)
+                .collectionName(StrUtil.blankToDefault(collectionName, null))
                 .userId(userId)
                 .username(username)
                 .userRole(userRole)

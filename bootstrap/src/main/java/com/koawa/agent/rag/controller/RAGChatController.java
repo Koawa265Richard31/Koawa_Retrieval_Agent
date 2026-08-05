@@ -18,7 +18,9 @@
 package com.koawa.agent.rag.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.util.StrUtil;
 import com.koawa.agent.framework.convention.Result;
+import com.koawa.agent.framework.exception.ClientException;
 import com.koawa.agent.framework.idempotent.IdempotentSubmit;
 import com.koawa.agent.framework.web.Results;
 import com.koawa.agent.rag.config.RAGDefaultProperties;
@@ -39,6 +41,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequiredArgsConstructor
 public class RAGChatController {
 
+    private static final int MAX_CONVERSATION_ID_LENGTH = 20;
+
     private final RAGChatService ragChatService;
     private final RAGDefaultProperties ragDefaultProperties;
 
@@ -53,15 +57,36 @@ public class RAGChatController {
     public SseEmitter chat(@RequestParam String question,
                            @RequestParam(required = false) String conversationId,
                            @RequestParam(required = false, defaultValue = "false") Boolean deepThinking,
-                           @RequestParam(required = false, defaultValue = "AUTO") String executionMode) {
+                           @RequestParam(required = false, defaultValue = "RAG") String executionMode,
+                           @RequestParam(required = false) String collectionName) {
+        validateConversationId(conversationId);
+        validateCollectionName(collectionName);
         ChatExecutionMode resolvedMode = ChatExecutionMode.from(executionMode);
-        if (resolvedMode != ChatExecutionMode.AUTO) {
+        if (resolvedMode == ChatExecutionMode.AGENT) {
             StpUtil.checkRole("admin");
         }
         SseEmitter emitter = new SseEmitter(ragDefaultProperties.getSseTimeoutMs());
         ragChatService.streamChat(
-                question, conversationId, deepThinking, resolvedMode, emitter);
+                question, conversationId, deepThinking, resolvedMode, collectionName, emitter);
         return emitter;
+    }
+
+    private void validateConversationId(String conversationId) {
+        if (StrUtil.isBlank(conversationId)) {
+            return;
+        }
+        if (conversationId.trim().length() > MAX_CONVERSATION_ID_LENGTH) {
+            throw new ClientException("conversationId 长度不能超过 20 个字符");
+        }
+    }
+
+    private void validateCollectionName(String collectionName) {
+        if (StrUtil.isBlank(collectionName)) {
+            return;
+        }
+        if (collectionName.trim().length() > 128) {
+            throw new ClientException("collectionName 长度不能超过 128 个字符");
+        }
     }
 
     /**

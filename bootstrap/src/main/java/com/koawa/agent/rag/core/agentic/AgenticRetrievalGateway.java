@@ -17,86 +17,24 @@
 
 package com.koawa.agent.rag.core.agentic;
 
-import com.koawa.agent.rag.config.AgenticRetrievalProperties;
 import com.koawa.agent.rag.dto.RetrievalContext;
 import com.koawa.agent.rag.service.ChatExecutionMode;
 import com.koawa.agent.rag.service.pipeline.StreamChatContext;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class AgenticRetrievalGateway {
-
-    private final AgenticRetrievalRouteDecider routeDecider;
-    private final AgenticRetrievalShadowService shadowService;
-    private final AgenticRetrievalOrchestrator orchestrator;
-    private final EvidenceContextPresenter evidencePresenter;
 
     public RetrievalContext route(
             StreamChatContext chat,
             RetrievalContext singlePass,
             int topK) {
         ChatExecutionMode executionMode = chat.getExecutionMode() == null
-                ? ChatExecutionMode.AUTO : chat.getExecutionMode();
-        if (executionMode == ChatExecutionMode.RAG
-                || executionMode == ChatExecutionMode.AGENT) {
-            log.info("Agentic Retrieval bypassed by admin execution mode: taskId={}, mode={}",
-                    chat.getTaskId(), executionMode);
-            return singlePass;
-        }
-        if (executionMode == ChatExecutionMode.AGENTIC) {
-            log.info("Agentic Retrieval forced by admin execution mode: taskId={}",
-                    chat.getTaskId());
-            return executeActive(chat, singlePass, topK);
-        }
-
-        AgenticRetrievalRouteDecision decision = routeDecider.decide(
-                chat.getConversationId(), chat.getUserId(),
-                chat.getRewriteResult(), chat.getSubIntents());
-        log.info("Agentic Retrieval route: taskId={}, mode={}, reason={}, score={}, bucket={}",
-                chat.getTaskId(), decision.mode(), decision.reason(),
-                decision.complexity().score(), decision.bucket());
-        if (decision.mode() == AgenticRetrievalProperties.Mode.SHADOW) {
-            shadowService.submit(chat.getTaskId(), chat.getSubIntents(), singlePass, topK);
-            return singlePass;
-        }
-        if (decision.mode() != AgenticRetrievalProperties.Mode.ACTIVE) {
-            return singlePass;
-        }
-        return executeActive(chat, singlePass, topK);
-    }
-
-    private RetrievalContext executeActive(
-            StreamChatContext chat,
-            RetrievalContext singlePass,
-            int topK) {
-        try {
-            AgenticRetrievalResult result = orchestrator.execute(
-                    chat.getTaskId(), chat.getSubIntents(), singlePass, topK,
-                    new RetrievalAccessPrincipal(
-                            chat.getUserId(), chat.getUsername(), chat.getUserRole()));
-            if (isFailure(result.stopReason()) || result.retrievalContext() == null) {
-                log.warn("Agentic Retrieval active fallback: taskId={}, reason={}",
-                        chat.getTaskId(), result.stopReason());
-                return singlePass;
-            }
-            RetrievalContext presented = evidencePresenter.present(result);
-            return presented == null ? singlePass : presented;
-        } catch (RuntimeException exception) {
-            log.warn("Agentic Retrieval active fallback after exception: taskId={}, reason={}",
-                    chat.getTaskId(), exception.getMessage());
-            return singlePass;
-        }
-    }
-
-    private boolean isFailure(RetrievalStopReason reason) {
-        return reason == RetrievalStopReason.CANCELLED
-                || reason == RetrievalStopReason.TIMEOUT
-                || reason == RetrievalStopReason.PLANNING_FAILED
-                || reason == RetrievalStopReason.RETRIEVAL_FAILED
-                || reason == RetrievalStopReason.EVALUATION_FAILED;
+                ? ChatExecutionMode.RAG : chat.getExecutionMode();
+        log.info("Agentic Retrieval bypassed by execution mode: taskId={}, mode={}",
+                chat.getTaskId(), executionMode);
+        return singlePass;
     }
 }

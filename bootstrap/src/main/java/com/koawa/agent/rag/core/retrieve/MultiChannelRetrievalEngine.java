@@ -63,8 +63,13 @@ public class MultiChannelRetrievalEngine {
      */
     @RagTraceNode(name = "multi-channel-retrieval", type = "RETRIEVE_CHANNEL")
     public List<RetrievedChunk> retrieveKnowledgeChannels(List<SubQuestionIntent> subIntents, int topK) {
+        return retrieveKnowledgeChannels(subIntents, topK, null);
+    }
+
+    public List<RetrievedChunk> retrieveKnowledgeChannels(
+            List<SubQuestionIntent> subIntents, int topK, String collectionName) {
         // 构建检索上下文
-        SearchContext context = buildSearchContext(subIntents, topK);
+        SearchContext context = buildSearchContext(subIntents, topK, collectionName);
 
         // 【阶段1：多通道并行检索】
         List<SearchChannelResult> channelResults = executeSearchChannels(context);
@@ -208,7 +213,8 @@ public class MultiChannelRetrievalEngine {
     /**
      * 构建检索上下文
      */
-    private SearchContext buildSearchContext(List<SubQuestionIntent> subIntents, int topK) {
+    private SearchContext buildSearchContext(
+            List<SubQuestionIntent> subIntents, int topK, String collectionName) {
         String question = CollUtil.isEmpty(subIntents) ? "" : subIntents.get(0).subQuestion();
 
         return SearchContext.builder()
@@ -216,6 +222,7 @@ public class MultiChannelRetrievalEngine {
                 .rewrittenQuestion(question)
                 .intents(subIntents)
                 .topK(topK)
+                .collectionName(collectionName)
                 .build();
     }
 }

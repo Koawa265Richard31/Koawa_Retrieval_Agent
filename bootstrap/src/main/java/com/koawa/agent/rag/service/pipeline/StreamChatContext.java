@@ -42,6 +42,7 @@ public class StreamChatContext {
     private final String taskId;
     private final boolean deepThinking;
     private final ChatExecutionMode executionMode;
+    private final String collectionName;
     private final String userId;
     private final String username;
     private final String userRole;

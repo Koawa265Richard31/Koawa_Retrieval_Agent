@@ -167,7 +167,8 @@ public class StreamChatPipeline {
     }
 
     private RetrievalContext retrieve(StreamChatContext ctx) {
-        return retrievalEngine.retrieve(ctx.getSubIntents(), searchProperties.getDefaultTopK());
+        return retrievalEngine.retrieve(
+                ctx.getSubIntents(), searchProperties.getDefaultTopK(), ctx.getCollectionName());
     }
 
     private boolean handleEmptyRetrieval(StreamChatContext ctx, RetrievalContext retrievalCtx) {

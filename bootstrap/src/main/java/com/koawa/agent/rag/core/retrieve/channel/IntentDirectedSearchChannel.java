@@ -18,6 +18,7 @@
 package com.koawa.agent.rag.core.retrieve.channel;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.koawa.agent.framework.convention.RetrievedChunk;
 import com.koawa.agent.rag.config.SearchChannelProperties;
 import com.koawa.agent.rag.core.intent.NodeScore;
@@ -64,6 +65,10 @@ public class IntentDirectedSearchChannel implements SearchChannel {
 
     @Override
     public boolean isEnabled(SearchContext context) {
+        // 显式集合范围的请求只能通过该集合检索，不能被意图路由到其他知识库。
+        if (StrUtil.isNotBlank(context.getCollectionName())) {
+            return false;
+        }
         // 检查配置是否启用
         if (!properties.getChannels().getIntentDirected().isEnabled()) {
             return false;

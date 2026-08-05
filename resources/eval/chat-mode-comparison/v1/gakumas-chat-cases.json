@@ -1,0 +1,169 @@
+{
+  "schemaVersion": "1.0",
+  "dataset": "gakumas-gamekee-characters-chat-mode-comparison",
+  "description": "学园偶像大师 GameKee 角色 KB 的 RAG 与完整 Agent loop 对照测试集。评估最终聊天回答，不评估 /rag/eval 检索接口。",
+  "modes": ["RAG", "AGENT"],
+  "globalChecks": {
+    "mustFinish": true,
+    "mustNotAskClarification": true
+  },
+  "cases": [
+    {
+      "id": "profile-single-saki-all",
+      "category": "single_profile",
+      "difficulty": "easy",
+      "agentExpectedValue": "none",
+      "question": "花海咲季该角色所有资料",
+      "expectedEntities": ["花海咲季"],
+      "requiredTerms": ["4月2日", "16", "152cm", "45kg", "A", "左手", "爱知县", "所有运动", "長月あおい", "小火龙"],
+      "minImageCount": 3,
+      "notes": "单跳角色资料。RAG 应该完成；Agent 不应引入澄清或丢图。"
+    },
+    {
+      "id": "profile-single-temari-all",
+      "category": "single_profile",
+      "difficulty": "easy",
+      "agentExpectedValue": "none",
+      "question": "月村手毬该角色所有资料，图片也要返回",
+      "expectedEntities": ["月村手毬"],
+      "requiredTerms": ["6月3日", "15", "162cm", "51kg", "AB", "右手", "京都府", "唱歌", "小鹿なお"],
+      "minImageCount": 3,
+      "notes": "单跳角色资料 + 明确图片要求。"
+    },
+    {
+      "id": "profile-image-only-saki",
+      "category": "image_rendering",
+      "difficulty": "easy",
+      "agentExpectedValue": "none",
+      "question": "只返回花海咲季资料里的全部图片，并简短说明每张图片来自哪里",
+      "expectedEntities": ["花海咲季"],
+      "requiredTerms": ["花海咲季"],
+      "minImageCount": 3,
+      "notes": "专门验证 Markdown 图片 `![...](...)` 是否保留。"
+    },
+    {
+      "id": "alias-saki-nickname",
+      "category": "alias_resolution",
+      "difficulty": "medium",
+      "agentExpectedValue": "possible",
+      "question": "小火龙是谁？给我她的角色资料和图片",
+      "expectedEntities": ["花海咲季"],
+      "requiredTerms": ["花海咲季", "小火龙", "4月2日", "長月あおい"],
+      "minImageCount": 2,
+      "notes": "别名/玩家爱称解析。Agent 理论上可通过重检索补充，但不应澄清。"
+    },
+    {
+      "id": "compare-saki-temari-basic",
+      "category": "comparison",
+      "difficulty": "medium",
+      "agentExpectedValue": "possible",
+      "question": "对比花海咲季和月村手毬的生日、年龄、身高、体重、血型、特长和兴趣，尽量用表格",
+      "expectedEntities": ["花海咲季", "月村手毬"],
+      "requiredTerms": ["4月2日", "6月3日", "152cm", "162cm", "45kg", "51kg", "所有运动", "唱歌"],
+      "minImageCount": 0,
+      "notes": "两角色结构化对比。观察 Agent 是否比 RAG 更稳定覆盖两份资料。"
+    },
+    {
+      "id": "relation-saki-yume",
+      "category": "relationship",
+      "difficulty": "medium",
+      "agentExpectedValue": "possible",
+      "question": "花海咲季和花海佑芽是什么关系？把两人的资料、共同点和差异都说清楚，并返回图片",
+      "expectedEntities": ["花海咲季", "花海佑芽"],
+      "requiredTerms": ["妹妹", "姐姐", "宿敌", "所有运动", "4月2日", "4月1日"],
+      "minImageCount": 2,
+      "notes": "跨两个角色的关系与对比。Agent 应该有机会通过多步检索提升覆盖。"
+    },
+    {
+      "id": "multi-character-height-ranking",
+      "category": "multi_entity_aggregation",
+      "difficulty": "hard",
+      "agentExpectedValue": "yes",
+      "question": "在花海咲季、月村手毬、藤田琴音、十王星南这四人中，按身高从高到低排序，并列出年龄、体重和出身地",
+      "expectedEntities": ["花海咲季", "月村手毬", "藤田琴音", "十王星南"],
+      "requiredTerms": ["170cm", "162cm", "156cm", "152cm", "17", "15", "16", "东京", "京都府", "埼玉县", "爱知县"],
+      "minImageCount": 0,
+      "notes": "多实体聚合排序。Agent loop 理论上最应该在此类问题上体现价值。"
+    },
+    {
+      "id": "multi-character-cv-index",
+      "category": "multi_entity_aggregation",
+      "difficulty": "hard",
+      "agentExpectedValue": "yes",
+      "question": "整理花海咲季、月村手毬、藤田琴音、花海佑芽、十王星南的 CV、玩家爱称和印象色",
+      "expectedEntities": ["花海咲季", "月村手毬", "藤田琴音", "花海佑芽", "十王星南"],
+      "requiredTerms": ["長月あおい", "小鹿なお", "飯田ヒカル", "松田彩音", "陽高真白", "#FF4F64", "#27B4EB", "#FFD203", "#F74C2C", "#FFAC28"],
+      "minImageCount": 0,
+      "notes": "多角色字段抽取。用于检验上下文覆盖和遗漏。"
+    },
+    {
+      "id": "source-metadata-saki",
+      "category": "metadata",
+      "difficulty": "easy",
+      "agentExpectedValue": "none",
+      "question": "花海咲季这条资料的 GameKee 内容ID、来源链接和页面更新时间是什么？",
+      "expectedEntities": ["花海咲季"],
+      "requiredTerms": ["623218", "https://www.gamekee.com/gakumas/623218.html"],
+      "requiredTermGroups": [["2024-08-13", "2024年8月13日", "2024/08/13", "2024/8/13"]],
+      "minImageCount": 0,
+      "notes": "验证采集元数据是否能回答。"
+    },
+    {
+      "id": "missing-card-strength",
+      "category": "missing_information",
+      "difficulty": "medium",
+      "agentExpectedValue": "none",
+      "question": "花海咲季的 SSR 卡强度、技能倍率和抽取建议是什么？",
+      "expectedEntities": ["花海咲季"],
+      "requiredTermsAny": ["未收录", "没有收录", "未检索到", "没有检索到", "资料中没有", "无法确认", "没有提供", "无法提供", "无法回答", "无法为您提供", "不包含"],
+      "forbiddenTerms": ["必抽", "T0", "倍率为", "强度是最强"],
+      "minImageCount": 0,
+      "notes": "当前 KB 只采集角色资料，不应编造卡牌强度。Agent 不应为了不确定而澄清。"
+    },
+    {
+      "id": "out-of-scope-story",
+      "category": "missing_information",
+      "difficulty": "medium",
+      "agentExpectedValue": "none",
+      "question": "花海咲季在主线剧情第三章具体说了哪些台词？",
+      "expectedEntities": [],
+      "requiredTermsAny": ["未收录", "没有收录", "未检索到", "没有检索到", "资料中没有", "无法确认", "没有提供", "无法提供", "无法回答", "无法为您提供"],
+      "forbiddenTerms": ["第三章中她说", "台词是"],
+      "minImageCount": 0,
+      "notes": "采集范围明确不含外链剧情正文；应拒绝编造。"
+    },
+    {
+      "id": "orthography-himezaki",
+      "category": "orthography",
+      "difficulty": "medium",
+      "agentExpectedValue": "possible",
+      "question": "姫崎莉波的角色资料和图片",
+      "expectedEntities": ["姫崎莉波"],
+      "requiredTerms": ["姫崎莉波"],
+      "minImageCount": 1,
+      "notes": "日文汉字名称检索。"
+    },
+    {
+      "id": "newer-character-amenoya-tsubame",
+      "category": "new_character",
+      "difficulty": "medium",
+      "agentExpectedValue": "possible",
+      "question": "雨夜燕的角色资料，包含图片、CV、生日、身高体重和来源",
+      "expectedEntities": ["雨夜", "燕"],
+      "requiredTerms": ["681855", "雨夜", "燕"],
+      "minImageCount": 2,
+      "notes": "较新的角色资料，标题中带空格/分隔符。"
+    },
+    {
+      "id": "all-characters-list",
+      "category": "broad_list",
+      "difficulty": "hard",
+      "agentExpectedValue": "yes",
+      "question": "当前知识库里收录了哪些学园偶像大师角色？只列角色名和 GameKee 内容ID",
+      "expectedEntities": ["花海咲季", "月村手毬", "藤田琴音", "有村麻央", "葛城莉莉娅", "仓本千奈", "紫云清夏", "篠泽广", "姫崎莉波", "花海佑芽", "秦谷美铃", "十王星南", "雨夜"],
+      "requiredTerms": ["623218", "623555", "623551", "624398", "624399", "624402", "618476", "624400", "618473", "623552", "622416", "624860", "681855"],
+      "minImageCount": 0,
+      "notes": "广覆盖列表。单次 RAG topK 可能不稳定；Agent 理论上应该通过多轮检索更完整。"
+    }
+  ]
+}

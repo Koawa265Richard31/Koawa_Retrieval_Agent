@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "source": "gamekee",
+  "gameAlias": "gakumas",
+  "fetchedAt": "2026-08-04T10:32:21.276274+00:00",
+  "profileOnly": true,
+  "documents": [
+    {
+      "contentId": 623218,
+      "title": "花海咲季",
+      "sourceUrl": "https://www.gamekee.com/gakumas/623218.html",
+      "updatedAt": "2024-08-13T09:54:21+00:00",
+      "file": "01-623218-花海咲季.md",
+      "chunksFile": "01-623218-花海咲季.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/27/509767.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_86/h_86/50368/43637/2024/5/4/711350.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/4/27/216238.png"
+      ],
+      "sha256": "52eeb7c40b82eeae7ceebd08de31b8b6f783353e03095305d9b27e916f81b179"
+    },
+    {
+      "contentId": 623555,
+      "title": "月村手毬",
+      "sourceUrl": "https://www.gamekee.com/gakumas/623555.html",
+      "updatedAt": "2024-11-17T05:42:10+00:00",
+      "file": "02-623555-月村手毬.md",
+      "chunksFile": "02-623555-月村手毬.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/29/552608.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/4/29/450274.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1200/h_900/50368/534907/2024/4/29/913755.png"
+      ],
+      "sha256": "d33ad07408eaa3015bcadd5d51e28313a1761afd2ef6a34b2b1bf273041f0161"
+    },
+    {
+      "contentId": 623551,
+      "title": "藤田琴音",
+      "sourceUrl": "https://www.gamekee.com/gakumas/623551.html",
+      "updatedAt": "2024-07-13T02:39:06+00:00",
+      "file": "03-623551-藤田琴音.md",
+      "chunksFile": "03-623551-藤田琴音.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/29/793855.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/4/29/126707.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1200/h_900/50368/534907/2024/4/29/499575.png"
+      ],
+      "sha256": "bca4a02bd33d2a8a5b02b89b5fa38f7c4d40d07c54fb50491f0771e0c5fde286"
+    },
+    {
+      "contentId": 624398,
+      "title": "有村麻央",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624398.html",
+      "updatedAt": "2025-06-27T10:43:13+00:00",
+      "file": "04-624398-有村麻央.md",
+      "chunksFile": "04-624398-有村麻央.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/5/8/810201.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/5/8/773895.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1200/h_900/50368/534907/2024/5/8/964107.png"
+      ],
+      "sha256": "98aee6bbc8bf1fe4c30c9b43e6055b8a1dbfde835325431a3e80b381f4609893"
+    },
+    {
+      "contentId": 624399,
+      "title": "葛城莉莉娅",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624399.html",
+      "updatedAt": "2024-06-08T05:50:06+00:00",
+      "file": "05-624399-葛城莉莉娅.md",
+      "chunksFile": "05-624399-葛城莉莉娅.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/5/8/348289.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/5/8/7085.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1200/h_900/50368/534907/2024/5/8/31013.png"
+      ],
+      "sha256": "ea47fe1c88e97cb983fd318b9c959ee9a75e762ae49a16de3b3aec9e6ec9e4dc"
+    },
+    {
+      "contentId": 624402,
+      "title": "仓本千奈",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624402.html",
+      "updatedAt": "2024-06-16T07:26:18+00:00",
+      "file": "06-624402-仓本千奈.md",
+      "chunksFile": "06-624402-仓本千奈.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/5/8/930519.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/5/8/226015.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1200/h_900/50368/534907/2024/5/8/55006.png"
+      ],
+      "sha256": "bcbecdb1866d2bb6c64ae80578ec3e2c6dbb272d1838f9bd0ab29cee8277986a"
+    },
+    {
+      "contentId": 618476,
+      "title": "紫云清夏",
+      "sourceUrl": "https://www.gamekee.com/gakumas/618476.html",
+      "updatedAt": "2025-01-16T14:38:47+00:00",
+      "file": "07-618476-紫云清夏.md",
+      "chunksFile": "07-618476-紫云清夏.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_960/h_1280/50368/452947/2024/3/1/157273.jpg",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_733/h_733/50368/452947/2024/2/21/179113.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1458/h_4096/50368/452947/2024/2/27/797444.jpg"
+      ],
+      "sha256": "f2f6fa9b915f19e49250bbf6dda65156554eb1ee876bfd2e030ee9d82d6a4716"
+    },
+    {
+      "contentId": 624400,
+      "title": "篠泽广",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624400.html",
+      "updatedAt": "2024-06-08T06:01:59+00:00",
+      "file": "08-624400-篠泽广.md",
+      "chunksFile": "08-624400-篠泽广.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/5/8/884765.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/5/8/846701.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1200/h_900/50368/534907/2024/5/8/5277.png"
+      ],
+      "sha256": "ae1a5d1fb84cec7e063dc39065c657c6d654cf5246c29c9ecc9bde5aa84aab9d"
+    },
+    {
+      "contentId": 618473,
+      "title": "姫崎莉波",
+      "sourceUrl": "https://www.gamekee.com/gakumas/618473.html",
+      "updatedAt": "2024-06-08T06:38:40+00:00",
+      "file": "09-618473-姫崎莉波.md",
+      "chunksFile": "09-618473-姫崎莉波.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_960/h_1280/50368/452947/2024/3/1/957938.jpg"
+      ],
+      "sha256": "e540e1135e9538b595d9be3edbaa4bd9b1265217d752f23e6cfc36fe786cc8e3"
+    },
+    {
+      "contentId": 623552,
+      "title": "花海佑芽",
+      "sourceUrl": "https://www.gamekee.com/gakumas/623552.html",
+      "updatedAt": "2024-06-02T06:54:40+00:00",
+      "file": "10-623552-花海佑芽.md",
+      "chunksFile": "10-623552-花海佑芽.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/534907/2024/4/29/426943.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/534907/2024/4/31/614460.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1200/h_900/50368/534907/2024/4/27/338447.png"
+      ],
+      "sha256": "f796c68d464af3e58df5a5855ec1c6f98c3f48fdc675ee205539ef26119469b4"
+    },
+    {
+      "contentId": 622416,
+      "title": "秦谷美铃",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622416.html",
+      "updatedAt": "2026-05-06T02:39:23+00:00",
+      "file": "11-622416-秦谷美铃.md",
+      "chunksFile": "11-622416-秦谷美铃.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/172302/2024/4/17/776445.png?x-image-process=image/format,webp/ignore-error,1&eo-img.format=webp",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_733/h_733/50368/452947/2024/2/21/179113.png?x-image-process=image/format,webp/ignore-error,1&eo-img.format=webp",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_300/h_224/50368/172302/2024/4/17/721264.png?x-image-process=image/format,webp/ignore-error,1&eo-img.format=webp"
+      ],
+      "sha256": "7772d5750ce5ef281788d08b554f9c9c585ee7c8f0d3011f4e57e9c08972b62c"
+    },
+    {
+      "contentId": 624860,
+      "title": "十王星南",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624860.html",
+      "updatedAt": "2024-11-23T08:46:11+00:00",
+      "file": "12-624860-十王星南.md",
+      "chunksFile": "12-624860-十王星南.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/535344/2024/5/16/792651.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_256/h_256/50368/535344/2024/5/16/579269.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_256/h_256/50368/361622/2024/10/19/660690.png"
+      ],
+      "sha256": "f0d7d94767bbc2ae01966e303da91f418aefab5a152c018f115f646afeee7203"
+    },
+    {
+      "contentId": 681855,
+      "title": "雨夜 燕",
+      "sourceUrl": "https://www.gamekee.com/gakumas/681855.html",
+      "updatedAt": "2026-04-28T15:13:44+00:00",
+      "file": "13-681855-雨夜-燕.md",
+      "chunksFile": "13-681855-雨夜-燕.chunks.json",
+      "chunkCount": 1,
+      "images": [
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_272/h_320/50368/535344/2025/10/1/794849.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_1024/h_1024/50368/535344/2026/3/28/622675.png",
+        "https://cdnimg-v2.gamekee.com/wiki2.0/images/w_512/h_512/50368/535344/2026/3/28/148608.png?x-image-process=image/format,webp/ignore-error,1&eo-img.format=webp"
+      ],
+      "sha256": "ee5f76fe30f1f8f0f31e90dca694def0cefea566e84c35ced5be3e303e1c0e23"
+    }
+  ]
+}

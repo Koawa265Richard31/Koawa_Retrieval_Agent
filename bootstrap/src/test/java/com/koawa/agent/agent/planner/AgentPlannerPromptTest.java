@@ -40,7 +40,8 @@ class AgentPlannerPromptTest {
                         "current_step", "1",
                         "max_steps", "3",
                         "steps", "Step 0: RETRIEVE_KB",
-                        "tools", "toolId: weather"
+                        "tools", "toolId: weather",
+                        "recovery_context", "无规划恢复信息"
                 )
         );
 
@@ -52,11 +53,15 @@ class AgentPlannerPromptTest {
                 () -> assertTrue(rendered.contains("CALL_MCP_TOOL")),
                 () -> assertTrue(rendered.contains("ASK_CLARIFICATION")),
                 () -> assertTrue(rendered.contains("FINAL_ANSWER")),
+                () -> assertTrue(rendered.contains("第一步必须选择 RETRIEVE_KB")),
+                () -> assertTrue(rendered.contains("Markdown 图片语法")),
+                () -> assertTrue(rendered.contains("不得再选择 ASK_CLARIFICATION")),
                 () -> assertFalse(rendered.contains("{original_question}")),
                 () -> assertFalse(rendered.contains("{current_step}")),
                 () -> assertFalse(rendered.contains("{max_steps}")),
                 () -> assertFalse(rendered.contains("{steps}")),
                 () -> assertFalse(rendered.contains("{tools}")),
+                () -> assertFalse(rendered.contains("{recovery_context}")),
                 () -> assertFalse(rendered.contains("\"finish\""))
         );
     }

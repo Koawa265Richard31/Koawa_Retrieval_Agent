@@ -18,6 +18,8 @@
 package com.koawa.agent.rag.core.retrieve.channel;
 
 import com.koawa.agent.framework.convention.RetrievedChunk;
+import com.koawa.agent.framework.errorcode.BaseErrorCode;
+import com.koawa.agent.framework.exception.RemoteException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -95,12 +97,16 @@ public abstract class AbstractParallelRetriever<T> {
         log.info("{} 检索统计 - 总目标数: {}, 成功: {}, 失败: {}, 检索到 Chunk 总数: {}",
                 getStatisticsName(), targets.size(), successCount, failureCount, allChunks.size());
 
+        if (!targets.isEmpty() && failureCount == targets.size()) {
+            throw new RemoteException(getStatisticsName() + "全部目标检索失败", BaseErrorCode.REMOTE_ERROR);
+        }
+
         return allChunks;
     }
 
     /**
      * 创建单个检索任务（子类实现）
-     * 注意：此方法内部应包含异常处理，失败时返回空列表
+     * 注意：业务无匹配时返回空列表；基础设施异常应抛出，由模板统一统计和处理。
      *
      * @param question 查询问题
      * @param target   检索目标

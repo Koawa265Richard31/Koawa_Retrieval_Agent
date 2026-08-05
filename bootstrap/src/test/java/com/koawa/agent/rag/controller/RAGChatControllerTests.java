@@ -18,6 +18,7 @@
 package com.koawa.agent.rag.controller;
 
 import cn.dev33.satoken.exception.SaTokenException;
+import com.koawa.agent.framework.exception.ClientException;
 import com.koawa.agent.rag.config.RAGDefaultProperties;
 import com.koawa.agent.rag.service.ChatExecutionMode;
 import com.koawa.agent.rag.service.RAGChatService;
@@ -33,26 +34,38 @@ import static org.mockito.Mockito.verifyNoInteractions;
 class RAGChatControllerTests {
 
     @Test
-    void autoModeDoesNotRequireAdminRole() {
+    void ragModeDoesNotRequireAdminRole() {
         RAGChatService service = mock(RAGChatService.class);
         RAGDefaultProperties properties = new RAGDefaultProperties();
         RAGChatController controller = new RAGChatController(service, properties);
 
-        controller.chat("question", null, false, "AUTO");
+        controller.chat("question", null, false, "RAG", "pilot-kb");
 
         verify(service).streamChat(
-                eq("question"), eq(null), eq(false), eq(ChatExecutionMode.AUTO), any());
+                eq("question"), eq(null), eq(false), eq(ChatExecutionMode.RAG), eq("pilot-kb"), any());
     }
 
     @Test
-    void forcedModeRejectsCallerWithoutAdminRole() {
+    void shouldRejectTooLongConversationIdBeforeStreaming() {
+        RAGChatService service = mock(RAGChatService.class);
+        RAGDefaultProperties properties = new RAGDefaultProperties();
+        RAGChatController controller = new RAGChatController(service, properties);
+
+        assertThrows(
+                ClientException.class,
+                () -> controller.chat("question", "conversation-id-more-than-20", false, "RAG", null));
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void agentModeRejectsCallerWithoutAdminRole() {
         RAGChatService service = mock(RAGChatService.class);
         RAGDefaultProperties properties = new RAGDefaultProperties();
         RAGChatController controller = new RAGChatController(service, properties);
 
         assertThrows(
                 SaTokenException.class,
-                () -> controller.chat("question", null, false, "AGENTIC"));
+                () -> controller.chat("question", null, false, "AGENT", null));
         verifyNoInteractions(service);
     }
 }

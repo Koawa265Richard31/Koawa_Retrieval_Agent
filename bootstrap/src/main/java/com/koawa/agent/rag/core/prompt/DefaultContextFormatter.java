@@ -20,6 +20,8 @@ package com.koawa.agent.rag.core.prompt;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.koawa.agent.framework.convention.RetrievedChunk;
+import com.koawa.agent.infra.token.TokenCounterService;
+import com.koawa.agent.rag.config.ContextFormattingProperties;
 import com.koawa.agent.rag.core.intent.IntentNode;
 import com.koawa.agent.rag.core.intent.NodeScore;
 import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
@@ -33,6 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.koawa.agent.rag.constant.RAGConstant.CONTEXT_FORMAT_PATH;
 
@@ -40,7 +44,12 @@ import static com.koawa.agent.rag.constant.RAGConstant.CONTEXT_FORMAT_PATH;
 @RequiredArgsConstructor
 public class DefaultContextFormatter implements ContextFormatter {
 
+    private static final Pattern MARKDOWN_IMAGE_PATTERN =
+            Pattern.compile("!\\[[^\\]\\r\\n]*]\\([^\\s)]+(?:\\s+\"[^\"]*\")?\\)");
+
     private final PromptTemplateLoader templateLoader;
+    private final TokenCounterService tokenCounterService;
+    private final ContextFormattingProperties contextProperties;
 
     @Override
     public String formatKbContext(List<NodeScore> kbIntents, Map<String, List<RetrievedChunk>> rerankedByIntent, int topK) {
@@ -65,7 +74,7 @@ public class DefaultContextFormatter implements ContextFormatter {
             return "";
         }
         String snippet = StrUtil.emptyIfNull(nodeScore.getNode().getPromptSnippet()).trim();
-        String body = joinChunkTexts(chunks, topK);
+        String body = addImageMarkdownIndex(joinChunkTexts(chunks, topK));
         return renderKbSection(renderSnippetRules(snippet), body);
     }
 
@@ -100,10 +109,8 @@ public class DefaultContextFormatter implements ContextFormatter {
             return snippetSection;
         }
 
-        String body = allChunks.stream()
-                .map(RetrievedChunk::getText)
-                .collect(Collectors.joining("\n"));
-        return renderKbSection(snippetSection, body);
+        String body = joinChunkTexts(allChunks, topK);
+        return renderKbSection(snippetSection, addImageMarkdownIndex(body));
     }
 
     private String formatChunksWithoutIntent(Map<String, List<RetrievedChunk>> rerankedByIntent, int topK) {
@@ -127,10 +134,8 @@ public class DefaultContextFormatter implements ContextFormatter {
             return "";
         }
 
-        String body = chunks.stream()
-                .map(RetrievedChunk::getText)
-                .collect(Collectors.joining("\n"));
-        return renderKbSection("", body);
+        String body = joinChunkTexts(chunks, topK);
+        return renderKbSection("", addImageMarkdownIndex(body));
     }
 
     @Override
@@ -193,10 +198,53 @@ public class DefaultContextFormatter implements ContextFormatter {
     }
 
     private String joinChunkTexts(List<RetrievedChunk> chunks, int topK) {
-        return chunks.stream()
-                .limit(topK)
-                .map(RetrievedChunk::getText)
-                .collect(Collectors.joining("\n"));
+        int chunkLimit = topK > 0 ? topK : Integer.MAX_VALUE;
+        int remainingTokens = Math.max(1, contextProperties.getMaxTokens());
+        List<String> selected = new ArrayList<>();
+        for (RetrievedChunk chunk : chunks) {
+            if (selected.size() >= chunkLimit || chunk == null || StrUtil.isBlank(chunk.getText())) {
+                continue;
+            }
+            String text = chunk.getText().trim();
+            Integer estimated = tokenCounterService.countTokens(text);
+            int tokens = estimated == null ? text.length() : estimated;
+            // Atomic chunks preserve complete card data and heading-based guide sections.
+            if (tokens > remainingTokens) {
+                continue;
+            }
+            selected.add(text);
+            remainingTokens -= tokens;
+        }
+        return String.join("\n\n", selected);
+    }
+
+    private String addImageMarkdownIndex(String body) {
+        if (StrUtil.isBlank(body)) {
+            return body;
+        }
+        List<String> images = extractMarkdownImages(body).stream()
+                .limit(Math.max(0, contextProperties.getMaxImages()))
+                .toList();
+        if (images.isEmpty()) {
+            return body;
+        }
+        return "<image-markdown>\n"
+                + "以下图片来自命中的知识库内容。回答资料、所有资料、角色信息、介绍或图片类问题时，必须保留相关 Markdown 图片，前端依赖 `![描述](URL)` 渲染图片。\n"
+                + String.join("\n", images)
+                + "\n</image-markdown>\n\n"
+                + MARKDOWN_IMAGE_PATTERN.matcher(body).replaceAll("");
+    }
+
+    private List<String> extractMarkdownImages(String text) {
+        List<String> images = new ArrayList<>();
+        Matcher matcher = MARKDOWN_IMAGE_PATTERN.matcher(text);
+        while (matcher.find()) {
+            String image = matcher.group();
+            if (!images.contains(image)) {
+                images.add(image);
+            }
+        }
+        return images;
     }
 
     private String mergeAllResultsToText(Map<String, List<CallToolResult>> toolResults) {

@@ -17,8 +17,6 @@
 
 package com.koawa.agent.rag.service.impl;
 
-import com.koawa.agent.agent.routing.AgentRouteDecider;
-import com.koawa.agent.agent.config.AgentRuntimeProperties;
 import com.koawa.agent.agent.domain.AgentRunResult;
 import com.koawa.agent.agent.domain.AgentStopReason;
 import com.koawa.agent.agent.service.AgentChatService;
@@ -68,7 +66,6 @@ class RAGChatServiceImplTest {
             mock(AgentChatService.class);
     private final ConversationMemoryService memoryService =
             mock(ConversationMemoryService.class);
-    private final AgentRouteDecider routeDecider = routeDecider();
     private final AgentStreamChatAdapter agentAdapter =
             new AgentStreamChatAdapter(agentChatService, memoryService);
     private final StreamCallback callback = mock(StreamCallback.class);
@@ -79,7 +76,6 @@ class RAGChatServiceImplTest {
             callbackFactory,
             traceRunner,
             taskManager,
-            routeDecider,
             agentAdapter
     );
 
@@ -95,7 +91,7 @@ class RAGChatServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void shouldUseSameTaskIdAcrossTraceAndAgentBranch() {
+    void shouldUseSameTaskIdAcrossTraceAndExplicitAgentBranch() {
         SseEmitter emitter = new SseEmitter();
         when(callbackFactory.createChatEventHandler(
                 eq(emitter),
@@ -143,7 +139,8 @@ class RAGChatServiceImplTest {
                 "question",
                 " conversation-1 ",
                 false,
-                ChatExecutionMode.AUTO,
+                ChatExecutionMode.AGENT,
+                null,
                 emitter
         );
 
@@ -171,6 +168,53 @@ class RAGChatServiceImplTest {
                 "user-1"
         );
         verifyNoInteractions(chatPipeline);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void shouldUseRagPipelineForRagMode() {
+        SseEmitter emitter = new SseEmitter();
+        when(callbackFactory.createChatEventHandler(
+                eq(emitter),
+                eq("conversation-1"),
+                any(String.class)
+        )).thenReturn(callback);
+        doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(3)).run();
+            return null;
+        }).when(chatQueueLimiter).enqueue(
+                eq("question"),
+                eq("conversation-1"),
+                eq(emitter),
+                any(Runnable.class)
+        );
+        doAnswer(invocation -> {
+            Consumer<StreamCallback> businessLogic =
+                    invocation.getArgument(4);
+            businessLogic.accept(callback);
+            return null;
+        }).when(traceRunner).run(
+                eq("question"),
+                eq("conversation-1"),
+                any(String.class),
+                eq(callback),
+                any(Consumer.class)
+        );
+
+        service.streamChat(
+                "question",
+                "conversation-1",
+                false,
+                ChatExecutionMode.RAG,
+                "pilot-kb",
+                emitter
+        );
+
+        ArgumentCaptor<com.koawa.agent.rag.service.pipeline.StreamChatContext> contextCaptor =
+                ArgumentCaptor.forClass(com.koawa.agent.rag.service.pipeline.StreamChatContext.class);
+        verify(chatPipeline).execute(contextCaptor.capture());
+        assertEquals("pilot-kb", contextCaptor.getValue().getCollectionName());
+        verifyNoInteractions(agentChatService);
     }
 
     @Test
@@ -215,18 +259,12 @@ class RAGChatServiceImplTest {
                 "question",
                 "conversation-1",
                 false,
-                ChatExecutionMode.AUTO,
+                ChatExecutionMode.AGENT,
+                null,
                 emitter
         );
 
         verify(callback).onComplete();
         verifyNoInteractions(chatPipeline);
-    }
-
-    private static AgentRouteDecider routeDecider() {
-        AgentRuntimeProperties properties = new AgentRuntimeProperties();
-        properties.setEnabled(true);
-        properties.setRolloutPercentage(100);
-        return new AgentRouteDecider(properties);
     }
 }
