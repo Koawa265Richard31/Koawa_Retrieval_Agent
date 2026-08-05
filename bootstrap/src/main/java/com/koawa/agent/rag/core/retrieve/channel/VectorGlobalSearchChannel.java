@@ -73,6 +73,12 @@ public class VectorGlobalSearchChannel implements SearchChannel {
             return false;
         }
 
+        // 显式限定集合时，意图定向通道会被禁用以避免跨库访问，
+        // 因此必须始终启用本通道作为该集合的唯一检索入口。
+        if (StrUtil.isNotBlank(context.getCollectionName())) {
+            return true;
+        }
+
         // 意图定向检索关闭时，全局检索必须兜底，否则无通道可用
         if (!properties.getChannels().getIntentDirected().isEnabled()) {
             return true;
