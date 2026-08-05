@@ -127,6 +127,7 @@ public class RAGChatServiceImpl implements RAGChatService {
                 conversationId,
                 taskId,
                 userId,
+                collectionName,
                 callback
         )) {
             return;

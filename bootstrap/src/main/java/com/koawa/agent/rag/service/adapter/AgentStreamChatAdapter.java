@@ -27,6 +27,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import cn.hutool.core.util.StrUtil;
+
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -45,16 +47,26 @@ public final class AgentStreamChatAdapter {
             String userId,
             StreamCallback callback
     ) {
+        return tryExecute(question, conversationId, taskId, userId, null, callback);
+    }
+
+    public boolean tryExecute(
+            String question,
+            String conversationId,
+            String taskId,
+            String userId,
+            String collectionName,
+            StreamCallback callback
+    ) {
         long startedAtNanos = System.nanoTime();
         AgentRunResult result;
         try {
+            AgentRunResult rawResult = StrUtil.isBlank(collectionName)
+                    ? agentChatService.chat(question, conversationId, taskId, userId)
+                    : agentChatService.chat(
+                            question, conversationId, taskId, userId, collectionName.trim());
             result = Objects.requireNonNull(
-                    agentChatService.chat(
-                            question,
-                            conversationId,
-                            taskId,
-                            userId
-                    ),
+                    rawResult,
                     "agentChatService returned null result"
             );
         } catch (RuntimeException exception) {

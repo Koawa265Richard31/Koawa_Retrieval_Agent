@@ -82,6 +82,17 @@ public final class DefaultAgentChatService implements AgentChatService {
             String taskId,
             String userId
     ) {
+        return chat(question, conversationId, taskId, userId, null);
+    }
+
+    @Override
+    public AgentRunResult chat(
+            String question,
+            String conversationId,
+            String taskId,
+            String userId,
+            String collectionName
+    ) {
         if (question == null || question.isBlank()) {
             throw new IllegalArgumentException(
                     "question cannot be blank"
@@ -107,6 +118,7 @@ public final class DefaultAgentChatService implements AgentChatService {
                 .taskId(actualTaskId)
                 .userId(userId)
                 .originalQuestion(question)
+                .collectionName(collectionName)
                 .currentStep(0)
                 .maxSteps(properties.getMaxSteps())
                 .deadlineAt(deadlineAt)

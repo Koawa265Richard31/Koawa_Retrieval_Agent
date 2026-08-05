@@ -41,6 +41,11 @@ public class AgentState {
 
     private String originalQuestion;
 
+    /**
+     * Optional vector collection scope inherited from the chat request.
+     */
+    private String collectionName;
+
     private int currentStep;
 
     private int maxSteps;

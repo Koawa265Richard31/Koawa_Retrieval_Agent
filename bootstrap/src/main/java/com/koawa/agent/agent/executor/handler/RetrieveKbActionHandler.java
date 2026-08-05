@@ -29,6 +29,7 @@ import com.koawa.agent.rag.core.retrieve.RetrievalEngine;
 import com.koawa.agent.rag.core.rewrite.RewriteResult;
 import com.koawa.agent.rag.dto.RetrievalContext;
 import com.koawa.agent.rag.dto.SubQuestionIntent;
+import cn.hutool.core.util.StrUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -95,8 +96,10 @@ public class RetrieveKbActionHandler implements AgentActionHandler {
                 .toList();
 
 
-        RetrievalContext retrievalContext =
-                retrievalEngine.retrieve(kbSubIntents, topK);
+        RetrievalContext retrievalContext = StrUtil.isBlank(state.getCollectionName())
+                ? retrievalEngine.retrieve(kbSubIntents, topK)
+                : retrievalEngine.retrieve(
+                        kbSubIntents, topK, state.getCollectionName().trim());
 
         String kbContext = Objects.toString(
                 retrievalContext.getKbContext(),
@@ -110,6 +113,7 @@ public class RetrieveKbActionHandler implements AgentActionHandler {
                 .metadata(Map.of(
                         "query", query,
                         "topK", topK,
+                        "collectionName", Objects.toString(state.getCollectionName(), ""),
                         "empty", kbContext.isBlank()
                 ))
                 .build();

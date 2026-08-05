@@ -27,4 +27,14 @@ public interface AgentChatService {
             String taskId,
             String userId
     );
+
+    default AgentRunResult chat(
+            String question,
+            String conversationId,
+            String taskId,
+            String userId,
+            String collectionName
+    ) {
+        return chat(question, conversationId, taskId, userId);
+    }
 }
