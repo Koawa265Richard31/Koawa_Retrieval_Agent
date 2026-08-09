@@ -169,7 +169,7 @@ export function UserListPage() {
             <RefreshCw className="w-4 h-4 mr-2" />
             刷新
           </Button>
-          <Button className="admin-primary-gradient" onClick={openCreateDialog}>
+          <Button className="admin-primary-gradient admin-cta" onClick={openCreateDialog}>
             <UserPlus className="w-4 h-4 mr-2" />
             新增用户
           </Button>

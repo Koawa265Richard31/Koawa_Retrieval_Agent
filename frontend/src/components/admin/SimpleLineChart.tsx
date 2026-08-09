@@ -45,12 +45,12 @@ interface SimpleLineChartProps {
 const FALLBACK_TONES: ChartTone[] = ["primary", "success", "warning", "danger", "info", "neutral"];
 
 const CHART_COLOR_VARS: CSSProperties = {
-  ["--chart-primary" as string]: "#8b5cf6",
-  ["--chart-success" as string]: "#22c55e",
-  ["--chart-warning" as string]: "#f59e0b",
-  ["--chart-danger" as string]: "#ef4444",
-  ["--chart-info" as string]: "#06b6d4",
-  ["--chart-neutral" as string]: "#64748b"
+  ["--chart-primary" as string]: "#ff7600",
+  ["--chart-success" as string]: "#2f9e44",
+  ["--chart-warning" as string]: "#f39800",
+  ["--chart-danger" as string]: "#c0392b",
+  ["--chart-info" as string]: "#e07b00",
+  ["--chart-neutral" as string]: "#8a8378"
 };
 
 const TONE_STROKE: Record<ChartTone, string> = {

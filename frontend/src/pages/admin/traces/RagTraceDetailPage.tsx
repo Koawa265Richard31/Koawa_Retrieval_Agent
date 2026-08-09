@@ -62,10 +62,10 @@ const copyToClipboard = (text: string, label: string) => {
 type StatusType = "success" | "failed" | "running" | "default";
 
 const STATUS_COLORS: Record<StatusType, { dot: string; bar: string }> = {
-  success: { dot: "bg-emerald-500", bar: "bg-emerald-400" },
-  failed: { dot: "bg-red-500", bar: "bg-red-400" },
-  running: { dot: "bg-amber-500", bar: "bg-amber-400" },
-  default: { dot: "bg-slate-300", bar: "bg-slate-300" }
+  success: { dot: "bg-[#2f9e44]", bar: "bg-[#6fbf73]" },
+  failed: { dot: "bg-[#c0392b]", bar: "bg-[#d97b6f]" },
+  running: { dot: "bg-[#f39800]", bar: "bg-[#f5b347]" },
+  default: { dot: "bg-[#d9d4c8]", bar: "bg-[#d9d4c8]" }
 };
 
 const getStatusColors = (status?: string | null) => {
@@ -88,10 +88,10 @@ function MetricItem({
 }) {
   const styles = {
     default: "text-slate-600",
-    success: "text-emerald-600",
-    error: "text-red-600",
-    warning: "text-amber-600",
-    primary: "text-blue-600"
+    success: "text-[#2f9e44]",
+    error: "text-[#c0392b]",
+    warning: "text-[#f39800]",
+    primary: "text-[#e07b00]"
   };
 
   return (
@@ -156,9 +156,9 @@ function WaterfallRow({
           className={cn(
               "grid grid-cols-[minmax(180px,1fr)_120px_2fr_100px] gap-4 px-4 py-2.5 transition-colors group",
               clickable && "cursor-pointer hover:bg-slate-50/80",
-              isRoot && "bg-indigo-50/40 border-b border-indigo-100",
-              isTopSlowest && !isSelected && !isRoot && "bg-amber-50/40",
-              isSelected && "bg-blue-50/60 ring-1 ring-inset ring-blue-200"
+              isRoot && "bg-[#fff3e2]/50 border-b border-[#ffe3b3]",
+              isTopSlowest && !isSelected && !isRoot && "bg-[#fff7ec]/60",
+              isSelected && "bg-[#fdeed8]/70 ring-1 ring-inset ring-[#f5c27b]"
           )}
       >
         <div className="flex items-center gap-1.5 min-w-0">

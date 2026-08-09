@@ -210,7 +210,7 @@ export function QueryTermMappingPage() {
             <RefreshCw className="w-4 h-4 mr-2" />
             刷新
           </Button>
-          <Button className="admin-primary-gradient" onClick={openCreateDialog}>
+          <Button className="admin-primary-gradient admin-cta" onClick={openCreateDialog}>
             <Plus className="w-4 h-4 mr-2" />
             新增映射
           </Button>

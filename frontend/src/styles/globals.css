@@ -2471,3 +2471,80 @@ textarea {
 .admin-layout .ui-button.admin-cta {
   border-radius: 0 43.89px 0 43.89px;
 }
+
+
+/* ============================================================
+   管理控制台 · 批次D/E：Trace 暖色变量 + 页面入场动效 + 空态/微交互
+   ============================================================ */
+
+/* Trace 链路页：--trace-* 变量暖色化（覆盖 @layer components 中的默认值） */
+.admin-layout .trace-list-page {
+  --trace-text-primary: #1a1a1a;
+  --trace-text-secondary: #3f3f3f;
+  --trace-text-weak: #8a8378;
+  --trace-border: #ece5d8;
+  --trace-border-strong: #dcd2bf;
+  --trace-bg-surface: #ffffff;
+  --trace-bg-muted: #faf6ee;
+  --trace-bg-subtle: #f4ecdd;
+  --trace-shadow-card: 0 1px 2px rgba(160, 120, 40, 0.06);
+  --trace-kpi-chip-bg: #faf6ee;
+  --trace-kpi-chip-border: #ece5d8;
+  --trace-kpi-icon-bg: #fdeed8;
+  --trace-kpi-icon-border: #f5e3c3;
+  --trace-kpi-icon-color: #e07b00;
+}
+
+/* 页面内容入场：轻上浮淡入（尊重系统减少动态偏好） */
+.admin-layout .admin-page > * {
+  animation: admin-fade-up 0.32s ease-out both;
+}
+.admin-layout .admin-page > *:nth-child(2) { animation-delay: 0.04s; }
+.admin-layout .admin-page > *:nth-child(3) { animation-delay: 0.08s; }
+.admin-layout .admin-page > *:nth-child(4) { animation-delay: 0.12s; }
+
+@keyframes admin-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 主按钮微交互 */
+.admin-layout .ui-button[data-variant="default"]:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* 空态：logo 水印 + 暖色提示（页面空态容器加 .admin-empty 即可） */
+.admin-layout .admin-empty {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 220px;
+  padding: 2.5rem 1.5rem;
+  border: 1px dashed rgba(232, 229, 216, 0.9);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  color: #8a8378;
+  text-align: center;
+}
+.admin-layout .admin-empty::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/assets/gakuen/logo_main.jpg") center / 220px auto no-repeat;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* 减少动态偏好：关闭一切管理台动画 */
+@media (prefers-reduced-motion: reduce) {
+  .admin-layout .admin-page > *,
+  .admin-layout .admin-sidebar,
+  .admin-layout .ui-button {
+    animation: none !important;
+    transition: none !important;
+  }
+}

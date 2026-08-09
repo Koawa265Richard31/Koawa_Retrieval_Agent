@@ -373,8 +373,8 @@ const DashboardHeader = ({
                   className={cn(
                       "rounded-md px-3 py-1.5 text-sm font-medium transition-all",
                       timeWindow === opt.value
-                          ? "bg-slate-900 text-white"
-                          : "text-slate-500 hover:text-slate-700"
+                          ? "bg-[#FF7600] text-white"
+                          : "text-slate-500 hover:text-[#E07B00]"
                   )}
               >
                 {opt.label}
@@ -482,32 +482,28 @@ const KPISection = ({ overview }: { overview: DashboardOverview | null }) => {
       label: "活跃用户",
       change: toChange(kpis?.activeUsers.deltaPct),
       icon: <Activity className="h-5 w-5" />,
-      iconBg: "#DBEAFE",
-      iconColor: "#2563EB"
+      iconBg: "#FDEED8", iconColor: "#E07B00"
     },
     {
       value: formatNumber(kpis?.sessions24h.value),
       label: "会话数",
       change: toChange(kpis?.sessions24h.deltaPct),
       icon: <MessageSquare className="h-5 w-5" />,
-      iconBg: "#E0E7FF",
-      iconColor: "#4F46E5"
+      iconBg: "#FDEED8", iconColor: "#C07070"
     },
     {
       value: formatNumber(kpis?.messages24h.value),
       label: "消息数",
       change: toChange(kpis?.messages24h.deltaPct),
       icon: <Zap className="h-5 w-5" />,
-      iconBg: "#FEF3C7",
-      iconColor: "#D97706"
+      iconBg: "#FFF3E2", iconColor: "#F39800"
     },
     {
       value: sessionDepth === null ? "-" : formatRatio(sessionDepth),
       label: "会话深度（条/会话）",
       change: undefined,
       icon: <BarChart3 className="h-5 w-5" />,
-      iconBg: "#E0F2FE",
-      iconColor: "#0284C7"
+      iconBg: "#E8F5E9", iconColor: "#2F9E44"
     }
   ];
 

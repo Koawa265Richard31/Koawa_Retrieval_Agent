@@ -323,7 +323,7 @@ export function IntentTreePage() {
               <RefreshCw className="mr-2 h-4 w-4" />
               刷新
             </Button>
-            <Button className="admin-primary-gradient" onClick={() => openCreateDialog(null)}>
+            <Button className="admin-primary-gradient admin-cta" onClick={() => openCreateDialog(null)}>
               <Plus className="mr-2 h-4 w-4" />
               新建根节点
             </Button>

@@ -397,7 +397,7 @@ export function IngestionPage() {
                   刷新
                 </Button>
                 <Button
-                  className="admin-primary-gradient"
+                  className="admin-primary-gradient admin-cta"
                   onClick={() => setPipelineDialog({ open: true, mode: "create", pipeline: null })}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -510,7 +510,7 @@ export function IngestionPage() {
                   <FileUp className="mr-2 h-4 w-4" />
                   上传文件
                 </Button>
-                <Button className="admin-primary-gradient" onClick={() => setTaskDialogOpen(true)}>
+                <Button className="admin-primary-gradient admin-cta" onClick={() => setTaskDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
                   新建任务
                 </Button>
