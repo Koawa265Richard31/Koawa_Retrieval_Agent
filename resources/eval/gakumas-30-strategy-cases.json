@@ -1,0 +1,307 @@
+{
+  "schemaVersion": "1.0",
+  "dataset": "GameKee Gakumas 30 strategy QA",
+  "cases": [
+    {
+      "id": "gk30-01",
+      "category": "角色卡",
+      "difficulty": "easy",
+      "question": "花海咲季「Fighting My Way」的初始 Vo、Da、Vi 和体力分别是多少？",
+      "expectedAnswer": "初始 Vo 75、Da 75、Vi 80、体力 32，推荐效果为好调。",
+      "sourceTitle": "花海 咲季（Fighting My Way）",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622396.html",
+      "requiredTerms": ["75", "80", "32"]
+    },
+    {
+      "id": "gk30-02",
+      "category": "角色卡",
+      "difficulty": "easy",
+      "question": "花海咲季「Fighting My Way」育成最大 Vo、Da、Vi 和体力是多少？",
+      "expectedAnswer": "育成最大 Vo 100、Da 100、Vi 105、体力 38。",
+      "sourceTitle": "花海 咲季（Fighting My Way）",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622396.html",
+      "requiredTerms": ["100", "105", "38"]
+    },
+    {
+      "id": "gk30-03",
+      "category": "角色卡",
+      "difficulty": "medium",
+      "question": "花海咲季「Fighting My Way」技能卡「絶対に負けない」在特训3阶段的效果是什么？",
+      "expectedAnswer": "数值+48，课程中限1次，不可重复。",
+      "sourceTitle": "花海 咲季（Fighting My Way）",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622396.html",
+      "requiredTerms": ["48", "限1次", "不可重复"]
+    },
+    {
+      "id": "gk30-04",
+      "category": "角色卡",
+      "difficulty": "easy",
+      "question": "月村手毬「Luna say maybe」的初始 Vo、Da、Vi、体力和推荐效果是什么？",
+      "expectedAnswer": "初始 Vo 75、Da 65、Vi 55、体力 30，推荐效果为集中。",
+      "sourceTitle": "月村 手毬 (Luna say maybe)",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622562.html",
+      "requiredTerms": ["75", "65", "55", "30", "集中"]
+    },
+    {
+      "id": "gk30-05",
+      "category": "角色卡",
+      "difficulty": "easy",
+      "question": "藤田琴音「Yellow Big Bang！」的初始 Vo、Da、Vi、体力和推荐效果是什么？",
+      "expectedAnswer": "初始 Vo 65、Da 55、Vi 75、体力 27，推荐效果为好调。",
+      "sourceTitle": "藤田 琴音 (Yellow Big Bang！)",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624736.html",
+      "requiredTerms": ["65", "55", "75", "27", "好调"]
+    },
+    {
+      "id": "gk30-06",
+      "category": "角色卡",
+      "difficulty": "medium",
+      "question": "花海咲季「Fighting My Way」的 P 道具「共に戦うタオル」效果是什么？开花2阶段又追加了什么？",
+      "expectedAnswer": "使用行动类技能卡后，获得1回合好调和技能卡使用次数+1（课程内限一次）；开花2阶段再追加精力+5。",
+      "sourceTitle": "花海 咲季（Fighting My Way）",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622396.html",
+      "requiredTermGroups": [["好调"], ["技能卡使用次数+1", "次数+1"], ["精力+5"]]
+    },
+    {
+      "id": "gk30-07",
+      "category": "继承机制",
+      "difficulty": "medium",
+      "question": "按 GameKee 继承机制详解，继承因子通常由哪三部分组成？",
+      "expectedAnswer": "继承因子通常由三部分组成：小偶像的卡片收集一张、属性提升类的因子效果、具有特殊效果的因子效果。",
+      "sourceTitle": "继承机制详解",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622546.html",
+      "requiredTermGroups": [["卡片"], ["属性"], ["特殊"]]
+    },
+    {
+      "id": "gk30-08",
+      "category": "继承机制",
+      "difficulty": "medium",
+      "question": "继承因子中，蓝/金/虹字适应性和初始值分别提供多少加成？",
+      "expectedAnswer": "适应性蓝字1.4%、金字2.1%、虹字2.8%；初始值蓝字+10、金字+15、虹字+20。",
+      "sourceTitle": "继承机制详解",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622546.html",
+      "requiredTerms": ["1.4%", "2.1%", "2.8%", "+10", "+15", "+20"]
+    },
+    {
+      "id": "gk30-09",
+      "category": "竞技场",
+      "difficulty": "medium",
+      "question": "按继承机制详解，竞技场带走的继承卡数量与育成等级有什么关系？",
+      "expectedAnswer": "竞技场带走4-6张不同的牌：A是6张，B/C是5张，E/F是4张；目前没有遇到一轮育成带走2张相同牌的情况。",
+      "sourceTitle": "继承机制详解",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622546.html",
+      "requiredTerms": ["6", "5", "4"]
+    },
+    {
+      "id": "gk30-10",
+      "category": "育成机制",
+      "difficulty": "medium",
+      "question": "SP 课程和普通课程相比，主要区别是什么？",
+      "expectedAnswer": "SP 课所需学分更高、需要消耗更多体力，但回报也更高；SP 课的道具上手率似乎更高。",
+      "sourceTitle": "开荒向（SP，课程类浅析）",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622381.html",
+      "requiredTerms": ["学分", "体力", "回报"]
+    },
+    {
+      "id": "gk30-11",
+      "category": "育成机制",
+      "difficulty": "medium",
+      "question": "新手攻略中，各行动收益大致如何排序？",
+      "expectedAnswer": "冲刺训练>SP训练>训练>授业>外出≈活动支给；论外的是相谈和休息。",
+      "sourceTitle": "从入坑到入土——个人向的新手攻略（从PLV1级到15级）",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624586.html",
+      "requiredTerms": ["冲刺", "SP", "授业", "外出"]
+    },
+    {
+      "id": "gk30-12",
+      "category": "新手攻略",
+      "difficulty": "easy",
+      "question": "玩家等级 PLV 到多少级会解锁最后一个功能？这个功能是什么？",
+      "expectedAnswer": "15级会解锁删卡功能，此时算离开新手村。",
+      "sourceTitle": "从入坑到入土——个人向的新手攻略（从PLV1级到15级）",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624586.html",
+      "requiredTerms": ["15", "删卡"]
+    },
+    {
+      "id": "gk30-13",
+      "category": "新手攻略",
+      "difficulty": "medium",
+      "question": "按新手攻略，开局支援卡建议怎么带？",
+      "expectedAnswer": "建议3主3副，或3主2副1不擅长；如果有老师 SSR，老师可以顶掉任意一张卡。",
+      "sourceTitle": "从入坑到入土——个人向的新手攻略（从PLV1级到15级）",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624586.html",
+      "requiredTerms": ["主属性卡", "副属性卡", "老师"]
+    },
+    {
+      "id": "gk30-14",
+      "category": "新手攻略",
+      "difficulty": "medium",
+      "question": "刷初始和角色自选时，GameKee 新手攻略的推荐是什么？",
+      "expectedAnswer": "推荐初始刷老师 SSR 支援卡；角色自选推荐选藤田琴音，也就是玩家口中的皮卡丘。",
+      "sourceTitle": "从入坑到入土——个人向的新手攻略（从游戏下载到第一次育成前）",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624112.html",
+      "requiredTerms": ["老师", "藤田琴音"]
+    },
+    {
+      "id": "gk30-15",
+      "category": "育成机制",
+      "difficulty": "medium",
+      "question": "PRO 模式和普通模式相比，主要区别是什么？",
+      "expectedAnswer": "PRO 模式消耗20体力，有更长的育成流程、更强的考试对手，并且属性上限增加。",
+      "sourceTitle": "从入坑到入土——个人向的新手攻略（从PLV1级到15级）",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624586.html",
+      "requiredTerms": ["20", "体力", "属性上限"]
+    },
+    {
+      "id": "gk30-16",
+      "category": "育成机制",
+      "difficulty": "medium",
+      "question": "期中和期末考试有哪些需要注意的规则？",
+      "expectedAnswer": "考试没达到前三名会被淘汰；每场考试能重来3次，每天1次免费；期中考分数影响奖励，期末考分数直接关系育成得分。",
+      "sourceTitle": "从入坑到入土——个人向的新手攻略（从PLV1级到15级）",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624586.html",
+      "requiredTerms": ["前三", "3次", "期末"]
+    },
+    {
+      "id": "gk30-17",
+      "category": "育成机制",
+      "difficulty": "medium",
+      "question": "特训和开花收益浅析给出的结论是什么？",
+      "expectedAnswer": "特训尽量以满特训为目标，最好开到6；开花有碎片就开，不必强行用井换。",
+      "sourceTitle": "特训，开花收益浅析",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622567.html",
+      "requiredTerms": ["6", "开花", "碎片"]
+    },
+    {
+      "id": "gk30-18",
+      "category": "定向育成",
+      "difficulty": "hard",
+      "question": "定向育成中遇到撞卡时，选卡原则是什么？",
+      "expectedAnswer": "妥协卡或废卡同时出现时，选择已经有的那张，避免已经污染的牌库二次污染；铺开太多妥协卡会降低核心卡被继承的概率。",
+      "sourceTitle": "定向育成",
+      "sourceUrl": "https://www.gamekee.com/gakumas/625590.html",
+      "requiredTerms": ["已经拥有的", "污染"]
+    },
+    {
+      "id": "gk30-19",
+      "category": "PVE攻略",
+      "difficulty": "hard",
+      "question": "PVE 进阶篇中，绝好调集中流的三张核心卡是什么？",
+      "expectedAnswer": "魅惑の視線、魅惑のパフォーマンス、演出計画；其中魅惑の視線的抓取和继承指数都是5。",
+      "sourceTitle": "PVE进阶篇",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624458.html",
+      "requiredTerms": ["魅惑の視線", "魅惑のパフォーマンス", "演出計画"]
+    },
+    {
+      "id": "gk30-20",
+      "category": "状态词条",
+      "difficulty": "easy",
+      "question": "好调的效果是什么？",
+      "expectedAnswer": "好调的效果是数值上升量提升50%。",
+      "sourceTitle": "好調",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622675.html",
+      "requiredTerms": ["50%"]
+    },
+    {
+      "id": "gk30-21",
+      "category": "状态词条",
+      "difficulty": "medium",
+      "question": "绝好调的效果是什么？",
+      "expectedAnswer": "好调的数值上升量根据好调的回合数上升，公式为10%*50%+回合数*10%。",
+      "sourceTitle": "絶好調",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622728.html",
+      "requiredTerms": ["绝好调", "好调层数"]
+    },
+    {
+      "id": "gk30-22",
+      "category": "状态词条",
+      "difficulty": "easy",
+      "question": "干劲（やる気）的效果是什么？",
+      "expectedAnswer": "元气每次增加时，额外增加等额的干劲量。",
+      "sourceTitle": "干劲（やる気）",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622706.html",
+      "requiredTerms": ["元气", "干劲"]
+    },
+    {
+      "id": "gk30-23",
+      "category": "状态词条",
+      "difficulty": "easy",
+      "question": "好印象的效果是什么？",
+      "expectedAnswer": "回合结束时提升数值，回合开始时好印象减少1。",
+      "sourceTitle": "好印象",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622705.html",
+      "requiredTerms": ["回合结束"],
+      "requiredTermGroups": [["减少1层", "减少1", "-1", "递减值"]]
+    },
+    {
+      "id": "gk30-24",
+      "category": "状态词条",
+      "difficulty": "easy",
+      "question": "集中（专注）的效果是什么？",
+      "expectedAnswer": "集中提升数值的上升量。",
+      "sourceTitle": "集中",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622707.html",
+      "requiredTerms": ["上升量", "数值"]
+    },
+    {
+      "id": "gk30-25",
+      "category": "负面状态",
+      "difficulty": "easy",
+      "question": "状态不佳的效果是什么？",
+      "expectedAnswer": "在持续回合内数值上升量减少33%。",
+      "sourceTitle": "状态不佳",
+      "sourceUrl": "https://www.gamekee.com/gakumas/625465.html",
+      "requiredTerms": ["33%"]
+    },
+    {
+      "id": "gk30-26",
+      "category": "负面状态",
+      "difficulty": "easy",
+      "question": "精神萎靡的效果是什么？",
+      "expectedAnswer": "精神萎靡期间数值无法上升。",
+      "sourceTitle": "精神萎靡",
+      "sourceUrl": "https://www.gamekee.com/gakumas/625474.html",
+      "requiredTerms": ["无法上升"]
+    },
+    {
+      "id": "gk30-27",
+      "category": "负面状态",
+      "difficulty": "easy",
+      "question": "元气增加无效的效果是什么？",
+      "expectedAnswer": "持续回合内元气增加无效，并且每回合-1。",
+      "sourceTitle": "元气增加无效",
+      "sourceUrl": "https://www.gamekee.com/gakumas/625462.html",
+      "requiredTerms": ["无效", "减少1层"]
+    },
+    {
+      "id": "gk30-28",
+      "category": "技能卡效果",
+      "difficulty": "easy",
+      "question": "技能卡使用次数增加的效果是什么？",
+      "expectedAnswer": "当回合可使用卡牌次数+1。",
+      "sourceTitle": "技能卡使用次数增加",
+      "sourceUrl": "https://www.gamekee.com/gakumas/624994.html",
+      "requiredTerms": ["次数+1"]
+    },
+    {
+      "id": "gk30-29",
+      "category": "打牌机制",
+      "difficulty": "hard",
+      "question": "打牌基础中，山札、舍札、除外区分别是什么机制？",
+      "expectedAnswer": "山札是可能抽上来的牌；舍札在洗牌前不能抽；比赛中限1卡使用后进入除外区，洗牌时只把舍札并入山札，除外区不会回到山札。",
+      "sourceTitle": "打牌基础",
+      "sourceUrl": "https://www.gamekee.com/gakumas/622823.html",
+      "requiredTerms": ["舍札", "除外", "洗牌"]
+    },
+    {
+      "id": "gk30-30",
+      "category": "竞技场",
+      "difficulty": "hard",
+      "question": "S4 竞技场 Stage2 的版本答案为什么是 SSR 藤田琴音「Yellow Big Bang！」？",
+      "expectedAnswer": "因为 Stage2 物品触发条件是使用带绝好调效果的卡牌，而当前 SSR 角色卡中只有 Yellow Big Bang 的技能卡天然拥有该效果。",
+      "sourceTitle": "S4竞技场配队推荐",
+      "sourceUrl": "https://www.gamekee.com/gakumas/626352.html",
+      "requiredTerms": ["Yellow Big Bang", "绝好调", "藤田琴音"]
+    }
+  ]
+}

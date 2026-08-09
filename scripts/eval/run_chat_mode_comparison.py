@@ -32,6 +32,18 @@ from typing import Any
 
 IMAGE_RE = re.compile(r"!\[[^\]\n]*]\([^\s)]+\)")
 CLARIFICATION_TERMS = ["请补充", "请明确", "需要你进一步", "澄清", "你想了解哪"]
+WHITESPACE_RE = re.compile(r"\s+")
+
+
+def normalize_text(value: str) -> str:
+    """Normalize Markdown/Chinese number phrasing before exact-term checks."""
+    text = str(value)
+    text = WHITESPACE_RE.sub("", text)
+    text = re.sub(r"减少(\d+)层", r"-\1", text)
+    text = re.sub(r"增加(\d+)层", r"+\1", text)
+    text = re.sub(r"([+-])(\d)", r"\1\2", text)
+    text = re.sub(r"[*_`]", "", text)
+    return text.casefold()
 
 
 def parse_args() -> argparse.Namespace:
@@ -135,32 +147,37 @@ def request_sse(
         f"{base_url.rstrip('/')}/rag/v3/chat?{query}",
         headers={"Authorization": token, "Accept": "text/event-stream"},
     )
-    started = time.monotonic()
-    raw_parts: list[str] = []
-    done = False
-    error: str | None = None
-    try:
-        with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
-            while True:
-                try:
-                    raw = response.readline()
-                except socket.timeout:
-                    error = "socket timeout"
-                    break
-                if not raw:
-                    break
-                line = raw.decode("utf-8", errors="replace")
-                raw_parts.append(line)
-                if "[DONE]" in line:
-                    done = True
-                    break
-                if time.monotonic() - started > timeout_seconds - 2:
-                    error = "client deadline reached"
-                    break
-    except urllib.error.HTTPError as exc:
-        error = f"http {exc.code}: {exc.read().decode(errors='replace')[:300]}"
-    except Exception as exc:  # noqa: BLE001 - report client-side eval failures
-        error = repr(exc)
+    for attempt in range(2):
+        started = time.monotonic()
+        raw_parts: list[str] = []
+        done = False
+        error: str | None = None
+        try:
+            with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+                while True:
+                    try:
+                        raw = response.readline()
+                    except socket.timeout:
+                        error = "socket timeout"
+                        break
+                    if not raw:
+                        break
+                    line = raw.decode("utf-8", errors="replace")
+                    raw_parts.append(line)
+                    if "[DONE]" in line:
+                        done = True
+                        break
+                    if time.monotonic() - started > timeout_seconds - 2:
+                        error = "client deadline reached"
+                        break
+        except urllib.error.HTTPError as exc:
+            error = f"http {exc.code}: {exc.read().decode(errors='replace')[:300]}"
+            if exc.code in {502, 503} and attempt == 0:
+                time.sleep(3)
+                continue
+        except Exception as exc:  # noqa: BLE001 - report client-side eval failures
+            error = repr(exc)
+        break
     raw_text = "".join(raw_parts)
     answer = extract_answer(raw_text)
     latency_ms = round((time.monotonic() - started) * 1000)
@@ -203,15 +220,28 @@ def evaluate_answer(case: dict[str, Any], result: dict[str, Any]) -> dict[str, A
     expected_entities = case.get("expectedEntities") or []
     min_image_count = int(case.get("minImageCount") or 0)
 
-    missing_required = [term for term in required_terms if term not in answer]
-    missing_required_groups = [
-        group
+    normalized_answer = normalize_text(answer)
+    normalized_required = [(term, normalize_text(term)) for term in required_terms]
+    normalized_groups = [
+        [(term, normalize_text(term)) for term in group]
         for group in required_term_groups
-        if not isinstance(group, list) or not any(str(term) in answer for term in group)
     ]
-    missing_entities = [term for term in expected_entities if term not in answer]
-    forbidden_hits = [term for term in forbidden_terms if term in answer]
-    required_any_hit = not required_any or any(term in answer for term in required_any)
+    normalized_any = [(term, normalize_text(term)) for term in required_any]
+    normalized_forbidden = [(term, normalize_text(term)) for term in forbidden_terms]
+    normalized_entities = [(term, normalize_text(term)) for term in expected_entities]
+
+    missing_required = [term for term, norm in normalized_required if norm not in normalized_answer]
+    missing_group_indexes = [
+        index
+        for index, group in enumerate(normalized_groups)
+        if not isinstance(group, list) or not any(norm in normalized_answer for _, norm in group)
+    ]
+    missing_required_groups = [required_term_groups[index] for index in missing_group_indexes]
+    missing_entities = [term for term, norm in normalized_entities if norm not in normalized_answer]
+    forbidden_hits = [term for term, norm in normalized_forbidden if norm in normalized_answer]
+    required_any_hit = not normalized_any or any(
+        norm in normalized_answer for _, norm in normalized_any
+    )
 
     checks = {
         "done": bool(result["done"]),
@@ -303,6 +333,7 @@ def main() -> int:
 
     token = args.token or login(args.base_url, args.env_file, args.timeout_seconds)
     results: list[dict[str, Any]] = []
+    run_token = str(int(time.time_ns() // 1000) % 100000000)
     for index, case in enumerate(cases, start=1):
         print(f"[{index}/{len(cases)}] {case['id']}", flush=True)
         modes: dict[str, Any] = {}
@@ -312,7 +343,7 @@ def main() -> int:
                 token,
                 case["question"],
                 mode,
-                f"cmp{index}{mode.lower()}",
+                f"cmp{index}{mode.lower()}{run_token}",
                 args.timeout_seconds,
                 args.collection_name,
             )
@@ -332,6 +363,25 @@ def main() -> int:
                 "question": case["question"],
                 "modes": modes,
             }
+        )
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(
+            json.dumps(
+                {
+                    "schemaVersion": "1.0",
+                    "dataset": str(args.cases).replace("\\", "/"),
+                    "collectionName": args.collection_name,
+                    "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "partial": True,
+                    "caseCount": len(results),
+                    "summary": summarize(results),
+                    "cases": results,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
         )
 
     report = {

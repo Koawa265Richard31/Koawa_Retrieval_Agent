@@ -54,3 +54,8 @@ __pycache__/
 .claude/settings.local.json
 docs/ADMIN_CREDENTIALS.md
 .firecrawl/
+frontend/dist-check/
+frontend/dist-next-*/
+frontend/vite.*.log
+%SystemDrive%/
+.extract-design-system/
