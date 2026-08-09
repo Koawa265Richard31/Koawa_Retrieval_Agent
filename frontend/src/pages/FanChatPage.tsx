@@ -23,37 +23,59 @@ type FanAvatar = {
   src: string;
 };
 
-const baseIdols = [
-  "倉本千奈",
-  "月村手毬",
-  "藤田ことね",
-  "有村麻央",
-  "花海咲季",
-  "葛城リーリヤ",
-  "篠澤広",
-  "紫雲清夏",
-  "姫崎莉波"
+const fanIdolAvatars: FanAvatar[] = [
+  { name: "花海咲季", src: "/assets/gakuen/distribution/icon/花海咲季.png" },
+  { name: "月村手毬", src: "/assets/gakuen/distribution/icon/月村手毬.png" },
+  { name: "藤田琴音", src: "/assets/gakuen/distribution/icon/藤田琴音.png" },
+  { name: "姫崎莉波", src: "/assets/gakuen/distribution/icon/姫崎莉波.png" },
+  { name: "紫云 清夏", src: "/assets/gakuen/distribution/icon/紫云 清夏.png" },
+  { name: "篠泽 广", src: "/assets/gakuen/distribution/icon/篠泽 广.png" },
+  { name: "葛城莉莉娅", src: "/assets/gakuen/distribution/icon/葛城莉莉娅.png" },
+  { name: "仓本千奈", src: "/assets/gakuen/distribution/icon/仓本千奈.png" },
+  { name: "有村麻央", src: "/assets/gakuen/distribution/icon/有村麻央.png" }
 ];
 
-const fanAvatarAssets: FanAvatar[] = [
-  ...baseIdols.map((name, index) => ({
-    name,
-    src: `/assets/gakuen/distribution/icon/icon_${String.fromCharCode(65 + index)}.png`
-  })),
-  ...[...baseIdols, "花海佑芽", "秦谷美鈴", "十王星南"].map((name, index) => ({
-    name,
-    src: `/assets/gakuen/distribution/icon/halloween_icon_${index + 1}.png`
-  }))
+const fanHalloweenAvatars: FanAvatar[] = [
+  { name: "花海咲季", src: "/assets/gakuen/distribution/icon/花海咲季halloween.png" },
+  { name: "月村手毬", src: "/assets/gakuen/distribution/icon/月村手毬1.png" },
+  { name: "藤田琴音", src: "/assets/gakuen/distribution/icon/藤田琴音1.png" },
+  { name: "有村麻央", src: "/assets/gakuen/distribution/icon/有村麻央1.png" },
+  { name: "葛城莉莉娅", src: "/assets/gakuen/distribution/icon/葛城莉莉娅1.png" },
+  { name: "仓本千奈", src: "/assets/gakuen/distribution/icon/仓本千奈1.png" },
+  { name: "紫云 清夏", src: "/assets/gakuen/distribution/icon/紫云 清夏1.png" },
+  { name: "篠泽 广", src: "/assets/gakuen/distribution/icon/篠泽 广1.png" },
+  { name: "姫崎莉波", src: "/assets/gakuen/distribution/icon/姫崎莉波1.png" },
+  { name: "花海佑芽", src: "/assets/gakuen/distribution/icon/花海佑芽1.png" },
+  { name: "秦谷美铃", src: "/assets/gakuen/distribution/icon/秦谷美铃1.png" },
+  { name: "十王星南", src: "/assets/gakuen/distribution/icon/十王星南1.png" }
 ];
+
+const fanAvatarAssets: FanAvatar[] = [...fanIdolAvatars, ...fanHalloweenAvatars];
 
 function randomFanAvatar() {
   return fanAvatarAssets[Math.floor(Math.random() * fanAvatarAssets.length)];
 }
 
-function LoadingOverlay({ leaving }: { leaving: boolean }) {
+function handleAvatarError(event: React.SyntheticEvent<HTMLImageElement>) {
+  const img = event.currentTarget;
+  img.onerror = null;
+  img.src = "/assets/gakuen/logo_text_or.svg";
+}
+
+function LoadingOverlay({ leaving, avatar }: { leaving: boolean; avatar: FanAvatar }) {
   return (
     <div className={`fan-loading ${leaving ? "is-leaving" : ""}`} aria-live="polite">
       <div className="fan-loading-card">
+        <div className="fan-loading-avatar">
+          <img
+            src={avatar.src}
+            alt={avatar.name}
+            onError={(event) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = "/assets/gakuen/logo_text_or.svg";
+            }}
+          />
+        </div>
         <img src="/assets/gakuen/logo_text_or.svg" alt="学园偶像大师" />
         <div className="fan-loading-dots" aria-label="正在加载">
           <i />
@@ -67,7 +89,7 @@ function LoadingOverlay({ leaving }: { leaving: boolean }) {
 }
 
 export function FanChatPage() {
-   const user = useAuthStore((state) => state.user);
+  const user = useAuthStore((state) => state.user);
   const {
     sessions,
     currentSessionId,
@@ -148,7 +170,7 @@ export function FanChatPage() {
 
   return (
     <main className={`fan-page ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}>
-      {loading ? <LoadingOverlay leaving={leaving} /> : null}
+      {loading ? <LoadingOverlay leaving={leaving} avatar={assistantAvatar} /> : null}
       {sidebarCollapsed ? (
         <button
           type="button"
@@ -246,7 +268,7 @@ export function FanChatPage() {
             {hasStarted || hasConversation ? (
               <article className="fan-message fan-message-welcome">
                 <div className="fan-avatar fan-avatar-assistant">
-                  <img src={assistantAvatar.src} alt={assistantAvatar.name} />
+                  <img src={assistantAvatar.src} alt={assistantAvatar.name} onError={handleAvatarError} />
                 </div>
                 <div className="fan-message-body">
                   <span className="fan-message-author">{assistantAvatar.name}</span>
@@ -258,9 +280,9 @@ export function FanChatPage() {
               <article key={message.id} className={`fan-message ${message.role === "user" ? "fan-message-user" : ""}`}>
                 <div className={`fan-avatar ${message.role === "assistant" ? "fan-avatar-assistant" : "fan-avatar-producer"}`}>
                   {message.role === "user" ? (
-                    <img src="/assets/gakuen/logo_text_or.svg" alt="プロデューサー" />
+                    <img src="/assets/gakuen/logo_text_or.svg" alt="プロデューサー" onError={handleAvatarError} />
                   ) : (
-                    <img src={assistantAvatar.src} alt={assistantAvatar.name} />
+                    <img src={assistantAvatar.src} alt={assistantAvatar.name} onError={handleAvatarError} />
                   )}
                 </div>
                 <div className="fan-message-body">

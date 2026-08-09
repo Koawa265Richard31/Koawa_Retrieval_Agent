@@ -730,3 +730,96 @@
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+/* ---------- review round 2 additions ---------- */
+
+/* sidebar collapse actually hides the rail */
+.fan-page.is-sidebar-collapsed .fan-sidebar {
+  display: none;
+}
+
+/* avatar loading ring */
+.fan-loading-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--fan-brand);
+  box-shadow: 0 0 0 6px rgba(243, 152, 0, 0.18);
+  animation: fan-avatar-breathe 1.6s ease-in-out infinite;
+}
+.fan-loading-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+@keyframes fan-avatar-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(243, 152, 0, 0.18);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 12px rgba(243, 152, 0, 0.08);
+  }
+}
+
+/* richer stage background: warm gradient + official pattern drift */
+.fan-shell {
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(243, 152, 0, 0.14), transparent 62%),
+    linear-gradient(180deg, #fff3e2 0%, #fff7ec 48%, #ffffff 100%);
+}
+.fan-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/gakuen/loading/bg_pc.png");
+  background-position: center 0;
+  background-size: 100vw auto;
+  background-repeat: repeat;
+  opacity: 0.16;
+  animation: fan-pattern-drift 26s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes fan-pattern-drift {
+  from {
+    background-position: center 0;
+  }
+  to {
+    background-position: center -24px;
+  }
+}
+
+/* knob ornament */
+.fan-conversation::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  right: -34px;
+  width: 190px;
+  height: 190px;
+  background: url("/assets/gakuen/knob.svg") center / contain no-repeat;
+  opacity: 0.12;
+  pointer-events: none;
+  animation: fan-knob-spin 42s linear infinite;
+}
+@keyframes fan-knob-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .fan-conversation::after {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fan-loading-avatar,
+  .fan-shell::before,
+  .fan-conversation::after {
+    animation: none;
+  }
+}
