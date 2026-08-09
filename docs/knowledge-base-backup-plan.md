@@ -96,7 +96,7 @@ docker compose ps          # app / frontend / postgres / rustfs 等全部 Up
 - [ ] `docker compose ps` 全部 healthy/Up
 - [ ] 登录：`POST /api/koawa-agent/auth/login`（admin + ADMIN_PASSWORD）返回 token
 - [ ] 文档数：`GET /knowledge-base/2084920454895685632/docs` 总数为 **871**（866 GameKee + 2 教职员 + 2 H.I.F + 1 P卡速查索引）
-- [ ] 向量数：`SELECT count(*) FROM t_knowledge_vector WHERE metadata->>'collection_name'='gakumas-gamekee-pilot-v3'` = 2094（2033 旧 + H.I.F 2 + 索引 5…以实际为准）
+- [ ] 向量数：`SELECT count(*) FROM t_knowledge_vector WHERE metadata->>'collection_name'='gakumas-gamekee-pilot-v3'` = **2046**（2026-08-10 实测）
 - [ ] 问答 smoke（RAG 模式）：
   - 「最新的P卡是哪张？」→ 花海 咲季（H.I.F），实装 2026-07-21
   - 「姫崎莉波（SUGAR FLAVOR）的P卡信息」→ 觉醒前/觉醒后卡面 + 数值/技能
