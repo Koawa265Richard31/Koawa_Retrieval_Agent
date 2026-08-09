@@ -219,20 +219,17 @@ public class DefaultContextFormatter implements ContextFormatter {
     }
 
     private String addImageMarkdownIndex(String body) {
-        if (StrUtil.isBlank(body)) {
+        if (StrUtil.isBlank(body) || extractMarkdownImages(body).isEmpty()) {
             return body;
         }
-        List<String> images = extractMarkdownImages(body).stream()
-                .limit(Math.max(0, contextProperties.getMaxImages()))
-                .toList();
-        if (images.isEmpty()) {
-            return body;
-        }
+        // 图片保留在正文原位置（提供位置锚点），该块只做编排提示，不再剥离图片
         return "<image-markdown>\n"
-                + "以下图片来自命中的知识库内容。回答资料、所有资料、角色信息、介绍或图片类问题时，必须保留相关 Markdown 图片，前端依赖 `![描述](URL)` 渲染图片。\n"
-                + String.join("\n", images)
-                + "\n</image-markdown>\n\n"
-                + MARKDOWN_IMAGE_PATTERN.matcher(body).replaceAll("");
+                + "知识库正文已把图片（`![描述](URL)`）保留在各自对应内容的位置。回答时必须：\n"
+                + "1. 保留相关图片，并放在回答中与它对应内容（对应角色/小节/段落）所在的位置；\n"
+                + "2. 禁止把所有图片集中堆到回答末尾；\n"
+                + "3. 对比/比较类问题中，每个对比对象的图片都要保留在各自的对比小节里。\n"
+                + "</image-markdown>\n\n"
+                + body;
     }
 
     private List<String> extractMarkdownImages(String text) {
