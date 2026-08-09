@@ -99,7 +99,9 @@ export function FanChatPage() {
     cancelGeneration,
     createSession,
     fetchSessions,
-    selectSession
+    selectSession,
+    executionMode,
+    setExecutionMode
   } = useChatStore();
   const [value, setValue] = React.useState("");
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
@@ -255,6 +257,14 @@ export function FanChatPage() {
             <div>
               <p className="fan-eyebrow">COMMUNITY CHAT</p>
               <h1>练习室对话</h1>
+            </div>
+            <div className="fan-mode-toggle" role="group" aria-label="检索模式">
+              <button type="button" className={executionMode === "RAG" ? "is-active" : ""} onClick={() => setExecutionMode("RAG")}>
+                RAG
+              </button>
+              <button type="button" className={executionMode === "AGENT" ? "is-active" : ""} onClick={() => setExecutionMode("AGENT")}>
+                Agent
+              </button>
             </div>
           </header>
           <div className="fan-topic-strip">

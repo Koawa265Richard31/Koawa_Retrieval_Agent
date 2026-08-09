@@ -850,3 +850,40 @@
     animation: none;
   }
 }
+
+/* ---------- fan mode toggle (RAG / Agent 双链路) ---------- */
+.fan-mode-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--fan-line);
+  border-radius: 999px;
+  background: var(--fan-paper);
+  box-shadow: var(--fan-shadow-soft);
+}
+.fan-mode-toggle button {
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--fan-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.fan-mode-toggle button.is-active {
+  background: var(--fan-brand);
+  color: #fff;
+}
+.fan-mode-toggle button:focus-visible {
+  outline: none;
+  box-shadow: var(--fan-focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fan-mode-toggle button {
+    transition: none;
+  }
+}

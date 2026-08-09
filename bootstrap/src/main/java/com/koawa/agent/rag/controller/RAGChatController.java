@@ -17,7 +17,6 @@
 
 package com.koawa.agent.rag.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import com.koawa.agent.framework.convention.Result;
 import com.koawa.agent.framework.exception.ClientException;
@@ -62,9 +61,6 @@ public class RAGChatController {
         validateConversationId(conversationId);
         validateCollectionName(collectionName);
         ChatExecutionMode resolvedMode = ChatExecutionMode.from(executionMode);
-        if (resolvedMode == ChatExecutionMode.AGENT) {
-            StpUtil.checkRole("admin");
-        }
         SseEmitter emitter = new SseEmitter(ragDefaultProperties.getSseTimeoutMs());
         ragChatService.streamChat(
                 question, conversationId, deepThinking, resolvedMode, collectionName, emitter);
