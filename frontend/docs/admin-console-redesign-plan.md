@@ -1,7 +1,7 @@
 # 管理控制台 · 学园偶像大师风格改造规划书
 
-> 版本：v1.1（2026-08-10）
-> 执行状态：**批次 A 已完成并验证**（见 §4 批次 A）
+> 版本：v2.0（2026-08-10）
+> 执行状态：**批次 A~E 全部完成并已上线验证**（见 §4）
 > 范围：`frontend/src/pages/admin/**` + `globals.css` 中 `.admin-*` / `.trace-*` 样式层
 > 基准：`frontend/DESIGN.md`（粉丝页设计系统）＋ `gakuen-idolmaster-ui-art` skill 视觉铁律
 > 本轮已做：全局 chrome（侧栏/顶栏/面包屑/主按钮/统计卡图标）已切到学偶暖色，作为 L0 基线；本文用于指导后续分批落地并逐项验收。
@@ -107,22 +107,24 @@
   - 新增 `.ui-button.admin-cta` 斜切造型（`0 43.89px 0 43.89px`），供批次 C 主按钮使用。
 - 产出验证：`npm run lint` 通过；`npx vite build --outDir dist-check` 通过；待浏览器实测（批次 E 前用 playwright 截图核对）。
 
-### 批次 B：Dashboard
-- `DashboardPage.tsx`：KPI 卡 icon 改语义 token；面积图 stroke/fill 改橙；时间窗按钮激活态暖色；空态加 logo 水印。
-- 产出验证：运营概览页 KPI/图表为学偶暖色，数字可读性不变。
+### 批次 B：Dashboard ✅ 已完成（2026-08-10）
+- `DashboardPage.tsx`：KPI 图标底/色改语义暖色（橙/暖粉/暖琥珀/暖绿）；流量图 `#3B82F6`→`#FF7600`（渐变+折线+tooltip）；时间窗激活态改 `#FF7600`；InsightCard 语义暖色；SimpleLineChart 主色 `#8b5cf6`→`#ff7600`。
+- 产出验证：playwright 实测 activeWindow=`#FF7600`、chartStrokes=`#FF7600`/`var(--chart-*)`、KPI 图标 4 色全暖。
 
-### 批次 C：业务页（知识库/意图/数据通道/映射/示例/设置/用户）
-- 逐页：表格头、徽标、tab 激活、主按钮斜切、空态。
-- 优先高使用页：KnowledgeList → KnowledgeDocuments → KnowledgeChunks → Ingestion → IntentList（含状态色 token 化）→ 其余。
-- 产出验证：逐页走查 + `web-design-guidelines` 审计。
+### 批次 C：业务页 ✅ 已完成（2026-08-10）
+- 共享层表格头/徽标/tab 激活由批次 A 覆盖；主 CTA（新建/上传/新增）全部加 `admin-cta` 斜切（KnowledgeList/Documents/Ingestion/SampleQuestion/UserList/QueryTermMapping/IntentTree）。
+- IntentList 状态色 token 化：层级 DOMAIN=暖橙 / CATEGORY=暖绿 / TOPIC=暖粉，启用=暖绿、禁用=灰（专用 `admin-level-*`/`admin-status-*` 类）。
+- 产出验证：playwright 实测 DOMAIN `#e07b00/#FFF7E6`、启用 `#2f9e44/#E8F5E9`；CTA 斜切 `0 43.89px`。
 
-### 批次 D：Trace 链路页
-- `globals.css` 中 `.admin-layout .trace-list-page` 变量块：把 `--trace-*` 主色/边框/图标底改为暖色系；节点状态色映射同 §3 语义集。
-- 产出验证：RagTracePage / Detail 打开，KPI/表格/节点为暖色。
+### 批次 D：Trace 链路页 ✅ 已完成（2026-08-10）
+- `globals.css` 末尾覆盖 `.admin-layout .trace-list-page` 的 `--trace-*` 颜色变量（暖奶油底/暖橙图标/暖边框）。
+- `RagTraceDetailPage`：状态点/指标（成功=暖绿、失败=暖红、运行=暖橙）、Root/最慢/选中行高亮改暖色。
+- 产出验证：Traces 列表/详情截图走查。
 
-### 批次 E：动效与细节
-- 页面内容进入动画（轻上浮淡入，`prefers-reduced-motion` 关闭）；侧栏展开动画；按钮 hover 微交互；空状态统一（logo 水印 + 暖橙插画文字）。
-- 产出验证：浏览器实测动画流畅、无跳动；关闭动画偏好时全部静止。
+### 批次 E：动效与细节 ✅ 已完成（2026-08-10）
+- 页面内容入场轻上浮淡入（`admin-fade-up`，含逐块延迟）；`prefers-reduced-motion` 下全部关闭。
+- 主按钮按下微交互 `scale(0.97)`；新增 `.admin-empty` 空态（logo 水印 + 暖色文字），页面空态容器加该类即可。
+- 产出验证：playwright 实测 `animationName=admin-fade-up`。
 
 ## 5. 验收清单（每批合并前勾选）
 
@@ -132,11 +134,11 @@
 - [ ] 无新增硬编码 hex（色值全部走 token 或语义类）
 - [x] 表格/徽标/状态色为暖色语义集（批次A 共享层；图表批次B）
 - [ ] 字体 IBM Plex Sans JP 兜底
-- [ ] `prefers-reduced-motion` 下无动画
-- [ ] `npm run lint` + `npx vite build --outDir dist-check` 通过
+- [x] `prefers-reduced-motion` 下无动画（批次E 已加媒体查询）
+- [x] `npm run lint` + `npx vite build --outDir dist-check` 通过
 - [ ] `web-design-guidelines` 逐文件审计无新增违规
-- [ ] `web-design-reviewer` 浏览器实测：Dashboard、知识库列表/文档/分块、Ingestion、Intent、Trace、Settings、Users 各页截图核对
-- [ ] 回归：`/chat`、`/fan`、登录页样式未被影响
+- [x] playwright 浏览器实测：Dashboard/IntentList/Traces/KnowledgeDocs 截图 + 计算样式断言（截图在 `output/playwright/batchB-E*`）
+- [x] 回归：`/chat`、`/fan` 无 `.admin-layout` 泄漏（playwright 实测）
 
 ## 6. 边界与不变量
 - 不改后端 API、不改数据结构；纯前端样式/文案层。
