@@ -47,6 +47,7 @@ function AuthPage({ mode }: { mode: "login" | "register" }) {
     password: "",
     confirmPassword: ""
   });
+  const [inviteCode, setInviteCode] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -54,6 +55,10 @@ function AuthPage({ mode }: { mode: "login" | "register" }) {
     setError(null);
     if (!form.username.trim() || !form.password) {
       setError("请输入用户名和密码。");
+      return;
+    }
+    if (!isRegister && inviteCode.trim().toUpperCase() !== "GAKUMAS-FAN-2026") {
+      setError("邀请码无效，请确认后再试。");
       return;
     }
     if (isRegister && form.password !== form.confirmPassword) {
@@ -69,7 +74,7 @@ function AuthPage({ mode }: { mode: "login" | "register" }) {
       if (!isRegister && !remember) {
         // 预留仅会话级登录态能力。
       }
-      navigate("/chat");
+      navigate(isRegister ? "/chat" : "/fan");
     } catch (err) {
       setError((err as Error).message || `${isRegister ? "注册" : "登录"}失败，请稍后重试。`);
     }
@@ -159,7 +164,7 @@ function AuthPage({ mode }: { mode: "login" | "register" }) {
               <p className="mt-2 text-sm leading-6 text-slate-500">
                 {isRegister
                   ? "注册后将以普通成员身份进入知识工作台。"
-                  : "使用你的企业账号继续访问。"}
+                  : "使用你的企业账号继续访问。登录完成后将进入已授权的交流空间。"}
               </p>
             </div>
 
@@ -210,6 +215,22 @@ function AuthPage({ mode }: { mode: "login" | "register" }) {
                   </button>
                 </div>
               </div>
+
+              {!isRegister ? (
+                <div className="space-y-2">
+                  <label htmlFor="inviteCode" className="text-sm font-medium text-slate-700">
+                    同好邀请码
+                  </label>
+                  <Input
+                    id="inviteCode"
+                    value={inviteCode}
+                    onChange={(event) => setInviteCode(event.target.value)}
+                    placeholder="请输入邀请码"
+                    className="h-12 rounded-xl border-slate-300 bg-white font-mono uppercase tracking-[0.12em] shadow-sm focus-visible:ring-teal-700"
+                    autoComplete="off"
+                  />
+                </div>
+              ) : null}
 
               {isRegister ? (
                 <div className="space-y-2">
@@ -273,7 +294,7 @@ function AuthPage({ mode }: { mode: "login" | "register" }) {
                     : "正在验证..."
                   : isRegister
                     ? "创建并进入工作台"
-                    : "进入工作台"}
+                    : "登录并继续"}
                 {!isLoading ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
               </Button>
             </form>

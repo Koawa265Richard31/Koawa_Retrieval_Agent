@@ -25,6 +25,7 @@ interface ChatState {
   currentSessionId: string | null;
   messages: Message[];
   isLoading: boolean;
+  sessionLoadId: number;
   sessionsLoaded: boolean;
   inputFocusKey: number;
   isStreaming: boolean;
@@ -85,6 +86,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   currentSessionId: null,
   messages: [],
   isLoading: false,
+  sessionLoadId: 0,
   sessionsLoaded: false,
   inputFocusKey: 0,
   isStreaming: false,
@@ -97,6 +99,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   streamingMessageId: null,
   cancelRequested: false,
   fetchSessions: async () => {
+    const sessionLoadId = get().sessionLoadId;
     set({ isLoading: true });
     try {
       const data = await listSessions();
@@ -115,7 +118,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     } catch (error) {
       toast.error((error as Error).message || "加载会话失败");
     } finally {
-      set({ isLoading: false, sessionsLoaded: true });
+      set((state) => ({
+        sessionsLoaded: true,
+        isLoading: state.sessionLoadId === sessionLoadId ? false : state.isLoading
+      }));
     }
   },
   createSession: async () => {
@@ -178,18 +184,26 @@ export const useChatStore = create<ChatState>((set, get) => ({
   selectSession: async (sessionId) => {
     if (!sessionId) return;
     if (get().currentSessionId === sessionId && get().messages.length > 0) return;
+    const sessionLoadId = get().sessionLoadId + 1;
     if (get().isStreaming) {
       get().cancelGeneration();
     }
     set({
+      sessionLoadId,
       isLoading: true,
       currentSessionId: sessionId,
+      messages: [],
       isCreatingNew: false,
-      thinkingStartAt: null
+      isStreaming: false,
+      thinkingStartAt: null,
+      streamTaskId: null,
+      streamAbort: null,
+      streamingMessageId: null,
+      cancelRequested: false
     });
     try {
       const data = await listMessages(sessionId);
-      if (get().currentSessionId !== sessionId) {
+      if (get().sessionLoadId !== sessionLoadId || get().currentSessionId !== sessionId) {
         return;
       }
       const mapped: Message[] = data.map((item) => ({
@@ -205,19 +219,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
       set({ messages: mapped });
     } catch (error) {
-      toast.error((error as Error).message || "加载消息失败");
+      if (get().sessionLoadId === sessionLoadId && get().currentSessionId === sessionId) {
+        toast.error((error as Error).message || "加载消息失败");
+      }
     } finally {
-      if (get().currentSessionId === sessionId) {
+      if (get().sessionLoadId === sessionLoadId && get().currentSessionId === sessionId) {
         set({
           isLoading: false,
-          isStreaming: false,
-          streamTaskId: null,
-          streamAbort: null,
-          streamingMessageId: null,
-          cancelRequested: false
+          isStreaming: false
         });
-      } else {
-        set({ isLoading: false });
       }
     }
   },

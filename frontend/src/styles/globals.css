@@ -2225,3 +2225,204 @@ textarea {
   overflow-wrap: break-word;
   white-space: pre-wrap;
 }
+
+/* Fan lounge: a warm stage treatment kept separate from the knowledge workspace. */
+.fan-page { min-height: 100vh; overflow: hidden; background: #fffaf4; color: #24344d; font-family: "Trebuchet MS", "Segoe UI", sans-serif; }
+.fan-topbar { height: 72px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid #f0d9d5; background: #fffaf4; }
+.fan-brand { display: inline-flex; align-items: center; gap: 10px; border: 0; background: transparent; color: #24344d; text-align: left; }
+.fan-brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; background: #ef7181; color: white; box-shadow: 4px 4px 0 #f8c4bb; }
+.fan-brand strong, .fan-brand small { display: block; }
+.fan-brand strong { font-size: 14px; letter-spacing: .1em; }
+.fan-brand small { margin-top: 2px; color: #b47d87; font-size: 9px; letter-spacing: .18em; }
+.fan-top-actions { display: flex; align-items: center; gap: 22px; }
+.fan-live, .fan-online { display: inline-flex; align-items: center; gap: 7px; color: #b47d87; font-size: 10px; font-weight: 700; letter-spacing: .14em; }
+.fan-live i, .fan-online i { width: 7px; height: 7px; border-radius: 50%; background: #ef7181; box-shadow: 0 0 0 4px #fbe1dd; }
+.fan-user, .fan-icon-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 0; background: transparent; color: #53647b; }
+.fan-user { font-size: 12px; }
+.fan-icon-button { width: 36px; height: 36px; border-radius: 10px; }
+.fan-icon-button:hover { background: #f7e4df; }
+.fan-layout { display: grid; min-height: calc(100vh - 72px); grid-template-columns: 220px minmax(360px, .92fr) minmax(430px, 1.08fr); }
+.fan-rail { display: flex; flex-direction: column; padding: 38px 18px 22px; border-right: 1px solid #f0d9d5; background: #fff5ee; }
+.fan-rail-head { display: flex; justify-content: space-between; padding: 0 12px 18px; color: #c4959b; font-size: 9px; font-weight: 700; letter-spacing: .2em; }
+.fan-rail-item { display: flex; align-items: center; gap: 12px; width: 100%; height: 48px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; color: #7e8497; font-size: 12px; text-align: left; }
+.fan-rail-item svg { width: 17px; height: 17px; }
+.fan-rail-item b { margin-left: auto; color: #d5a1a5; font-size: 10px; }
+.fan-rail-item > svg:last-child { margin-left: auto; width: 14px; }
+.fan-rail-item:hover, .fan-rail-item.is-active { background: #f9dcd7; color: #d6576c; }
+.fan-rail-note { margin: auto 10px 24px; padding: 15px 12px; border: 1px solid #f3cdc6; border-radius: 13px; background: #fffaf5; color: #bd8790; font-size: 11px; line-height: 1.7; }
+.fan-rail-note svg { width: 17px; color: #ef7181; }
+.fan-rail-note p { margin: 7px 0 0; }
+.fan-rail-footer { display: flex; align-items: center; gap: 8px; padding: 0 10px; color: #c9a0a2; font-size: 9px; letter-spacing: .15em; }
+.fan-stage-panel { position: relative; overflow: hidden; min-height: 600px; padding: 56px 30px 28px; background: #f8d9d1; }
+.fan-stage-panel::before { content: ""; position: absolute; inset: 0; opacity: .24; background: rgba(255, 255, 255, .55); }
+.fan-stage-copy { position: relative; z-index: 2; }
+.fan-stage-copy > span, .fan-kicker { color: #b35e70; font-size: 10px; font-weight: 700; letter-spacing: .19em; }
+.fan-stage-copy h1 { margin: 18px 0 14px; color: #253652; font-family: Georgia, serif; font-size: clamp(33px, 3vw, 52px); font-weight: 400; line-height: 1.08; }
+.fan-stage-copy h1 em { color: #d45168; font-style: normal; }
+.fan-stage-copy p { max-width: 280px; color: #8f6674; font-size: 13px; line-height: 1.8; }
+.fan-stage-art { position: absolute; right: 1%; bottom: 0; left: 2%; height: 75%; min-height: 430px; }
+.fan-stage-stars svg { position: absolute; z-index: 2; width: 19px; height: 19px; color: #f29f54; fill: #f29f54; animation: fan-twinkle 2.4s ease-in-out infinite; }
+.fan-stage-stars .star-one { top: 17%; left: 17%; }
+.fan-stage-stars .star-two { top: 28%; right: 13%; width: 13px; animation-delay: .7s; }
+.fan-stage-stars .star-three { top: 9%; right: 33%; width: 10px; animation-delay: 1.3s; }
+.fan-stage-stars .spark-one { top: 40%; left: 5%; color: #fff; animation: fan-float 3.4s ease-in-out infinite; }
+.fan-idol-svg { position: absolute; right: 8%; bottom: 28px; width: min(92%, 420px); height: 100%; overflow: visible; }
+.fan-idol-svg path, .fan-idol-svg circle { stroke-linecap: round; stroke-linejoin: round; }
+.svg-halo { fill: none; stroke: #f7b7aa; stroke-width: 2; stroke-dasharray: 4 12; animation: fan-spin 22s linear infinite; transform-origin: 210px 210px; }
+.svg-ribbon { fill: none; stroke: #ef7181; stroke-width: 8; opacity: .9; animation: fan-sway 4s ease-in-out infinite; transform-origin: 82px 360px; }
+.svg-ribbon-right { animation-delay: -.9s; transform-origin: 338px 360px; }
+.svg-hair { fill: #4c6182; stroke: #344b6c; stroke-width: 3; }
+.svg-face { fill: #ffe9d8; stroke: #344b6c; stroke-width: 3; }
+.svg-bangs, .svg-outfit { fill: #f6fbff; stroke: #344b6c; stroke-width: 3; }
+.svg-eye, .svg-smile { fill: none; stroke: #344b6c; stroke-width: 3; }
+.svg-neck, .svg-arm, .svg-leg { fill: none; stroke: #ffe9d8; stroke-width: 13; }
+.svg-outfit { fill: #fefefe; }
+.svg-collar, .svg-pleat { fill: none; stroke: #ef7181; stroke-width: 4; }
+.svg-bow { fill: #f5bd53; stroke: #344b6c; stroke-width: 3; }
+.svg-skirt { fill: #f5bd53; stroke: #344b6c; stroke-width: 3; }
+.svg-shoe { fill: none; stroke: #344b6c; stroke-width: 9; }
+.fan-stage-floor { position: absolute; right: 0; bottom: 0; left: 0; height: 22px; border-top: 2px solid #e9908f; background: #f5b8b0; transform: perspective(140px) rotateX(20deg); transform-origin: bottom; }
+.fan-stage-caption { position: absolute; right: 27px; bottom: 23px; left: 27px; z-index: 3; display: flex; align-items: end; justify-content: space-between; color: #bd707d; font-size: 8px; font-weight: 700; letter-spacing: .15em; }
+.fan-stage-caption b { color: #fff8f3; font-size: 10px; }
+.fan-stage-caption i { color: #e8757a; font-size: 18px; font-style: normal; vertical-align: -2px; }
+.fan-chat-panel { display: flex; min-width: 0; flex-direction: column; background: #fffdfb; }
+.fan-chat-head { display: flex; align-items: center; justify-content: space-between; padding: 43px 42px 25px; border-bottom: 1px solid #f2e6e2; }
+.fan-chat-head h2 { margin: 7px 0 0; color: #253652; font-family: Georgia, serif; font-size: 28px; font-weight: 400; }
+.fan-online { color: #a38e92; letter-spacing: .04em; }
+.fan-online i { width: 6px; height: 6px; background: #65b99b; box-shadow: 0 0 0 4px #e1f2e9; }
+.fan-topic-strip { display: flex; gap: 8px; overflow-x: auto; padding: 17px 42px; border-bottom: 1px solid #f5ece9; scrollbar-width: none; }
+.fan-topic-strip::-webkit-scrollbar { display: none; }
+.fan-topic-strip > span { flex: 0 0 auto; align-self: center; margin-right: 4px; color: #c6a8a9; font-size: 9px; font-weight: 700; letter-spacing: .14em; }
+.fan-topic-strip button { flex: 0 0 auto; padding: 7px 10px; border: 1px solid #f1d8d3; border-radius: 99px; background: #fff; color: #a46975; font-size: 11px; }
+.fan-topic-strip button:hover { border-color: #e8898f; background: #fff3f0; color: #d45168; }
+.fan-messages { min-height: 0; flex: 1; overflow-y: auto; padding: 30px 42px; }
+.fan-message { display: flex; gap: 12px; max-width: 620px; margin-bottom: 24px; }
+.fan-message-user { margin-left: auto; flex-direction: row-reverse; text-align: right; }
+.fan-avatar { display: grid; flex: 0 0 auto; place-items: center; width: 31px; height: 31px; border-radius: 50%; background: #f7c1b8; color: #9c4d61; font-family: Georgia, serif; font-size: 14px; }
+.fan-message-user .fan-avatar { background: #c9dff0; color: #4e6f8d; }
+.fan-message-meta { display: block; margin: 3px 0 7px; color: #bea4a5; font-size: 10px; letter-spacing: .04em; }
+.fan-message p { margin: 0; color: #526176; font-size: 13px; line-height: 1.75; }
+.fan-message-user p { display: inline-block; padding: 10px 13px; border-radius: 13px 13px 3px 13px; background: #edf4f8; color: #4b647b; text-align: left; }
+.fan-reactions { display: flex; align-items: center; gap: 6px; margin-top: 9px; color: #c2a6a7; font-size: 10px; }
+.fan-typing { display: flex; align-items: center; gap: 4px; margin: 5px 0 0 43px; color: #c29ea2; font-size: 11px; }
+.fan-typing span { width: 5px; height: 5px; border-radius: 50%; background: #e8898f; animation: fan-bounce 1s ease-in-out infinite; }
+.fan-typing span:nth-child(2) { animation-delay: .15s; }.fan-typing span:nth-child(3) { animation-delay: .3s; }
+.fan-compose { margin: 0 34px 30px; padding: 13px 14px 12px; border: 1px solid #efdeda; border-radius: 16px; background: #fff; box-shadow: 0 12px 28px rgba(149, 96, 98, .08); }
+.fan-compose textarea { display: block; width: 100%; min-height: 38px; resize: none; border: 0; outline: 0; color: #43556d; font: inherit; font-size: 13px; line-height: 1.6; }
+.fan-compose textarea::placeholder { color: #c8b7b7; }
+.fan-compose-tools { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; color: #c4acad; font-size: 10px; }
+.fan-compose-tools button { display: grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 7px; background: #fff2ef; color: #d97983; }
+.fan-compose-tools svg { width: 13px; }.fan-send { display: grid; place-items: center; float: right; width: 34px; height: 34px; margin-top: -4px; border: 0; border-radius: 10px; background: #ef7181; color: #fff; }
+.fan-send:disabled { cursor: not-allowed; background: #f2d8d4; }.fan-send svg { width: 16px; }
+.fan-rail-backdrop { position: fixed; inset: 0; z-index: 30; border: 0; background: rgba(40, 45, 67, .28); }
+@keyframes fan-twinkle { 0%, 100% { transform: scale(.8) rotate(0); opacity: .55; } 50% { transform: scale(1.15) rotate(18deg); opacity: 1; } }
+@keyframes fan-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-11px) rotate(8deg); } }
+@keyframes fan-spin { to { transform: rotate(360deg); } }
+@keyframes fan-sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(3deg) translateY(-5px); } }
+@keyframes fan-bounce { 0%, 80%, 100% { transform: translateY(0); opacity: .5; } 40% { transform: translateY(-4px); opacity: 1; } }
+@media (max-width: 1100px) { .fan-layout { grid-template-columns: 190px minmax(330px, .9fr) minmax(390px, 1.1fr); }.fan-chat-head, .fan-topic-strip, .fan-messages { padding-right: 26px; padding-left: 26px; }.fan-compose { margin-right: 24px; margin-left: 24px; } }
+@media (max-width: 860px) { .fan-layout { display: block; }.fan-rail { position: fixed; inset: 72px auto 0 0; z-index: 40; width: 220px; transform: translateX(-100%); transition: transform .25s ease; box-shadow: 14px 0 30px rgba(80, 45, 60, .12); }.fan-rail.is-open { transform: translateX(0); }.fan-stage-panel { min-height: 430px; }.fan-stage-art { height: 95%; }.fan-chat-panel { min-height: calc(100vh - 502px); }.fan-chat-head { padding-top: 28px; } }
+@media (max-width: 560px) { .fan-topbar { height: 64px; padding: 0 16px; }.fan-layout { min-height: calc(100vh - 64px); }.fan-top-actions { gap: 9px; }.fan-live { display: none; }.fan-stage-panel { min-height: 385px; padding: 30px 22px 20px; }.fan-stage-copy h1 { font-size: 34px; }.fan-stage-copy p { max-width: 220px; font-size: 11px; }.fan-idol-svg { right: -17%; bottom: 10px; width: 104%; opacity: .9; }.fan-stage-caption { right: 17px; bottom: 16px; left: 17px; }.fan-chat-head, .fan-topic-strip, .fan-messages { padding-right: 18px; padding-left: 18px; }.fan-chat-head h2 { font-size: 24px; }.fan-compose { margin: 0 12px 14px; } }
+
+/* Kimi-inspired fan conversation surface. */
+.fan-page { --fan-ink:#1f2329; --fan-muted:#70757d; --fan-line:#e8e9eb; --fan-paper:#fff; --fan-rail:#f7f7f5; --fan-coral:#ed7180; --fan-blush:#fff1ee; min-height:100vh; display:flex; overflow:hidden; background:var(--fan-paper); color:var(--fan-ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; }
+.fan-loading { position:fixed; inset:0; z-index:100; display:grid; place-items:center; background:#fffaf8; animation:fan-loading-in .18s ease both; }
+.fan-loading-card { display:flex; flex-direction:column; align-items:center; gap:14px; color:#9b6570; font-size:11px; letter-spacing:.14em; }
+.fan-loading-card img { width:min(240px,58vw); height:auto; filter:drop-shadow(0 7px 12px rgba(237,113,128,.13)); }
+.fan-loading-dots { display:flex; gap:5px; }
+.fan-loading-dots i,.fan-typing i { width:5px; height:5px; border-radius:50%; background:var(--fan-coral); animation:fan-dot 1s ease-in-out infinite; }
+.fan-loading-dots i:nth-child(2),.fan-typing i:nth-child(2){animation-delay:.14s}.fan-loading-dots i:nth-child(3),.fan-typing i:nth-child(3){animation-delay:.28s}
+.fan-sidebar { flex:0 0 240px; display:flex; flex-direction:column; min-height:100vh; padding:18px 14px 14px; background:var(--fan-rail); border-right:1px solid var(--fan-line); }
+.fan-sidebar-top,.fan-mobile-head,.fan-conversation-head,.fan-composer-actions { display:flex; align-items:center; justify-content:space-between; }
+.fan-wordmark { display:flex; align-items:center; gap:9px; border:0; background:transparent; color:var(--fan-ink); font-size:14px; font-weight:600; }
+.fan-wordmark svg { width:18px; color:var(--fan-coral); }
+.fan-icon-control { display:grid; place-items:center; width:32px; height:32px; border:0; border-radius:8px; background:transparent; color:#73777e; }
+.fan-icon-control:hover { background:#ececea; color:var(--fan-ink); }.fan-icon-control svg { width:17px; height:17px; }
+.fan-new-chat { display:flex; align-items:center; gap:9px; width:100%; height:38px; margin:28px 0 25px; padding:0 12px; border:1px solid #dedfdd; border-radius:8px; background:#fff; color:var(--fan-ink); font-size:13px; }
+.fan-new-chat:hover { border-color:#c9cac7; background:#fcfcfb; }.fan-new-chat svg { width:16px; }
+.fan-nav p { margin:0 10px 8px; color:#999d9f; font-size:11px; }.fan-nav button { display:flex; align-items:center; gap:10px; width:100%; height:39px; margin:2px 0; padding:0 10px; border:0; border-radius:8px; background:transparent; color:#666b72; font-size:13px; text-align:left; }.fan-nav button:hover,.fan-nav button.is-active { background:#ececea; color:var(--fan-ink); }.fan-nav button.is-active { font-weight:550; }.fan-nav svg { width:16px; height:16px; }
+.fan-sidebar-bottom { margin-top:auto; padding-top:12px; border-top:1px solid var(--fan-line); }.fan-profile { display:flex; align-items:center; gap:9px; width:100%; padding:8px 9px; border:0; border-radius:8px; background:transparent; color:#5d636a; text-align:left; }.fan-profile:hover { background:#ececea; }.fan-profile > svg { width:18px; }.fan-profile span { display:flex; flex-direction:column; gap:2px; }.fan-profile b { color:var(--fan-ink); font-size:12px; font-weight:500; }.fan-profile small { color:#9a9ea2; font-size:10px; }
+.fan-shell { min-width:0; flex:1; display:grid; grid-template-columns:minmax(250px,1fr) minmax(480px,720px); justify-content:center; background:#fff; }.fan-mobile-head { display:none; }.fan-context { position:relative; overflow:hidden; min-height:100vh; padding:clamp(65px,10vh,130px) clamp(28px,6vw,100px); background:#fff8f6; border-right:1px solid var(--fan-line); }.fan-eyebrow { margin:0 0 14px; color:#bd7882; font-size:10px; font-weight:600; letter-spacing:.12em; }.fan-context h1 { margin:0; color:#252b34; font-size:clamp(25px,2.8vw,40px); font-weight:450; line-height:1.25; }.fan-context-copy { max-width:280px; margin-top:22px; color:#8a7d80; font-size:13px; line-height:1.8; }.fan-context-knob { position:absolute; right:-24px; bottom:98px; width:120px; opacity:.14; transform:rotate(-18deg); }.fan-context-grid { position:absolute; right:12%; bottom:14%; display:grid; grid-template-columns:repeat(2,18px); gap:12px; opacity:.34; }.fan-context-grid span { width:18px; height:18px; border:2px solid #ef9ca6; border-radius:50%; }.fan-context-grid span:nth-child(2n){border-radius:4px;transform:rotate(45deg)}
+.fan-conversation { min-width:0; display:flex; flex-direction:column; min-height:100vh; background:#fff; }.fan-conversation-head { padding:28px 32px 20px; border-bottom:1px solid var(--fan-line); }.fan-conversation-head h2 { margin:0; font-size:20px; font-weight:550; }.fan-conversation-head .fan-eyebrow { margin-bottom:7px; }
+.fan-topic-strip { display:flex; gap:8px; overflow-x:auto; padding:15px 32px; border-bottom:1px solid #f0f0ef; scrollbar-width:none; }.fan-topic-strip::-webkit-scrollbar{display:none}.fan-topic-strip button { flex:0 0 auto; padding:7px 11px; border:1px solid #e3e4e2; border-radius:8px; background:#fff; color:#73777d; font-size:12px; }.fan-topic-strip button:hover{border-color:#f0afb5;background:var(--fan-blush);color:#b34f5c}
+.fan-messages { min-height:0; flex:1; overflow-y:auto; padding:30px 32px 20px; }.fan-message { display:flex; gap:11px; max-width:620px; margin:0 auto 26px; }.fan-message-user { flex-direction:row-reverse; }.fan-avatar { display:grid; flex:0 0 auto; place-items:center; width:28px; height:28px; border-radius:50%; background:#edf0f2; color:#646c75; font-size:12px; }.fan-avatar img { width:100%; height:100%; border-radius:inherit; object-fit:cover; }.fan-avatar-assistant { background:#ffe3e0; color:#c45e69; }.fan-message > div:last-child { min-width:0; }.fan-message span { display:block; margin:3px 0 7px; color:#989da2; font-size:11px; }.fan-message p { margin:0; color:#373c43; font-size:14px; line-height:1.72; white-space:pre-wrap; overflow-wrap:anywhere; }.fan-message-user p { padding:9px 12px; border-radius:10px 10px 3px 10px; background:#f3f4f4; }.fan-typing { display:flex; align-items:center; gap:5px; max-width:620px; margin:0 auto; color:#9a9ea2; font-size:11px; }.fan-typing span { margin-left:3px; }
+.fan-composer { margin:8px 24px 0; padding:12px 14px 10px; border:1px solid #dfe1df; border-radius:12px; background:#fff; box-shadow:0 10px 30px rgba(30,35,40,.06); }.fan-composer textarea { display:block; width:100%; min-height:34px; resize:none; border:0; outline:0; color:#2e3338; font:inherit; font-size:14px; line-height:1.55; }.fan-composer textarea::placeholder{color:#a8adb1}.fan-composer-actions{justify-content:flex-start; gap:8px; color:#a0a4a8; font-size:11px}.fan-composer-actions .fan-send{display:grid;place-items:center;width:30px;height:30px;margin-left:auto;border:0;border-radius:8px;background:var(--fan-ink);color:#fff}.fan-composer-actions .fan-send:disabled{background:#e6e7e6;color:#a9adaf}.fan-send svg{width:16px;height:16px}.fan-disclaimer { margin:10px 0 16px; color:#b0b3b5; font-size:10px; text-align:center; }
+.fan-sidebar-backdrop { display:none; }.fan-loading.is-leaving{animation:fan-loading-out .22s ease forwards}@keyframes fan-loading-in{from{opacity:0}to{opacity:1}}@keyframes fan-loading-out{to{opacity:0;visibility:hidden}}@keyframes fan-dot{0%,80%,100%{transform:translateY(0);opacity:.35}40%{transform:translateY(-4px);opacity:1}}
+@media (max-width:900px){.fan-sidebar{position:fixed;inset:0 auto 0 0;z-index:50;width:240px;transform:translateX(-100%);transition:transform .2s ease;box-shadow:10px 0 26px rgba(30,35,40,.12)}.fan-sidebar.is-open{transform:translateX(0)}.fan-sidebar-backdrop{display:block;position:fixed;inset:0;z-index:40;border:0;background:rgba(24,28,32,.2)}.fan-shell{display:flex;flex-direction:column;width:100%;min-height:100vh}.fan-mobile-head{display:flex;height:56px;padding:0 14px;border-bottom:1px solid var(--fan-line);font-size:14px;font-weight:550}.fan-context{min-height:220px;padding:38px 24px;border-right:0;border-bottom:1px solid var(--fan-line)}.fan-context h1{font-size:27px}.fan-context-copy{margin-top:12px}.fan-context-knob{right:8px;bottom:-12px;width:100px}.fan-context-grid{right:12%;bottom:20%}.fan-conversation{min-height:calc(100vh - 276px)}}
+@media (max-width:560px){.fan-conversation-head{padding:22px 18px 16px}.fan-topic-strip{padding:12px 18px}.fan-messages{padding:24px 18px 14px}.fan-composer{margin:8px 12px 0}.fan-disclaimer{margin-bottom:12px}.fan-context{min-height:205px;padding:28px 18px}.fan-context h1{font-size:25px}.fan-context-copy{font-size:12px}}
+@media (prefers-reduced-motion:reduce){.fan-loading-dots i,.fan-typing i{animation:none}.fan-loading{animation:none}}
+
+/* Official Gakuen loading texture reused behind the conversation surface. */
+.fan-conversation { background-color:#f39800; background-image:url('/assets/gakuen/loading/bg_pc.png'),linear-gradient(0,#ff7600 0,#f39800 100%); background-position:center top; background-size:100vw auto,100% 100%; background-repeat:repeat,no-repeat; }
+@media (max-width:900px){.fan-conversation { background-image:url('/assets/gakuen/loading/bg.png'),linear-gradient(0,#ff7600 0,#f39800 100%); }}
+
+/* Full-width conversation stage using the official loading texture. */
+.fan-shell { display:flex; justify-content:center; background-color:#f39800; background-image:url('/assets/gakuen/loading/bg_pc.png'),linear-gradient(0,#ff7600 0,#f39800 100%); background-position:center top; background-size:100vw auto,100% 100%; background-repeat:repeat,no-repeat; animation:fan-pattern-drift 18s ease-in-out infinite alternate; }
+.fan-conversation { width:min(100%,940px); min-height:100vh; background:transparent; }
+.fan-conversation-head,.fan-topic-strip { background:rgba(255,255,255,.72); backdrop-filter:blur(8px); }
+.fan-messages { background:rgba(255,255,255,.12); }
+.fan-message { align-items:flex-start; animation:fan-message-in .42s cubic-bezier(.2,.7,.2,1) both; }
+.fan-avatar { width:44px; height:44px; font-size:15px; box-shadow:0 5px 12px rgba(114,70,38,.16); }
+.fan-avatar-assistant { animation:fan-avatar-breathe 2.8s ease-in-out infinite; }
+.fan-message p { padding:11px 14px; border-radius:12px 12px 12px 3px; background:rgba(255,255,255,.88); box-shadow:0 5px 14px rgba(123,77,42,.1); font-family:"Yu Gothic UI","Hiragino Kaku Gothic ProN","Noto Sans JP","PingFang SC",sans-serif; font-weight:600; }
+.fan-message-user p { background:rgba(255,248,236,.92); border-radius:12px 12px 3px 12px; }
+.fan-message span { color:rgba(61,57,52,.72); font-family:"Yu Gothic UI","Hiragino Kaku Gothic ProN","Noto Sans JP","PingFang SC",sans-serif; font-weight:600; }
+.fan-composer { background:rgba(255,255,255,.9); backdrop-filter:blur(10px); }
+.fan-disclaimer { color:rgba(83,58,34,.74); font-weight:600; }
+@keyframes fan-pattern-drift { from { background-position:center 0,0 0; } to { background-position:center -88px,0 0; } }
+@keyframes fan-message-in { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fan-avatar-breathe { 0%,100% { transform:translateY(0); box-shadow:0 5px 12px rgba(114,70,38,.16); } 50% { transform:translateY(-3px); box-shadow:0 9px 17px rgba(114,70,38,.24); } }
+@media (max-width:900px){.fan-shell { background-image:url('/assets/gakuen/loading/bg.png'),linear-gradient(0,#ff7600 0,#f39800 100%); }.fan-conversation { width:100%; }}
+@media (prefers-reduced-motion:reduce){.fan-shell,.fan-message,.fan-avatar-assistant{animation:none}}
+
+/* Let the conversation use every pixel left by the navigation rail. */
+.fan-conversation { width:100%; max-width:none; }
+.fan-message { max-width:none; }
+.fan-sidebar { transition:flex-basis .22s ease,width .22s ease,padding .22s ease,border-color .22s ease; }
+.fan-page.is-sidebar-collapsed .fan-sidebar { flex-basis:0; width:0; padding-right:0; padding-left:0; overflow:hidden; border-right-color:transparent; }
+.fan-sidebar-reopen { position:fixed; top:18px; left:18px; z-index:60; border:1px solid rgba(255,255,255,.55); background:rgba(255,255,255,.82); box-shadow:0 6px 16px rgba(91,59,33,.16); }
+@media (max-width:900px){.fan-page.is-sidebar-collapsed .fan-sidebar { flex-basis:auto; width:240px; padding:18px 14px 14px; border-right-color:var(--fan-line); }.fan-sidebar-reopen { display:none; }}
+
+/* Extra texture and hierarchy for the navigation and conversation header. */
+.fan-sidebar { position:relative; overflow:hidden; background:#fff8ee; background-image:linear-gradient(180deg,rgba(255,255,255,.82),rgba(255,243,224,.92)); }
+.fan-sidebar::before { content:""; position:absolute; inset:0; background:url('/assets/gakuen/loading/bg_pc.png') center top / 470px auto repeat; opacity:.1; pointer-events:none; animation:fan-sidebar-pattern 24s linear infinite; }
+.fan-sidebar::after { content:""; position:absolute; right:-35px; bottom:60px; width:170px; height:170px; background:url('/assets/gakuen/knob.svg') center/contain no-repeat; opacity:.09; pointer-events:none; transform:rotate(-18deg); }
+.fan-sidebar > * { position:relative; z-index:1; }
+.fan-sidebar-feature { display:flex; align-items:center; gap:10px; margin:0 6px 20px; padding:10px 11px; border:1px solid rgba(231,164,91,.35); border-radius:12px; background:rgba(255,255,255,.58); color:#9e6f4b; font-size:11px; line-height:1.5; }
+.fan-sidebar-feature img { width:28px; height:28px; object-fit:contain; opacity:.8; }
+.fan-sidebar-feature b { color:#d77b3f; font-size:9px; letter-spacing:.08em; }
+.fan-conversation { position:relative; }
+.fan-conversation-head { position:relative; overflow:hidden; background-color:rgba(255,255,255,.68); background-image:url('/assets/gakuen/loading/bg_pc.png'),linear-gradient(90deg,rgba(255,255,255,.82),rgba(255,246,229,.7)); background-position:center top; background-size:330px auto,100% 100%; background-repeat:repeat,no-repeat; }
+.fan-conversation-head::after { content:""; position:absolute; right:32px; bottom:-13px; width:92px; height:32px; border-top:2px solid rgba(236,141,66,.6); border-radius:50%; transform:rotate(-8deg); opacity:.7; }
+.fan-avatar-producer { background:linear-gradient(145deg,#ff9f22,#f46d12); }
+.fan-avatar-producer img { object-fit:contain; padding:7px; }
+.fan-composer.is-hero { position:absolute; right:clamp(18px,8vw,120px); bottom:35%; left:clamp(18px,8vw,120px); margin:0; transform:translateY(50%); box-shadow:0 16px 38px rgba(125,71,24,.2); }
+.fan-composer.is-docked { animation:fan-composer-dock .42s ease both; }
+@keyframes fan-sidebar-pattern { from { background-position:center 0; } to { background-position:center -180px; } }
+@keyframes fan-composer-dock { from { opacity:.72; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+@media (max-width:900px){.fan-conversation-head { background-size:230px auto,100% 100%; }.fan-composer.is-hero { right:18px; bottom:28%; left:18px; }}
+@media (prefers-reduced-motion:reduce){.fan-sidebar::before,.fan-composer.is-docked{animation:none}}
+
+/* Final restrained pass: the surface stays quiet until a conversation starts. */
+.fan-page { background:#f7f5f1; color:#24272b; font-family:"Yu Gothic UI","Hiragino Kaku Gothic ProN","Noto Sans JP","PingFang SC",sans-serif; }
+.fan-sidebar { background:#f5f3ef; border-right:1px solid #e7e3dd; }
+.fan-sidebar::before { opacity:.035; animation:none; }
+.fan-sidebar::after { opacity:.045; }
+.fan-sidebar-feature { margin-top:4px; margin-bottom:22px; border-color:#e9e3db; background:rgba(255,255,255,.46); color:#8c8175; }
+.fan-sidebar-feature b { color:#b6774e; }
+.fan-shell { background:#fbfaf8; background-image:none; animation:none; }
+.fan-conversation { background:#fbfaf8; }
+.fan-conversation-head { padding:30px clamp(24px,4vw,56px) 22px; border-bottom:1px solid #ebe8e3; background:#fff; background-image:url('/assets/gakuen/loading/bg_pc.png'); background-position:right -180px top; background-size:260px auto; background-repeat:no-repeat; }
+.fan-conversation-head::after { right:clamp(24px,4vw,56px); border-color:#e5a06e; }
+.fan-topic-strip { padding-right:clamp(24px,4vw,56px); padding-left:clamp(24px,4vw,56px); border-bottom:1px solid #ebe8e3; background:#fff; backdrop-filter:none; }
+.fan-messages { padding-right:clamp(24px,7vw,110px); padding-left:clamp(24px,7vw,110px); background:transparent; }
+.fan-message { gap:14px; margin-bottom:28px; animation:fan-message-in .32s ease both; }
+.fan-message p { background:#fff; box-shadow:0 3px 12px rgba(42,35,29,.06); font-weight:500; }
+.fan-message-user p { background:#fff2df; }
+.fan-avatar-producer { border-radius:12px; }
+.fan-composer { margin-right:clamp(24px,7vw,110px); margin-left:clamp(24px,7vw,110px); box-shadow:0 8px 24px rgba(42,35,29,.08); }
+.fan-composer.is-hero { top:52%; right:clamp(24px,12vw,180px); bottom:auto; left:clamp(24px,12vw,180px); transform:translateY(-50%); }
+.fan-composer.is-docked { position:relative; top:auto; right:auto; bottom:auto; left:auto; transform:none; margin-top:8px; }
+.fan-disclaimer { color:#9b9289; font-weight:400; }
+@media (max-width:900px){.fan-conversation-head { padding-right:18px; padding-left:18px; background-position:right -120px top; background-size:190px auto; }.fan-messages { padding-right:18px; padding-left:18px; }.fan-composer { margin-right:12px; margin-left:12px; }.fan-composer.is-hero { right:18px; left:18px; }}
+@media (prefers-reduced-motion:reduce){.fan-sidebar::before,.fan-message,.fan-composer.is-docked{animation:none}}

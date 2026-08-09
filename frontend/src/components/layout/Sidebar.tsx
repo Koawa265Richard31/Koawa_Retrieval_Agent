@@ -48,7 +48,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     createSession,
     deleteSession,
     renameSession,
-    selectSession,
     fetchSessions
   } = useChatStore();
   const [query, setQuery] = React.useState("");
@@ -108,9 +107,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     onClose();
   };
 
-  const openSession = async (id: string) => {
+  const openSession = (id: string) => {
     if (renamingId === id) return;
-    await selectSession(id);
     navigate(`/chat/${id}`);
     onClose();
   };
@@ -224,9 +222,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         key={session.id}
                         role="button"
                         tabIndex={0}
-                        onClick={() => openSession(session.id).catch(() => null)}
+                        onClick={() => openSession(session.id)}
                         onKeyDown={(event) => {
-                          if (event.key === "Enter") openSession(session.id).catch(() => null);
+                          if (event.key === "Enter") openSession(session.id);
                         }}
                         className={cn(
                           "group flex min-h-10 cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm transition",

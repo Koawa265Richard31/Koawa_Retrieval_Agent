@@ -12,6 +12,9 @@ const RegisterPage = React.lazy(() =>
 const ChatPage = React.lazy(() =>
   import("@/pages/ChatPage").then((module) => ({ default: module.ChatPage }))
 );
+const FanChatPage = React.lazy(() =>
+  import("@/pages/FanChatPage").then((module) => ({ default: module.FanChatPage }))
+);
 const NotFoundPage = React.lazy(() =>
   import("@/pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage }))
 );
@@ -160,6 +163,16 @@ export const router = createBrowserRouter([
     path: "/chat/:sessionId",
     element: <RequireAuth>{lazyPage(<ChatPage />)}</RequireAuth>
   },
+  {
+    path: "/fan",
+    element: <RequireAuth>{lazyPage(<FanChatPage />)}</RequireAuth>
+  },
+  ...(import.meta.env.DEV
+    ? [{
+        path: "/fan-preview",
+        element: lazyPage(<FanChatPage />)
+      }]
+    : []),
   {
     path: "/admin",
     element: <RequireAdmin>{lazyPage(<AdminLayout />)}</RequireAdmin>,
