@@ -22,17 +22,19 @@ import com.koawa.agent.framework.exception.ClientException;
 import java.util.Locale;
 
 public enum ChatExecutionMode {
+    AUTO,
     RAG,
-    AGENT;
+    AGENT,
+    AGENTIC;
 
     public static ChatExecutionMode from(String value) {
         if (value == null || value.isBlank()) {
-            return RAG;
+            return AUTO;
         }
         try {
             return valueOf(value.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException exception) {
-            throw new ClientException("执行模式仅支持 RAG、AGENT");
+            throw new ClientException("执行模式仅支持 AUTO、RAG、AGENT、AGENTIC");
         }
     }
 }
