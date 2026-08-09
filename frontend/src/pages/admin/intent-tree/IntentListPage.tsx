@@ -153,9 +153,9 @@ const resolveKindBadge = (value: number) => {
 };
 
 const resolveLevelBadgeClass = (value: number) => {
-  if (value === 0) return "border-[#ffd591] bg-[#fff7e6] text-[#e07b00]";
-  if (value === 1) return "border-[#b7eb8f] bg-[#e8f5e9] text-[#2f9e44]";
-  if (value === 2) return "border-[#f0c0c0] bg-[#fdeed8] text-[#c07070]";
+  if (value === 0) return "admin-level-0 border-[#ffd591] bg-[#fff7e6] text-[#e07b00]";
+  if (value === 1) return "admin-level-1 border-[#b7eb8f] bg-[#e8f5e9] text-[#2f9e44]";
+  if (value === 2) return "admin-level-2 border-[#f0c0c0] bg-[#fdeed8] text-[#c07070]";
   return "border-slate-200 bg-slate-50 text-slate-600";
 };
 
@@ -651,8 +651,8 @@ export function IntentListPage() {
                         variant={row.enabled === 0 ? "secondary" : "default"}
                         className={cn(
                           row.enabled === 0
-                            ? "border-[#e5e5e5] bg-[#f5f5f5] text-[#6e6e73] font-semibold"
-                            : "border-[#b7eb8f] bg-[#e8f5e9] text-[#2f9e44] font-semibold"
+                            ? "admin-status-muted border-[#e5e5e5] bg-[#f5f5f5] text-[#6e6e73] font-semibold"
+                            : "admin-status-success border-[#b7eb8f] bg-[#e8f5e9] text-[#2f9e44] font-semibold"
                         )}
                       >
                         {row.enabled === 0 ? "禁用" : "启用"}
