@@ -66,4 +66,9 @@ public class KnowledgeDocumentUploadRequest {
      * 仅在 processMode=pipeline 时有效
      */
     private String pipelineId;
+    /**
+     * 源端发布时间/更新时间（ISO8601 或毫秒时间戳，用于检索时间加权）
+     */
+    private String sourceTime;
+
 }

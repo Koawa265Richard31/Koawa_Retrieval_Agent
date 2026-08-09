@@ -100,6 +100,10 @@ public class KnowledgeChunkDO {
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)
+    /**
+     * 源端发布时间/更新时间（继承文档，用于检索时间加权）
+     */
+    private Date sourceTime;
     private Date createTime;
 
     /**

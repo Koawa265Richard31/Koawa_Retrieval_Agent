@@ -150,6 +150,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
                 .chunkStrategy(modeConfig.chunkingMode() != null ? modeConfig.chunkingMode().getValue() : null)
                 .chunkConfig(modeConfig.chunkConfig())
                 .pipelineId(modeConfig.pipelineId())
+                .sourceTime(parseSourceTime(requestParam.getSourceTime()))
                 .createdBy(UserContext.getUsername())
                 .updatedBy(UserContext.getUsername())
                 .build();
@@ -253,12 +254,17 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
     }
 
     private int persistChunksAndVectorsAtomically(String collectionName, String docId, List<VectorChunk> chunkResults) {
+        KnowledgeDocumentDO persistDocDO = documentMapper.selectById(docId);
+        Long sourceTimeEpoch = persistDocDO != null && persistDocDO.getSourceTime() != null
+                ? persistDocDO.getSourceTime().getTime() : System.currentTimeMillis();
+        attachSourceTime(chunkResults, new java.util.Date(sourceTimeEpoch));
         List<KnowledgeChunkCreateRequest> chunks = chunkResults.stream()
                 .map(vc -> {
                     KnowledgeChunkCreateRequest req = new KnowledgeChunkCreateRequest();
                     req.setChunkId(vc.getChunkId());
                     req.setIndex(vc.getIndex());
                     req.setContent(vc.getContent());
+                    req.setSourceTime(sourceTimeEpoch);
                     return req;
                 })
                 .toList();
@@ -643,6 +649,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
                             .index(each.getChunkIndex())
                             .build()
             ).toList();
+            attachSourceTime(vectorChunks, documentDO.getSourceTime());
             if (CollUtil.isEmpty(vectorChunks)) {
                 log.warn("启用文档时未找到任何 Chunk，跳过向量重建，docId={}", docId);
                 return;
@@ -843,6 +850,34 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
             fileStorageService.deleteByUrl(documentDO.getFileUrl());
         } catch (Exception e) {
             log.warn("删除文档存储文件失败, docId={}, fileUrl={}", documentDO.getId(), documentDO.getFileUrl(), e);
+        }
+    }
+
+    private java.util.Date parseSourceTime(String raw) {
+        if (cn.hutool.core.util.StrUtil.isBlank(raw)) {
+            return null;
+        }
+        try {
+            if (raw.matches("\\d{13}")) {
+                return new java.util.Date(Long.parseLong(raw));
+            }
+            if (raw.matches("\\d{10}")) {
+                return new java.util.Date(Long.parseLong(raw) * 1000);
+            }
+            return java.util.Date.from(java.time.OffsetDateTime.parse(raw).toInstant());
+        } catch (Exception e) {
+            log.warn("无法解析 sourceTime: {}", raw);
+            return null;
+        }
+    }
+
+    private void attachSourceTime(List<VectorChunk> chunks, java.util.Date sourceTime) {
+        if (sourceTime == null) {
+            return;
+        }
+        long epoch = sourceTime.getTime();
+        for (VectorChunk chunk : chunks) {
+            chunk.getMetadata().put("source_time", epoch);
         }
     }
 }

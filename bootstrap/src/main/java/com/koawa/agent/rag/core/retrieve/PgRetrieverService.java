@@ -51,10 +51,12 @@ public class PgRetrieverService implements RetrieverService {
 
         String vectorLiteral = toVectorLiteral(vector);
         // noinspection SqlDialectInspection,SqlNoDataSourceInspection
-        return jdbcTemplate.query("SELECT id, content, 1 - (embedding <=> ?::vector) AS score FROM t_knowledge_vector WHERE metadata->>'collection_name' = ? ORDER BY embedding <=> ?::vector LIMIT ?",
+        return jdbcTemplate.query("SELECT id, content, metadata->>'doc_id' AS doc_id, NULLIF(metadata->>'source_time', '') AS source_time, 1 - (embedding <=> ?::vector) AS score FROM t_knowledge_vector WHERE metadata->>'collection_name' = ? ORDER BY embedding <=> ?::vector LIMIT ?",
                 (rs, rowNum) -> RetrievedChunk.builder()
                         .id(rs.getString("id"))
                         .text(rs.getString("content"))
+                        .docId(rs.getString("doc_id"))
+                        .sourceTime(parseSourceTime(rs.getString("source_time")))
                         .score(rs.getFloat("score"))
                         .build(),
                 vectorLiteral, request.getCollectionName(), vectorLiteral, request.getTopK()
@@ -90,5 +92,16 @@ public class PgRetrieverService implements RetrieverService {
             sb.append(embedding[i]);
         }
         return sb.append("]").toString();
+    }
+
+    private Long parseSourceTime(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(raw);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

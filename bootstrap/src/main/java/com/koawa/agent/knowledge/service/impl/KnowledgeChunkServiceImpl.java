@@ -133,6 +133,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
                 .enabled(1)
                 .createdBy(UserContext.getUsername())
                 .updatedBy(UserContext.getUsername())
+                .sourceTime(toSourceTime(requestParam.getSourceTime(), documentDO.getSourceTime()))
                 .build();
 
         chunkMapper.insert(chunkDO);
@@ -492,6 +493,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
                 .chunkId(String.valueOf(chunkDO.getId()))
                 .embedding(vector)
                 .build();
+        attachSourceTime(chunk, chunkDO.getSourceTime());
         vectorStoreService.indexDocumentChunks(collectionName, docId, List.of(chunk));
 
         log.debug("同步 Chunk 到向量库成功, collectionName={}, docId={}, chunkId={}", collectionName, docId, chunkDO.getId());
@@ -547,5 +549,18 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
             return 0;
         }
         return tokenCounterService.countTokens(content);
+    }
+
+    private java.util.Date toSourceTime(Long epochMillis, java.util.Date fallback) {
+        if (epochMillis != null) {
+            return new java.util.Date(epochMillis);
+        }
+        return fallback;
+    }
+
+    private void attachSourceTime(VectorChunk chunk, java.util.Date sourceTime) {
+        if (sourceTime != null) {
+            chunk.getMetadata().put("source_time", sourceTime.getTime());
+        }
     }
 }

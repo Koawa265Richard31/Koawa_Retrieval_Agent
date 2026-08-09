@@ -144,6 +144,10 @@ public class KnowledgeDocumentDO {
     private String updatedBy;
 
     @TableField(fill = FieldFill.INSERT)
+    /**
+     * 源端发布时间/更新时间（攻略/档案时效基准，用于检索时间加权）
+     */
+    private Date sourceTime;
     private Date createTime;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)

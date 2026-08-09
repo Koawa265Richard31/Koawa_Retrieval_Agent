@@ -150,9 +150,11 @@ CREATE TABLE t_knowledge_document (
     updated_by       VARCHAR(20),
     create_time      TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time      TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    source_time      TIMESTAMP,
     deleted          SMALLINT      NOT NULL DEFAULT 0
 );
 CREATE INDEX idx_kb_id ON t_knowledge_document (kb_id);
+CREATE INDEX idx_doc_source_time ON t_knowledge_document (source_time);
 COMMENT ON TABLE t_knowledge_document IS '知识库文档表';
 
 CREATE TABLE t_knowledge_chunk (
@@ -169,9 +171,11 @@ CREATE TABLE t_knowledge_chunk (
     updated_by   VARCHAR(20),
     create_time  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    source_time  TIMESTAMP,
     deleted      SMALLINT    NOT NULL DEFAULT 0
 );
 CREATE INDEX idx_doc_id ON t_knowledge_chunk (doc_id);
+CREATE INDEX idx_chunk_source_time ON t_knowledge_chunk (source_time);
 COMMENT ON TABLE t_knowledge_chunk IS '知识库文档分块表';
 
 CREATE TABLE t_knowledge_document_chunk_log (

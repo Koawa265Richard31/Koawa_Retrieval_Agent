@@ -39,4 +39,9 @@ public class KnowledgeChunkCreateRequest {
      * 分块 ID
      */
     private String chunkId;
+    /**
+     * 源端时间（毫秒时间戳，继承文档，用于检索时间加权）
+     */
+    private Long sourceTime;
+
 }

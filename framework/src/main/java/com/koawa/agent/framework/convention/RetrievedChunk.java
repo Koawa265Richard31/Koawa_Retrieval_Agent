@@ -51,4 +51,14 @@ public class RetrievedChunk {
      * 数值越大表示与查询的相关性越高
      */
     private Float score;
+    /**
+     * 命中所属文档 ID（用于文档级时间加权与去重）
+     */
+    private String docId;
+
+    /**
+     * 源端时间（毫秒时间戳，来自向量元数据 source_time）
+     */
+    private Long sourceTime;
+
 }

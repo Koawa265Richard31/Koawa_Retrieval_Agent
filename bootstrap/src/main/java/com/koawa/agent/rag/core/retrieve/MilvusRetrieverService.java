@@ -86,10 +86,11 @@ public class MilvusRetrieverService implements RetrieverService {
         // TODO 需确认后续是否对分数较低数据进行限制，限制多少合适？0.65？
         // TODO 如果本次查询分数都较高，是否应该扩大查询范围？1.5倍？
         return results.get(0).stream()
-                .map(r -> new RetrievedChunk(
-                        Objects.toString(r.getEntity().get("id"), ""),
-                        Objects.toString(r.getEntity().get("content"), ""),
-                        r.getScore()))
+                .map(r -> RetrievedChunk.builder()
+                        .id(Objects.toString(r.getEntity().get("id"), ""))
+                        .text(Objects.toString(r.getEntity().get("content"), ""))
+                        .score(r.getScore())
+                        .build())
                 .collect(Collectors.toList());
     }
 
