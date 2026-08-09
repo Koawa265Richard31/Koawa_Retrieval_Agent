@@ -5,6 +5,7 @@ import App from "@/App";
 import { useAuthStore } from "@/stores/authStore";
 import { useThemeStore } from "@/stores/themeStore";
 import "@/styles/globals.css";
+import "@/styles/fan-lounge.css";
 
 useThemeStore.getState().initialize();
 useAuthStore.getState().checkAuth();
