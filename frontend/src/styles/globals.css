@@ -2449,10 +2449,6 @@ textarea {
   color: #a15c00;
   border-color: transparent;
 }
-.admin-layout .ui-badge[data-variant="outline"] {
-  color: #6e6e73;
-  border-color: #e8e9eb;
-}
 
 /* 输入框 / 下拉触发：焦点环橙色 */
 .admin-layout .ui-input:focus-visible,
