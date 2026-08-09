@@ -2381,3 +2381,93 @@ textarea {
 .admin-layout .admin-page-title {
   color: #1a1a1a;
 }
+
+
+/* ============================================================
+   管理控制台 · 批次A：共享层 token 与组件统一（学偶暖色语义集）
+   ============================================================ */
+.admin-layout {
+  /* 语义色 token（供后续批次页面复用，禁止再写硬编码 hex） */
+  --adm-brand: #f39800;
+  --adm-accent: #ff7600;
+  --adm-cream: #fff7ec;
+  --adm-cream-deep: #fff3e2;
+  --adm-blush: #fdeed8;
+  --adm-pink: #f0c0c0;
+  --adm-stage: #407040;
+  --adm-ink: #1a1a1a;
+  --adm-muted: #6e6e73;
+  --adm-line: #e8e9eb;
+  --adm-success: #2f9e44;
+  --adm-warn: #f39800;
+  --adm-danger: #c0392b;
+}
+
+/* 卡片：白卡 + 暖橙 eyebrow 点缀 */
+.admin-layout .ui-card {
+  border-color: rgba(232, 233, 235, 0.9);
+  background: rgba(255, 255, 255, 0.92);
+}
+.admin-layout .ui-card-header {
+  position: relative;
+}
+.admin-layout .ui-card-header::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1rem;
+  bottom: 1rem;
+  width: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #f39800 0%, #ff7600 100%);
+  opacity: 0.85;
+}
+
+/* 表格：暖奶油表头 + 暖色行 hover（覆盖 muted hover） */
+.admin-layout .ui-table-header {
+  background: #fff3e2;
+}
+.admin-layout .ui-table-head {
+  color: #6e6e73;
+  font-weight: 600;
+}
+.admin-layout .ui-table-row:hover {
+  background: #fff3e0 !important;
+}
+
+/* 徽标：default 暖橙系；secondary 暖粉底；outline 保留中性 */
+.admin-layout .ui-badge[data-variant="default"] {
+  background: #f39800;
+  color: #fff;
+  border-color: transparent;
+}
+.admin-layout .ui-badge[data-variant="default"]:hover {
+  background: #ff7600;
+}
+.admin-layout .ui-badge[data-variant="secondary"] {
+  background: #fdeed8;
+  color: #a15c00;
+  border-color: transparent;
+}
+.admin-layout .ui-badge[data-variant="outline"] {
+  color: #6e6e73;
+  border-color: #e8e9eb;
+}
+
+/* 输入框 / 下拉触发：焦点环橙色 */
+.admin-layout .ui-input:focus-visible,
+.admin-layout .ui-select-trigger:focus {
+  border-color: rgba(255, 118, 0, 0.6);
+  --tw-ring-color: rgba(255, 118, 0, 0.35);
+  box-shadow: 0 0 0 2px rgba(255, 118, 0, 0.18);
+}
+
+/* 开关激活态：橙色 */
+.admin-layout [role="switch"][data-state="checked"] {
+  background: #f39800 !important;
+}
+
+/* 主 CTA 斜切造型（仅主按钮使用，tab/次要按钮保持圆角） */
+.admin-layout .ui-button.admin-cta {
+  border-radius: 0 43.89px 0 43.89px;
+}

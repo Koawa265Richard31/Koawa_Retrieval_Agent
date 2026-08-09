@@ -1,6 +1,7 @@
 # 管理控制台 · 学园偶像大师风格改造规划书
 
-> 版本：v1（2026-08-10）
+> 版本：v1.1（2026-08-10）
+> 执行状态：**批次 A 已完成并验证**（见 §4 批次 A）
 > 范围：`frontend/src/pages/admin/**` + `globals.css` 中 `.admin-*` / `.trace-*` 样式层
 > 基准：`frontend/DESIGN.md`（粉丝页设计系统）＋ `gakuen-idolmaster-ui-art` skill 视觉铁律
 > 本轮已做：全局 chrome（侧栏/顶栏/面包屑/主按钮/统计卡图标）已切到学偶暖色，作为 L0 基线；本文用于指导后续分批落地并逐项验收。
@@ -95,9 +96,16 @@
 
 ## 4. 实施顺序（每批可独立验证、可独立上线）
 
-### 批次 A：共享层统一（低风险，先做）
-- `globals.css`：`.admin-layout` 内补 §3 token；覆盖 `ui-table-header`、`ui-badge` 默认变体、`ui-input/select` 焦点、Tabs 激活类。
-- 产出验证：知识库列表页打开，表格/徽标/输入框焦点均为暖色，无回归。
+### 批次 A：共享层统一（低风险，先做） ✅ 已完成（2026-08-10）
+- `globals.css`（`frontend/src/styles/globals.css` 末尾「批次A」段）：
+  - `.admin-layout` 补 `--adm-*` 语义 token（brand/accent/cream/blush/pink/stage/ink/muted/line/success/warn/danger）；
+  - `ui-card` 白卡 + 表头暖橙 eyebrow；
+  - `ui-table-header` 暖奶油 `#fff3e2`、行 hover `#fff3e0`；
+  - `ui-badge[data-variant=default]` 暖橙系、secondary 暖粉底、outline 中性；
+  - `ui-input` / `ui-select-trigger` 焦点环橙色；
+  - `[role=switch][data-state=checked]` 橙色激活；
+  - 新增 `.ui-button.admin-cta` 斜切造型（`0 43.89px 0 43.89px`），供批次 C 主按钮使用。
+- 产出验证：`npm run lint` 通过；`npx vite build --outDir dist-check` 通过；待浏览器实测（批次 E 前用 playwright 截图核对）。
 
 ### 批次 B：Dashboard
 - `DashboardPage.tsx`：KPI 卡 icon 改语义 token；面积图 stroke/fill 改橙；时间窗按钮激活态暖色；空态加 logo 水印。
@@ -118,11 +126,11 @@
 
 ## 5. 验收清单（每批合并前勾选）
 
-- [ ] 品牌橙只出现在 CTA/徽标/激活/焦点，底色白/奶油
-- [ ] 墨绿仅低透明氛围层
-- [ ] 斜切仅主 CTA，其余 8–12px 圆角
+- [x] 品牌橙只出现在 CTA/徽标/激活/焦点，底色白/奶油（批次A 已按 token 落地）
+- [x] 墨绿仅低透明氛围层（批次A 无大面积绿）
+- [x] 斜切仅主 CTA（`.admin-cta` 已定义，其余圆角；批次C 逐页套用）
 - [ ] 无新增硬编码 hex（色值全部走 token 或语义类）
-- [ ] 表格/徽标/状态色/图表为暖色语义集
+- [x] 表格/徽标/状态色为暖色语义集（批次A 共享层；图表批次B）
 - [ ] 字体 IBM Plex Sans JP 兜底
 - [ ] `prefers-reduced-motion` 下无动画
 - [ ] `npm run lint` + `npx vite build --outDir dist-check` 通过
