@@ -210,6 +210,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
                     .enabled(1)
                     .createdBy(username)
                     .updatedBy(username)
+                    .sourceTime(toSourceTime(request.getSourceTime(), documentDO.getSourceTime()))
                     .build();
             chunkDOList.add(chunkDO);
         }
