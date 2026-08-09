@@ -823,3 +823,30 @@
     animation: none;
   }
 }
+
+/* sena wallpaper as a faint stage layer on the right */
+.fan-shell::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: min(44vw, 580px);
+  background: url("/assets/gakuen/wallpaper/sena-wallpaper-pc.png") right top / cover no-repeat;
+  opacity: 0.1;
+  -webkit-mask-image: linear-gradient(to left, rgba(0, 0, 0, 1), transparent 88%);
+  mask-image: linear-gradient(to left, rgba(0, 0, 0, 1), transparent 88%);
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .fan-shell::after {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fan-shell::after {
+    animation: none;
+  }
+}
