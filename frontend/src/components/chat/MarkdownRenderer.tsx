@@ -173,6 +173,18 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   );
 }
 
+const GAMEKEE_CDN_HOSTS = ["https://cdnimg-v2.gamekee.com/", "https://cdnimg.gamekee.com/"];
+
+function toImageProxy(src?: string): string | undefined {
+  if (src) {
+    const proxied = GAMEKEE_CDN_HOSTS.find((host) => src.startsWith(host));
+    if (proxied) {
+      return `/api/koawa-agent/rag/v3/img-proxy?u=${encodeURIComponent(src)}`;
+    }
+  }
+  return src;
+}
+
 function MarkdownImage({ src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
   const [hasError, setHasError] = React.useState(false);
 
@@ -187,7 +199,7 @@ function MarkdownImage({ src, alt, ...props }: React.ImgHTMLAttributes<HTMLImage
 
   return (
     <img
-      src={src}
+      src={toImageProxy(src)}
       alt={alt || ""}
       className="my-3 max-w-full rounded-lg"
       onError={() => setHasError(true)}
