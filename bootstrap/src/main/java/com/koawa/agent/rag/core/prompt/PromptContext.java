@@ -64,6 +64,11 @@ public class PromptContext {
     private Map<String, List<RetrievedChunk>> intentChunks;
 
     /**
+     * 知识库最后更新时间（yyyy-MM-dd），用于系统提示词注入时效信息
+     */
+    private String kbUpdatedAt;
+
+    /**
      * 是否包含 MCP 上下文
      */
     public boolean hasMcp() {
@@ -77,3 +82,4 @@ public class PromptContext {
         return StrUtil.isNotBlank(kbContext);
     }
 }
+

@@ -49,12 +49,16 @@ agent:
     allowed-tool-ids: []
 
 rag:
+  search:
+    channels:
+      vector-global:
+        top-k-multiplier: 8
   time-weight:
     enabled: true
     weight: 0.25
     half-life-days: 180
     max-chunks-per-doc: 3
-    rerank-candidate-multiplier: 3
+    rerank-candidate-multiplier: 6
   agentic-retrieval:
     mode: off
     rollout-percentage: 0
@@ -242,3 +246,5 @@ app:
   demo-mode: false
   eval:
     enabled: true
+
+

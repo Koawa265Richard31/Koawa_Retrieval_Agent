@@ -58,7 +58,19 @@ public class RAGPromptService {
         String template = StrUtil.isNotBlank(plan.getBaseTemplate())
                 ? plan.getBaseTemplate()
                 : defaultTemplate(plan.getScene());
-        return StrUtil.isBlank(template) ? "" : PromptTemplateUtils.cleanupPrompt(template);
+        if (StrUtil.isBlank(template)) {
+            return "";
+        }
+        String cleaned = PromptTemplateUtils.cleanupPrompt(template);
+        if (StrUtil.isNotBlank(context.getKbUpdatedAt())) {
+            cleaned += "\n\n# 知识库时效信息\n\n"
+                    + "本知识库最后更新时间为 " + context.getKbUpdatedAt() + "。\n"
+                    + "当用户询问「最新」「最近实装」「更新时间」等时效性问题时，"
+                    + "请以知识库内文档标注的「实装时间/发布时间」为准判断新旧，"
+                    + "并在回答中明确给出该时间；回答中可自然提及知识库的更新情况"
+                    + "（例如「知识库更新于 " + context.getKbUpdatedAt() + "」），但不要机械地每次都说。";
+        }
+        return cleaned;
     }
 
     /**
@@ -245,3 +257,4 @@ public class RAGPromptService {
         return String.valueOf(node.getId());
     }
 }
+

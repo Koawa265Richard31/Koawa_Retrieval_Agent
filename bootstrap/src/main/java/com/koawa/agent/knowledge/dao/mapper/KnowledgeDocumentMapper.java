@@ -19,6 +19,22 @@ package com.koawa.agent.knowledge.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.koawa.agent.knowledge.dao.entity.KnowledgeDocumentDO;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+
+import java.util.Date;
 
 public interface KnowledgeDocumentMapper extends BaseMapper<KnowledgeDocumentDO> {
+
+    /**
+     * 查询某知识库下文档的最后更新时间（逻辑未删除的最大 update_time）
+     */
+    @Select("SELECT MAX(update_time) FROM t_knowledge_document WHERE kb_id = #{kbId} AND deleted = 0")
+    Date selectMaxUpdateTime(@Param("kbId") String kbId);
+
+    /**
+     * 查询全库文档的最后更新时间（逻辑未删除的最大 update_time）
+     */
+    @Select("SELECT MAX(update_time) FROM t_knowledge_document WHERE deleted = 0")
+    Date selectGlobalMaxUpdateTime();
 }

@@ -275,6 +275,20 @@ export function FanChatPage() {
             ))}
           </div>
           <div className="fan-messages" ref={scrollRef} aria-live="polite">
+            {!hasStarted && !hasConversation ? (
+              <div className="fan-welcome">
+                <img
+                  src="/assets/gakuen/logo_main.jpg"
+                  alt="学园偶像大师"
+                  className="fan-welcome-logo"
+                />
+                <p className="fan-eyebrow">GAKUMAS COMMUNITY CHAT</p>
+                <h2>欢迎来到练习室</h2>
+                <p className="fan-welcome-desc">
+                  从角色、P卡、活动到培养攻略，和偶像一起聊点什么吧。
+                </p>
+              </div>
+            ) : null}
             {hasStarted || hasConversation ? (
               <article className="fan-message fan-message-welcome">
                 <div className="fan-avatar fan-avatar-assistant">
@@ -350,3 +364,4 @@ export function FanChatPage() {
     </main>
   );
 }
+

@@ -39,6 +39,7 @@ import com.koawa.agent.rag.dto.IntentGroup;
 import com.koawa.agent.rag.dto.RetrievalContext;
 import com.koawa.agent.rag.dto.SubQuestionIntent;
 import com.koawa.agent.rag.config.SearchChannelProperties;
+import com.koawa.agent.rag.service.RagKnowledgeBaseInfoService;
 import com.koawa.agent.rag.service.handler.StreamTaskManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,6 +74,7 @@ public class StreamChatPipeline {
     private final RAGPromptService promptBuilder;
     private final PromptTemplateLoader promptTemplateLoader;
     private final StreamTaskManager taskManager;
+    private final RagKnowledgeBaseInfoService kbInfoService;
 
     /**
      * 执行流式对话管道
@@ -189,6 +191,7 @@ public class StreamChatPipeline {
                 ctx.getRewriteResult(),//改写后的问题和子问题
                 retrievalCtx,//检索到的知识库/MCP上下文
                 mergedGroup,//合并后的意图
+                ctx.getCollectionName(),//知识库集合（用于时效信息）
                 ctx.getHistory(),//历史对话
                 ctx.isDeepThinking(),
                 ctx.getCallback()//流式输出回调
@@ -220,7 +223,7 @@ public class StreamChatPipeline {
     }
 
     private StreamCancellationHandle streamLLMResponse(RewriteResult rewriteResult, RetrievalContext ctx,
-                                                       IntentGroup intentGroup, List<ChatMessage> history,
+                                                       IntentGroup intentGroup, String collectionName, List<ChatMessage> history,
                                                        boolean deepThinking, StreamCallback callback) {
         PromptContext promptContext = PromptContext.builder()
                 .question(rewriteResult.rewrittenQuestion())
@@ -229,6 +232,7 @@ public class StreamChatPipeline {
                 .mcpIntents(intentGroup.mcpIntents())
                 .kbIntents(intentGroup.kbIntents())
                 .intentChunks(ctx.getIntentChunks())
+                .kbUpdatedAt(kbInfoService.resolveLastUpdatedAt(collectionName))
                 .build();
 
         List<ChatMessage> messages = promptBuilder.buildStructuredMessages(
@@ -247,3 +251,4 @@ public class StreamChatPipeline {
         return llmService.streamChat(chatRequest, callback);
     }
 }
+

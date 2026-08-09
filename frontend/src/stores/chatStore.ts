@@ -287,7 +287,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       question: trimmed,
       conversationId: conversationId || undefined,
       deepThinking: deepThinkingEnabled ? true : undefined,
-      executionMode
+      executionMode,
+      collectionName: "gakumas-gamekee-pilot-v3"
     });
     const url = `${API_BASE_URL}/rag/v3/chat${query}`;
     const token = storage.getToken();
@@ -550,3 +551,4 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   }
 }));
+

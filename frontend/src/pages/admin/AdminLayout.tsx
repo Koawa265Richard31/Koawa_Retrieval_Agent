@@ -416,11 +416,13 @@ export function AdminLayout() {
       <aside className={cn("admin-sidebar", collapsed && "admin-sidebar--collapsed")}>
         <div className="admin-sidebar__brand">
           <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-            <div className="admin-sidebar__logo">K</div>
+            <div className="admin-sidebar__logo">
+              <img src="/assets/gakuen/logo_main.jpg" alt="学园偶像大师" />
+            </div>
             {!collapsed && (
               <div className="min-w-0">
-                <h1 className="admin-sidebar__title">Koawa Knowledge</h1>
-                <p className="admin-sidebar__subtitle">企业知识管理控制台</p>
+                <h1 className="admin-sidebar__title">学园偶像大师</h1>
+                <p className="admin-sidebar__subtitle">同好知识管理控制台</p>
               </div>
             )}
           </div>
@@ -801,3 +803,4 @@ export function AdminLayout() {
     </div>
   );
 }
+
