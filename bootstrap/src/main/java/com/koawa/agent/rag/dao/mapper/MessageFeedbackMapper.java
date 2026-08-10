@@ -20,15 +20,18 @@ package com.koawa.agent.rag.dao.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.koawa.agent.rag.controller.vo.MessageFeedbackCategoryStatVO;
 import com.koawa.agent.rag.controller.vo.MessageFeedbackVO;
 import com.koawa.agent.rag.dao.entity.MessageFeedbackDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 public interface MessageFeedbackMapper extends BaseMapper<MessageFeedbackDO> {
 
     /**
-     * 管理台分页查询反馈（联表取用户名/问题/回答/处理人）
+     * 管理台分页查询反馈（联表取用户名/问题/回答/处理人/链路ID）
      */
     @Select("""
             <script>
@@ -47,6 +50,14 @@ public interface MessageFeedbackMapper extends BaseMapper<MessageFeedbackDO> {
                    h.username AS handler_name,
                    msg.content AS answer,
                    q.content AS question,
+                   (SELECT tr.trace_id
+                    FROM t_rag_trace_run tr
+                    WHERE tr.conversation_id = f.conversation_id
+                      AND tr.user_id = f.user_id
+                      AND tr.deleted = 0
+                      AND (msg.create_time IS NULL OR tr.start_time &lt;= msg.create_time)
+                    ORDER BY tr.start_time DESC
+                    LIMIT 1) AS trace_id,
                    f.create_time,
                    f.update_time
             FROM t_message_feedback f
@@ -66,6 +77,7 @@ public interface MessageFeedbackMapper extends BaseMapper<MessageFeedbackDO> {
             WHERE f.deleted = 0
             <if test="vote != null"> AND f.vote = #{vote}</if>
             <if test="handled != null"> AND f.handled = #{handled}</if>
+            <if test="reason != null and reason != ''"> AND f.reason = #{reason}</if>
             <if test="keyword != null and keyword != ''">
                 AND (f.comment ILIKE CONCAT('%', #{keyword}, '%')
                   OR f.reason ILIKE CONCAT('%', #{keyword}, '%')
@@ -79,5 +91,23 @@ public interface MessageFeedbackMapper extends BaseMapper<MessageFeedbackDO> {
     IPage<MessageFeedbackVO> pageFeedback(Page<?> page,
                                           @Param("vote") Integer vote,
                                           @Param("handled") Integer handled,
+                                          @Param("reason") String reason,
                                           @Param("keyword") String keyword);
+
+    /**
+     * 反馈分类统计（治理视角）：按问题类型聚合点赞/点踩/未处理/最近时间
+     */
+    @Select("""
+            SELECT COALESCE(NULLIF(f.reason, ''), '未填写') AS reason,
+                   COUNT(*) FILTER (WHERE f.vote = -1)  AS dislike_count,
+                   COUNT(*) FILTER (WHERE f.vote = 1)   AS like_count,
+                   COUNT(*)                            AS total_count,
+                   COUNT(*) FILTER (WHERE f.vote = -1 AND f.handled = 0) AS unhandled_count,
+                   MAX(f.create_time)                  AS last_time
+            FROM t_message_feedback f
+            WHERE f.deleted = 0
+            GROUP BY f.reason
+            ORDER BY dislike_count DESC, last_time DESC
+            """)
+    List<MessageFeedbackCategoryStatVO> selectCategoryStats();
 }

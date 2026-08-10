@@ -16,6 +16,7 @@ export interface MessageFeedback {
   handleTime?: string | null;
   handlerId?: string | null;
   handlerName?: string | null;
+  traceId?: string | null;
   createTime?: string | null;
   updateTime?: string | null;
 }
@@ -34,6 +35,7 @@ export interface FeedbackPageParams {
   size?: number;
   vote?: number | null;
   handled?: number | null;
+  reason?: string;
   keyword?: string;
 }
 
@@ -52,6 +54,7 @@ export async function getFeedbackPage(params: FeedbackPageParams = {}): Promise<
       size: params.size || 10,
       vote: params.vote ?? undefined,
       handled: params.handled ?? undefined,
+      reason: params.reason || undefined,
       keyword: params.keyword || undefined
     }
   });
@@ -61,6 +64,19 @@ export async function getFeedbackStats(): Promise<FeedbackStats> {
   return api.get<FeedbackStats, FeedbackStats>("/message-feedback/stats");
 }
 
+export interface CategoryStat {
+  reason: string;
+  dislikeCount: number;
+  likeCount: number;
+  totalCount: number;
+  unhandledCount: number;
+  lastTime?: string | null;
+}
+
+export async function getFeedbackCategoryStats(): Promise<CategoryStat[]> {
+  return api.get<CategoryStat[], CategoryStat[]>("/message-feedback/category-stats");
+}
+
 export async function handleFeedback(id: string, note?: string): Promise<void> {
   await api.put(`/message-feedback/${id}/handle`, { note: note || undefined });
 }
@@ -68,3 +84,4 @@ export async function handleFeedback(id: string, note?: string): Promise<void> {
 export async function unhandleFeedback(id: string): Promise<void> {
   await api.put(`/message-feedback/${id}/unhandle`);
 }
+

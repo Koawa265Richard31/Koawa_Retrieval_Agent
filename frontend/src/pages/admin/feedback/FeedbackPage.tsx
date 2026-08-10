@@ -9,9 +9,11 @@ import {
   ThumbsDown,
   ThumbsUp,
   TrendingUp,
+  Workflow,
   Undo2
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,10 +45,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { RelativeTime } from "@/components/RelativeTime";
 import {
+  getFeedbackCategoryStats,
   getFeedbackPage,
   getFeedbackStats,
   handleFeedback,
   unhandleFeedback,
+  type CategoryStat,
   type FeedbackStats,
   type MessageFeedback,
   type PageResult
@@ -96,8 +100,11 @@ export function FeedbackPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [handleNote, setHandleNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [categoryStats, setCategoryStats] = useState<CategoryStat[]>([]);
+  const [reasonFilter, setReasonFilter] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const loadData = useCallback(async (current = pageNo, kw = keyword, vote = voteFilter, handled = handledFilter) => {
+  const loadData = useCallback(async (current = pageNo, kw = keyword, vote = voteFilter, handled = handledFilter, reason = reasonFilter) => {
     try {
       setLoading(true);
       const data = await getFeedbackPage({
@@ -105,6 +112,7 @@ export function FeedbackPage() {
         size: PAGE_SIZE,
         vote,
         handled,
+        reason: reason || undefined,
         keyword: kw || undefined
       });
       setPageData(data);
@@ -114,12 +122,20 @@ export function FeedbackPage() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, pageNo, voteFilter, handledFilter]);
+  }, [keyword, pageNo, voteFilter, handledFilter, reasonFilter]);
 
   const loadStats = useCallback(async () => {
     try {
       const data = await getFeedbackStats();
       setStats(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+  const loadCategoryStats = useCallback(async () => {
+    try {
+      const data = await getFeedbackCategoryStats();
+      setCategoryStats(data);
     } catch (error) {
       console.error(error);
     }
@@ -133,14 +149,24 @@ export function FeedbackPage() {
     loadStats();
   }, [loadStats]);
 
+  useEffect(() => {
+    loadCategoryStats();
+  }, [loadCategoryStats]);
+
   const handleSearch = () => {
     setPageNo(1);
     setKeyword(searchKeyword.trim());
   };
 
   const handleRefresh = () => {
-    loadData(1, keyword, voteFilter, handledFilter);
+    loadData(1, keyword, voteFilter, handledFilter, reasonFilter);
     loadStats();
+    loadCategoryStats();
+  };
+
+  const toggleReasonFilter = (reason: string) => {
+    setReasonFilter((prev) => (prev === reason ? null : reason));
+    setPageNo(1);
   };
 
   const applyVoteFilter = (value: string) => {
@@ -168,8 +194,9 @@ export function FeedbackPage() {
       await handleFeedback(detail.id, handleNote.trim() || undefined);
       toast.success("已标记为处理");
       setDetailOpen(false);
-      await loadData(pageNo, keyword, voteFilter, handledFilter);
+      await loadData(pageNo, keyword, voteFilter, handledFilter, reasonFilter);
       await loadStats();
+      await loadCategoryStats();
     } catch (error) {
       toast.error(getErrorMessage(error, "处理失败"));
       console.error(error);
@@ -183,8 +210,9 @@ export function FeedbackPage() {
       await unhandleFeedback(item.id);
       toast.success("已取消处理");
       setDetailOpen(false);
-      await loadData(pageNo, keyword, voteFilter, handledFilter);
+      await loadData(pageNo, keyword, voteFilter, handledFilter, reasonFilter);
       await loadStats();
+      await loadCategoryStats();
     } catch (error) {
       toast.error(getErrorMessage(error, "取消失败"));
       console.error(error);
@@ -246,6 +274,60 @@ export function FeedbackPage() {
         })}
       </div>
 
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-800">反馈分类治理</h2>
+              <p className="text-xs text-slate-500">按问题类型聚合点踩反馈，点击分类可筛选列表</p>
+            </div>
+            {reasonFilter ? (
+              <Button variant="ghost" size="sm" onClick={() => toggleReasonFilter(reasonFilter)}>
+                清除「{reasonFilter}」筛选
+              </Button>
+            ) : null}
+          </div>
+          {categoryStats.length === 0 ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">暂无分类数据，用户点踩后自动聚合</div>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {categoryStats.map((item) => {
+                const active = reasonFilter === item.reason;
+                const max = Math.max(...categoryStats.map((c) => c.dislikeCount), 1);
+                const ratio = Math.round((item.dislikeCount / max) * 100);
+                return (
+                  <button
+                    key={item.reason}
+                    type="button"
+                    onClick={() => toggleReasonFilter(item.reason)}
+                    className={cn(
+                      "rounded-xl border p-3 text-left transition-colors",
+                      active
+                        ? "border-rose-300 bg-rose-50"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-800">{item.reason}</span>
+                      <span className="text-xs text-rose-600">{item.dislikeCount} 踩</span>
+                    </div>
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div className="h-full rounded-full bg-rose-400" style={{ width: `${ratio}%` }} />
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                      <span>
+                        未处理 <span className="font-medium text-amber-600">{item.unhandledCount}</span>
+                      </span>
+                      <span>总 {item.totalCount}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
       <Card>
         <CardContent className="pt-6">
           <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -461,6 +543,12 @@ export function FeedbackPage() {
             </div>
           ) : null}
           <DialogFooter>
+            {detail?.traceId ? (
+              <Button variant="outline" onClick={() => navigate(`/admin/traces/${detail.traceId}`)}>
+                <Workflow className="mr-1 h-4 w-4" />
+                查看链路追踪
+              </Button>
+            ) : null}
             {detail?.handled === 1 ? (
               <Button variant="outline" onClick={() => submitUnhandle(detail)}>
                 <Undo2 className="mr-1 h-4 w-4" />
@@ -478,3 +566,4 @@ export function FeedbackPage() {
     </div>
   );
 }
+

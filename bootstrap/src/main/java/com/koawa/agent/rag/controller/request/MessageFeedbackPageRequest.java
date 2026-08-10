@@ -39,7 +39,13 @@ public class MessageFeedbackPageRequest extends Page {
     private Integer handled;
 
     /**
+     * 问题类型/原因（固定分类，精确匹配）
+     */
+    private String reason;
+
+    /**
      * 关键词（匹配用户名/问题/回答/反馈原因/补充说明）
      */
     private String keyword;
 }
+

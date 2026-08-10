@@ -19,8 +19,10 @@ package com.koawa.agent.rag.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.koawa.agent.rag.controller.request.MessageFeedbackPageRequest;
+import com.koawa.agent.rag.controller.vo.MessageFeedbackCategoryStatVO;
 import com.koawa.agent.rag.controller.vo.MessageFeedbackVO;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,6 +41,11 @@ public interface MessageFeedbackAdminService {
     Map<String, Object> stats();
 
     /**
+     * 反馈分类统计（按问题类型聚合，治理视角）
+     */
+    List<MessageFeedbackCategoryStatVO> categoryStats();
+
+    /**
      * 标记反馈为已处理
      *
      * @param id   反馈ID
@@ -53,3 +60,5 @@ public interface MessageFeedbackAdminService {
      */
     void unhandle(String id);
 }
+
+

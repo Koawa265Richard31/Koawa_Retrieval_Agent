@@ -25,48 +25,41 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 会话消息反馈视图对象（管理控制台）
+ * 消息反馈分类统计视图对象（管理控制台治理视角）
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MessageFeedbackVO {
+public class MessageFeedbackCategoryStatVO {
 
-    private String id;
-    private String messageId;
-    private String conversationId;
-    private String userId;
-    private String username;
-    private Integer vote;
+    /**
+     * 反馈原因/问题类型（固定分类，未填写时归为"未填写"）
+     */
     private String reason;
-    private String comment;
 
     /**
-     * 用户提问（同会话中最近一条用户消息）
+     * 点踩数
      */
-    private String question;
+    private Long dislikeCount;
 
     /**
-     * 助手回答内容
+     * 点赞数
      */
-    private String answer;
+    private Long likeCount;
 
     /**
-     * 是否已处理：0=未处理 1=已处理
+     * 该分类总反馈数
      */
-    private Integer handled;
-
-    private String handleNote;
-    private Date handleTime;
-    private String handlerId;
-    private String handlerName;
+    private Long totalCount;
 
     /**
-     * 关联链路追踪ID（同会话最近一次检索运行）
+     * 未处理点踩数
      */
-    private String traceId;
-    private Date createTime;
-    private Date updateTime;
+    private Long unhandledCount;
+
+    /**
+     * 最近一条反馈时间
+     */
+    private Date lastTime;
 }
-

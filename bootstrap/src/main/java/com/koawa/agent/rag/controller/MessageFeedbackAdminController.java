@@ -22,6 +22,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.koawa.agent.framework.convention.Result;
 import com.koawa.agent.framework.web.Results;
 import com.koawa.agent.rag.controller.request.MessageFeedbackHandleRequest;
+import com.koawa.agent.rag.controller.vo.MessageFeedbackCategoryStatVO;
 import com.koawa.agent.rag.controller.request.MessageFeedbackPageRequest;
 import com.koawa.agent.rag.controller.vo.MessageFeedbackVO;
 import com.koawa.agent.rag.service.MessageFeedbackAdminService;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -62,6 +64,15 @@ public class MessageFeedbackAdminController {
     }
 
     /**
+     * 反馈分类统计（治理视角）
+     */
+    @GetMapping("/message-feedback/category-stats")
+    public Result<List<MessageFeedbackCategoryStatVO>> categoryStats() {
+        StpUtil.checkRole("admin");
+        return Results.success(adminService.categoryStats());
+    }
+
+    /**
      * 标记为已处理
      */
     @PutMapping("/message-feedback/{id}/handle")
@@ -82,3 +93,4 @@ public class MessageFeedbackAdminController {
         return Results.success();
     }
 }
+

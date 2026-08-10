@@ -26,6 +26,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.koawa.agent.framework.context.UserContext;
 import com.koawa.agent.framework.exception.ClientException;
 import com.koawa.agent.rag.controller.request.MessageFeedbackPageRequest;
+import com.koawa.agent.rag.controller.vo.MessageFeedbackCategoryStatVO;
 import com.koawa.agent.rag.controller.vo.MessageFeedbackVO;
 import com.koawa.agent.rag.dao.entity.MessageFeedbackDO;
 import com.koawa.agent.rag.dao.mapper.MessageFeedbackMapper;
@@ -35,6 +36,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,6 +56,7 @@ public class MessageFeedbackAdminServiceImpl implements MessageFeedbackAdminServ
                 page,
                 request.getVote(),
                 request.getHandled(),
+                StrUtil.trimToNull(request.getReason()),
                 StrUtil.trimToNull(request.getKeyword())
         );
     }
@@ -93,6 +96,11 @@ public class MessageFeedbackAdminServiceImpl implements MessageFeedbackAdminServ
     }
 
     @Override
+    public List<MessageFeedbackCategoryStatVO> categoryStats() {
+        return feedbackMapper.selectCategoryStats();
+    }
+
+    @Override
     public void handle(String id, String note) {
         MessageFeedbackDO record = loadById(id);
         String handlerId = UserContext.getUserId();
@@ -125,3 +133,4 @@ public class MessageFeedbackAdminServiceImpl implements MessageFeedbackAdminServ
         return record;
     }
 }
+
