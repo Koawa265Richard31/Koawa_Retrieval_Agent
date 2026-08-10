@@ -278,7 +278,7 @@ export function FanChatPage() {
             {!hasStarted && !hasConversation ? (
               <div className="fan-welcome">
                 <img
-                  src="/assets/gakuen/logo_main.jpg"
+                  src="/assets/gakuen/logo_main_logo.png"
                   alt="学园偶像大师"
                   className="fan-welcome-logo"
                 />
@@ -364,4 +364,5 @@ export function FanChatPage() {
     </main>
   );
 }
+
 

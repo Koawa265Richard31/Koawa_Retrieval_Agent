@@ -955,8 +955,8 @@
   animation: fan-bubble-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .fan-welcome-logo {
-  width: min(300px, 72%);
-  max-height: 130px;
+  width: min(320px, 76%);
+  max-height: 210px;
   object-fit: contain;
   filter: drop-shadow(0 14px 30px rgba(243, 152, 0, 0.28));
   margin-bottom: 18px;
