@@ -75,11 +75,8 @@ public class RetrievalEngine {
     /**
      * 检索方法：根据子问题意图列表执行检索，整合知识库和MCP工具的结果
      */
-    @RagTraceNode(name = "retrieval-engine", type = "RETRIEVE")
     public RetrievalContext retrieve(List<SubQuestionIntent> subIntents, int topK) {
-        RetrievalContext context = retrieve(subIntents, topK, null);
-        attachRetrievalDocEvidence(context);
-        return context;
+        return retrieve(subIntents, topK, null);
     }
 
     /**
@@ -104,6 +101,7 @@ public class RetrievalEngine {
     /**
      * 在指定集合内检索；未指定时保持现有多知识库全局检索行为。
      */
+    @RagTraceNode(name = "retrieval-engine", type = "RETRIEVE")
     public RetrievalContext retrieve(List<SubQuestionIntent> subIntents, int topK, String collectionName) {
         if (CollUtil.isEmpty(subIntents)) {
             return RetrievalContext.builder()
@@ -169,11 +167,13 @@ public class RetrievalEngine {
             mcpContext = mcpBuilder.toString().trim();
         }
 
-        return RetrievalContext.builder()
+        RetrievalContext result = RetrievalContext.builder()
                 .mcpContext(mcpContext)
                 .kbContext(kbContext)
                 .intentChunks(mergedIntentChunks)
                 .build();
+        attachRetrievalDocEvidence(result);
+        return result;
     }
 
     private SubQuestionContext buildSubQuestionContext(
@@ -322,5 +322,6 @@ public class RetrievalEngine {
                                       Map<String, List<RetrievedChunk>> intentChunks) {
     }
 }
+
 
 
