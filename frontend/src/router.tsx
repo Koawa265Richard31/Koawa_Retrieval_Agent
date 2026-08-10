@@ -92,6 +92,12 @@ const UserListPage = React.lazy(() =>
   }))
 );
 
+const FeedbackPage = React.lazy(() =>
+  import("@/pages/admin/feedback/FeedbackPage").then((module) => ({
+    default: module.FeedbackPage
+  }))
+);
+
 function lazyPage(element: React.ReactNode) {
   return (
     <React.Suspense
@@ -236,6 +242,10 @@ export const router = createBrowserRouter([
       {
         path: "users",
         element: lazyPage(<UserListPage />)
+      },
+      {
+        path: "feedback",
+        element: lazyPage(<FeedbackPage />)
       }
     ]
   },

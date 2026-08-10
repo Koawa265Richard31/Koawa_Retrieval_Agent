@@ -4,8 +4,17 @@ export async function stopTask(taskId: string) {
   return api.post<void>(`/rag/v3/stop?taskId=${encodeURIComponent(taskId)}`);
 }
 
-export async function submitFeedback(messageId: string, vote: number) {
+export interface FeedbackPayload {
+  vote: number;
+  reason?: string | null;
+  comment?: string | null;
+}
+
+export async function submitFeedback(messageId: string, vote: number, reason?: string | null, comment?: string | null) {
   return api.post<void>(`/conversations/messages/${messageId}/feedback`, {
-    vote
+    vote,
+    reason: reason || undefined,
+    comment: comment || undefined
   });
 }
+

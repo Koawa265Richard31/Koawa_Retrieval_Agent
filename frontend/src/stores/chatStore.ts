@@ -49,7 +49,7 @@ interface ChatState {
   cancelGeneration: () => void;
   appendStreamContent: (delta: string) => void;
   appendThinkingContent: (delta: string) => void;
-  submitFeedback: (messageId: string, feedback: FeedbackValue) => Promise<void>;
+  submitFeedback: (messageId: string, feedback: FeedbackValue, reason?: string | null, comment?: string | null) => Promise<void>;
 }
 
 function mapVoteToFeedback(vote?: number | null): FeedbackValue {
@@ -526,7 +526,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       )
     }));
   },
-  submitFeedback: async (messageId, feedback) => {
+  submitFeedback: async (messageId, feedback, reason?, comment?) => {
     const vote = feedback === "like" ? 1 : feedback === "dislike" ? -1 : null;
     const prev = get().messages.find((message) => message.id === messageId)?.feedback ?? null;
     set((state) => ({
@@ -539,7 +539,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       return;
     }
     try {
-      await submitFeedback(messageId, vote);
+      await submitFeedback(messageId, vote, reason, comment);
       toast.success(feedback === "like" ? "点赞成功" : "点踩成功");
     } catch (error) {
       set((state) => ({
@@ -551,4 +551,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   }
 }));
+
+
 

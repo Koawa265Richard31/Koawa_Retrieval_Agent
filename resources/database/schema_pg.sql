@@ -88,6 +88,10 @@ CREATE TABLE t_message_feedback (
     vote            SMALLINT     NOT NULL,
     reason          VARCHAR(255),
     comment         VARCHAR(1024),
+    handled         SMALLINT     NOT NULL DEFAULT 0,
+    handle_note     VARCHAR(512),
+    handle_time     TIMESTAMP,
+    handler_id      VARCHAR(20),
     create_time     TIMESTAMP  NOT NULL,
     update_time     TIMESTAMP  NOT NULL,
     deleted         SMALLINT     NOT NULL DEFAULT 0,
@@ -475,6 +479,10 @@ COMMENT ON COLUMN t_message_feedback.comment IS '反馈评论';
 COMMENT ON COLUMN t_message_feedback.create_time IS '创建时间';
 COMMENT ON COLUMN t_message_feedback.update_time IS '更新时间';
 COMMENT ON COLUMN t_message_feedback.deleted IS '是否删除 0：正常 1：删除';
+COMMENT ON COLUMN t_message_feedback.handled IS '是否已处理 0：未处理 1：已处理';
+COMMENT ON COLUMN t_message_feedback.handle_note IS '处理备注';
+COMMENT ON COLUMN t_message_feedback.handle_time IS '处理时间';
+COMMENT ON COLUMN t_message_feedback.handler_id IS '处理人ID';
 
 -- t_sample_question
 COMMENT ON COLUMN t_sample_question.id IS 'ID';

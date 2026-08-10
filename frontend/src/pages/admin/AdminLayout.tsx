@@ -134,6 +134,11 @@ const menuGroups: MenuGroup[] = [
         path: "/admin/traces",
         label: "链路追踪",
         icon: Workflow
+      },
+      {
+        path: "/admin/feedback",
+        label: "用户反馈",
+        icon: MessageSquare
       }
     ]
   },
@@ -168,6 +173,7 @@ const breadcrumbMap: Record<string, string> = {
   traces: "链路追踪",
   "sample-questions": "示例问题",
   mappings: "关键词映射",
+  feedback: "用户反馈",
   settings: "系统设置",
   users: "用户管理"
 };

@@ -15,14 +15,8 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.rag.dao.entity;
+package com.koawa.agent.rag.controller.vo;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,88 +25,42 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 会话消息反馈实体类
- * 用于存储用户对助手消息的点赞/踩反馈
+ * 会话消息反馈视图对象（管理控制台）
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@TableName("t_message_feedback")
-public class MessageFeedbackDO {
+public class MessageFeedbackVO {
 
-    /**
-     * 主键 ID，采用雪花算法生成
-     */
-    @TableId(type = IdType.ASSIGN_ID)
     private String id;
-
-    /**
-     * 消息 ID，关联到会话消息
-     */
     private String messageId;
-
-    /**
-     * 会话 ID
-     */
     private String conversationId;
-
-    /**
-     * 用户 ID
-     */
     private String userId;
-
-    /**
-     * 反馈值：1=点赞，-1=点踩
-     */
+    private String username;
     private Integer vote;
-
-    /**
-     * 反馈原因（可选）
-     */
     private String reason;
+    private String comment;
 
     /**
-     * 补充说明（可选）
+     * 用户提问（同会话中最近一条用户消息）
      */
-    private String comment;
+    private String question;
+
+    /**
+     * 助手回答内容
+     */
+    private String answer;
 
     /**
      * 是否已处理：0=未处理 1=已处理
      */
     private Integer handled;
 
-    /**
-     * 处理备注
-     */
     private String handleNote;
-
-    /**
-     * 处理时间
-     */
     private Date handleTime;
-
-    /**
-     * 处理人ID
-     */
     private String handlerId;
-
-    /**
-     * 创建时间，自动填充
-     */
-    @TableField(fill = FieldFill.INSERT)
+    private String handlerName;
     private Date createTime;
-
-    /**
-     * 更新时间，插入和更新时自动填充
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
-
-    /**
-     * 删除标识，逻辑删除字段
-     */
-    @TableLogic
-    private Integer deleted;
 }
-
