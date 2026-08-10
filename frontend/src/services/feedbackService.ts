@@ -77,6 +77,22 @@ export async function getFeedbackCategoryStats(): Promise<CategoryStat[]> {
   return api.get<CategoryStat[], CategoryStat[]>("/message-feedback/category-stats");
 }
 
+export interface GovernanceItem {
+  docId: string;
+  docName: string;
+  kbId?: string | null;
+  dislikeCount: number;
+  unhandledCount: number;
+  recentTime?: string | null;
+  sampleQuestions?: string[] | null;
+}
+
+export async function getFeedbackGovernance(handled?: number | null): Promise<GovernanceItem[]> {
+  return api.get<GovernanceItem[], GovernanceItem[]>("/message-feedback/governance", {
+    params: { handled: handled ?? undefined }
+  });
+}
+
 export async function handleFeedback(id: string, note?: string): Promise<void> {
   await api.put(`/message-feedback/${id}/handle`, { note: note || undefined });
 }

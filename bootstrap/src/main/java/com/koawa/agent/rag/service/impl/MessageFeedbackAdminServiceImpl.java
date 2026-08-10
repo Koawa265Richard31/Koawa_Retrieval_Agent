@@ -17,27 +17,42 @@
 
 package com.koawa.agent.rag.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.koawa.agent.framework.context.UserContext;
 import com.koawa.agent.framework.exception.ClientException;
+import com.koawa.agent.knowledge.dao.entity.KnowledgeDocumentDO;
+import com.koawa.agent.knowledge.dao.mapper.KnowledgeDocumentMapper;
 import com.koawa.agent.rag.controller.request.MessageFeedbackPageRequest;
 import com.koawa.agent.rag.controller.vo.MessageFeedbackCategoryStatVO;
+import com.koawa.agent.rag.controller.vo.MessageFeedbackGovernanceVO;
 import com.koawa.agent.rag.controller.vo.MessageFeedbackVO;
 import com.koawa.agent.rag.dao.entity.MessageFeedbackDO;
+import com.koawa.agent.rag.dao.entity.RagTraceNodeDO;
 import com.koawa.agent.rag.dao.mapper.MessageFeedbackMapper;
+import com.koawa.agent.rag.dao.mapper.RagTraceNodeMapper;
 import com.koawa.agent.rag.service.MessageFeedbackAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 消息反馈管理服务实现
@@ -47,6 +62,8 @@ import java.util.Map;
 public class MessageFeedbackAdminServiceImpl implements MessageFeedbackAdminService {
 
     private final MessageFeedbackMapper feedbackMapper;
+    private final RagTraceNodeMapper traceNodeMapper;
+    private final KnowledgeDocumentMapper knowledgeDocumentMapper;
 
     @Override
     public IPage<MessageFeedbackVO> pageQuery(MessageFeedbackPageRequest request) {
@@ -101,6 +118,117 @@ public class MessageFeedbackAdminServiceImpl implements MessageFeedbackAdminServ
     }
 
     @Override
+    public List<MessageFeedbackGovernanceVO> governance(Integer handled) {
+        List<MessageFeedbackVO> rows = feedbackMapper.selectGovernanceFeedback(handled);
+        if (CollUtil.isEmpty(rows)) {
+            return List.of();
+        }
+        Map<String, List<MessageFeedbackVO>> feedbackByTrace = rows.stream()
+                .filter(row -> StrUtil.isNotBlank(row.getTraceId()))
+                .collect(Collectors.groupingBy(MessageFeedbackVO::getTraceId));
+        if (feedbackByTrace.isEmpty()) {
+            return List.of();
+        }
+        Map<String, Set<String>> docIdsByTrace = loadTraceDocIds(new ArrayList<>(feedbackByTrace.keySet()));
+        if (docIdsByTrace.isEmpty()) {
+            return List.of();
+        }
+        Map<String, List<MessageFeedbackVO>> feedbackByDoc = new LinkedHashMap<>();
+        for (MessageFeedbackVO row : rows) {
+            Set<String> docIds = docIdsByTrace.get(row.getTraceId());
+            if (CollUtil.isEmpty(docIds)) {
+                continue;
+            }
+            for (String docId : docIds) {
+                feedbackByDoc.computeIfAbsent(docId, key -> new ArrayList<>()).add(row);
+            }
+        }
+        if (feedbackByDoc.isEmpty()) {
+            return List.of();
+        }
+        Map<String, KnowledgeDocumentDO> docMap = loadDocMap(feedbackByDoc.keySet());
+        List<MessageFeedbackGovernanceVO> result = new ArrayList<>();
+        for (Map.Entry<String, List<MessageFeedbackVO>> entry : feedbackByDoc.entrySet()) {
+            String docId = entry.getKey();
+            List<MessageFeedbackVO> fbList = entry.getValue();
+            KnowledgeDocumentDO doc = docMap.get(docId);
+            long unhandled = fbList.stream().filter(r -> r.getHandled() != null && r.getHandled() == 0).count();
+            Date recent = fbList.stream()
+                    .map(MessageFeedbackVO::getCreateTime)
+                    .filter(Objects::nonNull)
+                    .max(Date::compareTo)
+                    .orElse(null);
+            List<String> questions = fbList.stream()
+                    .map(MessageFeedbackVO::getQuestion)
+                    .filter(StrUtil::isNotBlank)
+                    .distinct()
+                    .limit(3)
+                    .collect(Collectors.toList());
+            result.add(MessageFeedbackGovernanceVO.builder()
+                    .docId(docId)
+                    .docName(doc == null ? docId : doc.getDocName())
+                    .kbId(doc == null ? null : doc.getKbId())
+                    .dislikeCount((long) fbList.size())
+                    .unhandledCount(unhandled)
+                    .recentTime(recent)
+                    .sampleQuestions(questions)
+                    .build());
+        }
+        result.sort(Comparator.comparing(MessageFeedbackGovernanceVO::getDislikeCount, Comparator.reverseOrder())
+                .thenComparing(MessageFeedbackGovernanceVO::getRecentTime, Comparator.nullsLast(Comparator.reverseOrder())));
+        return result;
+    }
+
+    private Map<String, Set<String>> loadTraceDocIds(List<String> traceIds) {
+        Map<String, Set<String>> result = new HashMap<>();
+        if (CollUtil.isEmpty(traceIds)) {
+            return result;
+        }
+        List<RagTraceNodeDO> nodes = traceNodeMapper.selectList(
+                Wrappers.lambdaQuery(RagTraceNodeDO.class)
+                        .eq(RagTraceNodeDO::getDeleted, 0)
+                        .eq(RagTraceNodeDO::getNodeType, "RETRIEVE")
+                        .in(RagTraceNodeDO::getTraceId, traceIds)
+                        .isNotNull(RagTraceNodeDO::getExtraData));
+        for (RagTraceNodeDO node : nodes) {
+            Set<String> docIds = parseDocIds(node.getExtraData());
+            if (CollUtil.isNotEmpty(docIds)) {
+                result.computeIfAbsent(node.getTraceId(), key -> new HashSet<>()).addAll(docIds);
+            }
+        }
+        return result;
+    }
+
+    private Set<String> parseDocIds(String extraData) {
+        if (StrUtil.isBlank(extraData)) {
+            return Set.of();
+        }
+        try {
+            JSONArray array = JSONUtil.parseObj(extraData).getJSONArray("docIds");
+            if (array == null) {
+                return Set.of();
+            }
+            return array.stream()
+                    .map(String::valueOf)
+                    .filter(StrUtil::isNotBlank)
+                    .collect(Collectors.toSet());
+        } catch (Exception e) {
+            return Set.of();
+        }
+    }
+
+    private Map<String, KnowledgeDocumentDO> loadDocMap(Set<String> docIds) {
+        if (CollUtil.isEmpty(docIds)) {
+            return Map.of();
+        }
+        List<KnowledgeDocumentDO> docs = knowledgeDocumentMapper.selectList(
+                Wrappers.lambdaQuery(KnowledgeDocumentDO.class)
+                        .eq(KnowledgeDocumentDO::getDeleted, 0)
+                        .in(KnowledgeDocumentDO::getId, docIds));
+        return docs.stream().collect(Collectors.toMap(KnowledgeDocumentDO::getId, doc -> doc, (a, b) -> a));
+    }
+
+    @Override
     public void handle(String id, String note) {
         MessageFeedbackDO record = loadById(id);
         String handlerId = UserContext.getUserId();
@@ -133,4 +261,5 @@ public class MessageFeedbackAdminServiceImpl implements MessageFeedbackAdminServ
         return record;
     }
 }
+
 

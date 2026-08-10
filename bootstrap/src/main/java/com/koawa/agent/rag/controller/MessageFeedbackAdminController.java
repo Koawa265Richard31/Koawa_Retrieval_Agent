@@ -23,11 +23,13 @@ import com.koawa.agent.framework.convention.Result;
 import com.koawa.agent.framework.web.Results;
 import com.koawa.agent.rag.controller.request.MessageFeedbackHandleRequest;
 import com.koawa.agent.rag.controller.vo.MessageFeedbackCategoryStatVO;
+import com.koawa.agent.rag.controller.vo.MessageFeedbackGovernanceVO;
 import com.koawa.agent.rag.controller.request.MessageFeedbackPageRequest;
 import com.koawa.agent.rag.controller.vo.MessageFeedbackVO;
 import com.koawa.agent.rag.service.MessageFeedbackAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -73,6 +75,16 @@ public class MessageFeedbackAdminController {
     }
 
     /**
+     * 待治理清单（按命中文档归集点踩反馈）
+     */
+    @GetMapping("/message-feedback/governance")
+    public Result<List<MessageFeedbackGovernanceVO>> governance(
+            @RequestParam(required = false) Integer handled) {
+        StpUtil.checkRole("admin");
+        return Results.success(adminService.governance(handled));
+    }
+
+    /**
      * 标记为已处理
      */
     @PutMapping("/message-feedback/{id}/handle")
@@ -93,4 +105,5 @@ public class MessageFeedbackAdminController {
         return Results.success();
     }
 }
+
 

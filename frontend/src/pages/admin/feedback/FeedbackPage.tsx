@@ -46,11 +46,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { RelativeTime } from "@/components/RelativeTime";
 import {
   getFeedbackCategoryStats,
+  getFeedbackGovernance,
   getFeedbackPage,
   getFeedbackStats,
   handleFeedback,
   unhandleFeedback,
   type CategoryStat,
+  type GovernanceItem,
   type FeedbackStats,
   type MessageFeedback,
   type PageResult
@@ -102,6 +104,9 @@ export function FeedbackPage() {
   const [submitting, setSubmitting] = useState(false);
   const [categoryStats, setCategoryStats] = useState<CategoryStat[]>([]);
   const [reasonFilter, setReasonFilter] = useState<string | null>(null);
+  const [governance, setGovernance] = useState<GovernanceItem[]>([]);
+  const [governanceHandled, setGovernanceHandled] = useState<number | null>(0);
+  const [governanceLoading, setGovernanceLoading] = useState(false);
   const navigate = useNavigate();
 
   const loadData = useCallback(async (current = pageNo, kw = keyword, vote = voteFilter, handled = handledFilter, reason = reasonFilter) => {
@@ -132,6 +137,18 @@ export function FeedbackPage() {
       console.error(error);
     }
   }, []);
+  const loadGovernance = useCallback(async (handled = governanceHandled) => {
+    try {
+      setGovernanceLoading(true);
+      const data = await getFeedbackGovernance(handled);
+      setGovernance(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setGovernanceLoading(false);
+    }
+  }, [governanceHandled]);
+
   const loadCategoryStats = useCallback(async () => {
     try {
       const data = await getFeedbackCategoryStats();
@@ -153,6 +170,10 @@ export function FeedbackPage() {
     loadCategoryStats();
   }, [loadCategoryStats]);
 
+  useEffect(() => {
+    loadGovernance();
+  }, [loadGovernance]);
+
   const handleSearch = () => {
     setPageNo(1);
     setKeyword(searchKeyword.trim());
@@ -162,6 +183,7 @@ export function FeedbackPage() {
     loadData(1, keyword, voteFilter, handledFilter, reasonFilter);
     loadStats();
     loadCategoryStats();
+    loadGovernance();
   };
 
   const toggleReasonFilter = (reason: string) => {
@@ -197,6 +219,7 @@ export function FeedbackPage() {
       await loadData(pageNo, keyword, voteFilter, handledFilter, reasonFilter);
       await loadStats();
       await loadCategoryStats();
+      await loadGovernance();
     } catch (error) {
       toast.error(getErrorMessage(error, "处理失败"));
       console.error(error);
@@ -213,6 +236,7 @@ export function FeedbackPage() {
       await loadData(pageNo, keyword, voteFilter, handledFilter, reasonFilter);
       await loadStats();
       await loadCategoryStats();
+      await loadGovernance();
     } catch (error) {
       toast.error(getErrorMessage(error, "取消失败"));
       console.error(error);
@@ -329,6 +353,79 @@ export function FeedbackPage() {
         </CardContent>
       </Card>
       <Card>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-800">待治理文档</h2>
+              <p className="text-xs text-slate-500">按链路检索命中的文档归集点踩反馈，定位需核对/重采的语料</p>
+            </div>
+            <Select
+              value={governanceHandled === null ? "" : String(governanceHandled)}
+              onValueChange={(value) => setGovernanceHandled(value === "" ? null : Number(value))}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="全部状态" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">仅未处理</SelectItem>
+                <SelectItem value="1">仅已处理</SelectItem>
+                <SelectItem value="">全部</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {governanceLoading ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">加载中...</div>
+          ) : governance.length === 0 ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              暂无待治理文档，点踩反馈落库并产生新检索链路后自动归集
+            </div>
+          ) : (
+            <Table className="min-w-[900px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[260px]">文档</TableHead>
+                  <TableHead className="w-[140px]">知识库</TableHead>
+                  <TableHead className="w-[90px]">点踩</TableHead>
+                  <TableHead className="w-[100px]">未处理</TableHead>
+                  <TableHead className="w-[150px]">最近反馈</TableHead>
+                  <TableHead>涉及问题</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {governance.map((item) => (
+                  <TableRow key={item.docId}>
+                    <TableCell>
+                      <div className="max-w-[240px] truncate font-medium text-slate-800" title={item.docName}>
+                        {item.docName}
+                      </div>
+                      <div className="text-[11px] text-slate-400">{item.docId}</div>
+                    </TableCell>
+                    <TableCell className="text-xs text-slate-500">{item.kbId || "-"}</TableCell>
+                    <TableCell>
+                      <span className="font-semibold text-rose-600">{item.dislikeCount}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium text-amber-600">{item.unhandledCount}</span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <RelativeTime value={item.recentTime} />
+                    </TableCell>
+                    <TableCell className="max-w-[320px]">
+                      <span
+                        className="line-clamp-2 text-xs text-slate-600"
+                        title={(item.sampleQuestions || []).join(" | ")}
+                      >
+                        {(item.sampleQuestions || []).join("；") || "-"}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
         <CardContent className="pt-6">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <Select value={voteFilter === null ? "" : String(voteFilter)} onValueChange={applyVoteFilter}>

@@ -110,4 +110,47 @@ public interface MessageFeedbackMapper extends BaseMapper<MessageFeedbackDO> {
             ORDER BY dislike_count DESC, last_time DESC
             """)
     List<MessageFeedbackCategoryStatVO> selectCategoryStats();
+
+    /**
+     * 治理归集：查询点踩反馈及其关联链路ID/问题（供按命中文档聚合）
+     */
+    @Select("""
+            <script>
+            SELECT f.id,
+                   f.reason,
+                   f.handled,
+                   f.create_time,
+                   q.content AS question,
+                   tr.trace_id
+            FROM t_message_feedback f
+            LEFT JOIN LATERAL (
+                SELECT m.content
+                FROM t_message m
+                WHERE m.conversation_id = f.conversation_id
+                  AND m.role = 'user'
+                  AND m.deleted = 0
+                  AND ((SELECT mm.create_time FROM t_message mm WHERE mm.id = f.message_id AND mm.deleted = 0) IS NULL
+                       OR m.create_time &lt;= (SELECT mm.create_time FROM t_message mm WHERE mm.id = f.message_id AND mm.deleted = 0))
+                ORDER BY m.create_time DESC
+                LIMIT 1
+            ) q ON TRUE
+            LEFT JOIN LATERAL (
+                SELECT tr.trace_id
+                FROM t_rag_trace_run tr
+                WHERE tr.conversation_id = f.conversation_id
+                  AND tr.user_id = f.user_id
+                  AND tr.deleted = 0
+                  AND ((SELECT mm.create_time FROM t_message mm WHERE mm.id = f.message_id AND mm.deleted = 0) IS NULL
+                       OR tr.start_time &lt;= (SELECT mm.create_time FROM t_message mm WHERE mm.id = f.message_id AND mm.deleted = 0))
+                ORDER BY tr.start_time DESC
+                LIMIT 1
+            ) tr ON TRUE
+            WHERE f.deleted = 0
+              AND f.vote = -1
+            <if test="handled != null"> AND f.handled = #{handled}</if>
+            ORDER BY f.create_time DESC
+            </script>
+            """)
+    List<MessageFeedbackVO> selectGovernanceFeedback(@Param("handled") Integer handled);
 }
+

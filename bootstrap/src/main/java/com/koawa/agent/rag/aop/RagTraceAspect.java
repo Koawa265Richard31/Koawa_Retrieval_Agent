@@ -148,6 +148,7 @@ public class RagTraceAspect {
         RagTraceContext.pushNode(nodeId);
         try {
             Object result = joinPoint.proceed();
+            traceRecordService.updateNodeExtra(traceId, nodeId, RagTraceContext.getAndClearNodeExtra());
             traceRecordService.finishNode(
                     traceId,
                     nodeId,
@@ -204,3 +205,4 @@ public class RagTraceAspect {
         return message.substring(0, traceProperties.getMaxErrorLength());
     }
 }
+

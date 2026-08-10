@@ -40,6 +40,8 @@ public final class RagTraceContext {
         }
     };
 
+    private static final TransmittableThreadLocal<String> NODE_EXTRA = new TransmittableThreadLocal<>();
+
     private RagTraceContext() {
     }
 
@@ -93,5 +95,23 @@ public final class RagTraceContext {
         TRACE_ID.remove();
         TASK_ID.remove();
         NODE_STACK.remove();
+        NODE_EXTRA.remove();
+    }
+
+    /**
+     * 写入当前节点附加数据（JSON字符串，如检索命中文档ID）
+     */
+    public static void setNodeExtra(String extraData) {
+        NODE_EXTRA.set(extraData);
+    }
+
+    /**
+     * 读取并清空当前节点附加数据（由切面在节点收尾时调用）
+     */
+    public static String getAndClearNodeExtra() {
+        String extra = NODE_EXTRA.get();
+        NODE_EXTRA.remove();
+        return extra;
     }
 }
+

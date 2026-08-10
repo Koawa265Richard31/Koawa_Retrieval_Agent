@@ -17,6 +17,7 @@
 
 package com.koawa.agent.rag.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.koawa.agent.rag.dao.entity.RagTraceNodeDO;
 import com.koawa.agent.rag.dao.entity.RagTraceRunDO;
@@ -61,6 +62,19 @@ public class RagTraceRecordServiceImpl implements RagTraceRecordService {
     }
 
     @Override
+    public void updateNodeExtra(String traceId, String nodeId, String extraData) {
+        if (StrUtil.isBlank(extraData)) {
+            return;
+        }
+        RagTraceNodeDO update = RagTraceNodeDO.builder()
+                .extraData(extraData)
+                .build();
+        nodeMapper.update(update, Wrappers.lambdaUpdate(RagTraceNodeDO.class)
+                .eq(RagTraceNodeDO::getTraceId, traceId)
+                .eq(RagTraceNodeDO::getNodeId, nodeId));
+    }
+
+    @Override
     public void finishNode(String traceId, String nodeId, String status, String errorMessage, Date endTime, long durationMs) {
         RagTraceNodeDO update = RagTraceNodeDO.builder()
                 .status(status)
@@ -73,3 +87,4 @@ public class RagTraceRecordServiceImpl implements RagTraceRecordService {
                 .eq(RagTraceNodeDO::getNodeId, nodeId));
     }
 }
+

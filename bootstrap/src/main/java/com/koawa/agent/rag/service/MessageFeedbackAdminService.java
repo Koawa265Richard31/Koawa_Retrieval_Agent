@@ -20,6 +20,7 @@ package com.koawa.agent.rag.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.koawa.agent.rag.controller.request.MessageFeedbackPageRequest;
 import com.koawa.agent.rag.controller.vo.MessageFeedbackCategoryStatVO;
+import com.koawa.agent.rag.controller.vo.MessageFeedbackGovernanceVO;
 import com.koawa.agent.rag.controller.vo.MessageFeedbackVO;
 
 import java.util.List;
@@ -46,6 +47,13 @@ public interface MessageFeedbackAdminService {
     List<MessageFeedbackCategoryStatVO> categoryStats();
 
     /**
+     * 待治理清单：按检索命中文档归集点踩反馈
+     *
+     * @param handled 处理状态：0=未处理，1=已处理，null=全部
+     */
+    List<MessageFeedbackGovernanceVO> governance(Integer handled);
+
+    /**
      * 标记反馈为已处理
      *
      * @param id   反馈ID
@@ -60,5 +68,6 @@ public interface MessageFeedbackAdminService {
      */
     void unhandle(String id);
 }
+
 
 

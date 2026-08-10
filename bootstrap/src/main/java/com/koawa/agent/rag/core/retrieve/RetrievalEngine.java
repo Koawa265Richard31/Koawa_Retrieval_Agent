@@ -19,7 +19,9 @@ package com.koawa.agent.rag.core.retrieve;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.koawa.agent.framework.convention.RetrievedChunk;
+import com.koawa.agent.framework.trace.RagTraceContext;
 import com.koawa.agent.framework.trace.RagTraceNode;
 import com.koawa.agent.rag.config.SearchChannelProperties;
 import com.koawa.agent.rag.core.intent.IntentNode;
@@ -75,7 +77,28 @@ public class RetrievalEngine {
      */
     @RagTraceNode(name = "retrieval-engine", type = "RETRIEVE")
     public RetrievalContext retrieve(List<SubQuestionIntent> subIntents, int topK) {
-        return retrieve(subIntents, topK, null);
+        RetrievalContext context = retrieve(subIntents, topK, null);
+        attachRetrievalDocEvidence(context);
+        return context;
+    }
+
+    /**
+     * 把检索命中的文档ID写入当前 trace 节点附加数据，供反馈治理按文档归集
+     */
+    private void attachRetrievalDocEvidence(RetrievalContext context) {
+        if (StrUtil.isBlank(RagTraceContext.getTraceId()) || context == null) {
+            return;
+        }
+        List<String> docIds = context.getIntentChunks().values().stream()
+                .flatMap(List::stream)
+                .map(RetrievedChunk::getDocId)
+                .filter(StrUtil::isNotBlank)
+                .distinct()
+                .toList();
+        if (docIds.isEmpty()) {
+            return;
+        }
+        RagTraceContext.setNodeExtra(JSONUtil.toJsonStr(Map.of("docIds", docIds)));
     }
 
     /**
@@ -299,4 +322,5 @@ public class RetrievalEngine {
                                       Map<String, List<RetrievedChunk>> intentChunks) {
     }
 }
+
 

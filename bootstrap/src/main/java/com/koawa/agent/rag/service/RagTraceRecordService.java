@@ -34,4 +34,10 @@ public interface RagTraceRecordService {
     void startNode(RagTraceNodeDO node);
 
     void finishNode(String traceId, String nodeId, String status, String errorMessage, Date endTime, long durationMs);
+
+    /**
+     * 更新节点附加数据（如检索命中文档ID）
+     */
+    void updateNodeExtra(String traceId, String nodeId, String extraData);
 }
+
