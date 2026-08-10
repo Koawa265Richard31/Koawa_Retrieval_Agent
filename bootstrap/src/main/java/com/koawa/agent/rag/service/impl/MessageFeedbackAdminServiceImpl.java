@@ -52,6 +52,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -164,10 +166,15 @@ public class MessageFeedbackAdminServiceImpl implements MessageFeedbackAdminServ
                     .distinct()
                     .limit(3)
                     .collect(Collectors.toList());
+            String contentId = doc == null ? null : resolveContentId(doc.getDocName());
             result.add(MessageFeedbackGovernanceVO.builder()
                     .docId(docId)
                     .docName(doc == null ? docId : doc.getDocName())
                     .kbId(doc == null ? null : doc.getKbId())
+                    .sourceType(doc == null ? null : doc.getSourceType())
+                    .sourceLocation(doc == null ? null : doc.getSourceLocation())
+                    .contentId(contentId)
+                    .reCrawlable(contentId != null && !contentId.startsWith("9000"))
                     .dislikeCount((long) fbList.size())
                     .unhandledCount(unhandled)
                     .recentTime(recent)
@@ -217,6 +224,16 @@ public class MessageFeedbackAdminServiceImpl implements MessageFeedbackAdminServ
         }
     }
 
+    /**
+     * 从文档名解析源内容ID：命名规范 {index}-{contentId}-{title}.md
+     */
+    private String resolveContentId(String docName) {
+        if (StrUtil.isBlank(docName)) {
+            return null;
+        }
+        Matcher matcher = Pattern.compile("^\\d+-(\\d+)-").matcher(docName.trim());
+        return matcher.find() ? matcher.group(1) : null;
+    }
     private Map<String, KnowledgeDocumentDO> loadDocMap(Set<String> docIds) {
         if (CollUtil.isEmpty(docIds)) {
             return Map.of();
@@ -261,5 +278,8 @@ public class MessageFeedbackAdminServiceImpl implements MessageFeedbackAdminServ
         return record;
     }
 }
+
+
+
 
 

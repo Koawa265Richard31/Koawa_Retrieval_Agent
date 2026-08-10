@@ -81,6 +81,10 @@ export interface GovernanceItem {
   docId: string;
   docName: string;
   kbId?: string | null;
+  sourceType?: string | null;
+  sourceLocation?: string | null;
+  contentId?: string | null;
+  reCrawlable?: boolean | null;
   dislikeCount: number;
   unhandledCount: number;
   recentTime?: string | null;

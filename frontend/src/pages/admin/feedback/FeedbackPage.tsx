@@ -3,9 +3,11 @@ import {
   CheckCircle2,
   Check,
   Clock,
+  Download,
   Eye,
   MessageSquare,
   RefreshCw,
+  RefreshCcw,
   ThumbsDown,
   ThumbsUp,
   TrendingUp,
@@ -191,6 +193,51 @@ export function FeedbackPage() {
     setPageNo(1);
   };
 
+  const exportGovernanceCsv = () => {
+    if (governance.length === 0) return;
+    const header = [
+      "文档ID", "文档名", "知识库", "内容ID", "源类型", "源地址", "点踩数", "未处理数", "最近反馈", "涉及问题"
+    ];
+    const rows = governance.map((item) => [
+      item.docId,
+      item.docName,
+      item.kbId || "",
+      item.contentId || "",
+      item.sourceType || "",
+      item.sourceLocation || "",
+      String(item.dislikeCount),
+      String(item.unhandledCount),
+      item.recentTime || "",
+      (item.sampleQuestions || []).join(" | ")
+    ]);
+    const csv = [header, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, "\"\"")}"`).join(","))
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `待治理文档-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const copyReCrawlIds = async () => {
+    const ids = governance
+      .filter((item) => item.reCrawlable && item.contentId)
+      .map((item) => item.contentId as string);
+    if (ids.length === 0) {
+      toast.error("当前无 GameKee 源站内容可定点重采");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(ids.join(","));
+      toast.success(`已复制 ${ids.length} 个内容ID：crawl_gamekee_gakumas.py --ids ${ids.join(",")}`);
+    } catch {
+      toast.error("复制失败");
+    }
+  };
+
   const applyVoteFilter = (value: string) => {
     const next = value === "" ? null : Number(value);
     setVoteFilter(next);
@@ -360,7 +407,26 @@ export function FeedbackPage() {
               <h2 className="text-sm font-semibold text-slate-800">待治理文档</h2>
               <p className="text-xs text-slate-500">按链路检索命中的文档归集点踩反馈，定位需核对/重采的语料</p>
             </div>
-            <Select
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportGovernanceCsv}
+                disabled={governance.length === 0}
+              >
+                <Download className="mr-1 h-4 w-4" />
+                导出 CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={copyReCrawlIds}
+                disabled={governance.length === 0}
+              >
+                <RefreshCcw className="mr-1 h-4 w-4" />
+                重采清单
+              </Button>
+              <Select
               value={governanceHandled === null ? "" : String(governanceHandled)}
               onValueChange={(value) => setGovernanceHandled(value === "" ? null : Number(value))}
             >
@@ -373,6 +439,7 @@ export function FeedbackPage() {
                 <SelectItem value="">全部</SelectItem>
               </SelectContent>
             </Select>
+          </div>
           </div>
           {governanceLoading ? (
             <div className="py-6 text-center text-sm text-muted-foreground">加载中...</div>
@@ -663,4 +730,5 @@ export function FeedbackPage() {
     </div>
   );
 }
+
 

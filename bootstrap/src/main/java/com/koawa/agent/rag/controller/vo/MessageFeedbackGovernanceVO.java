@@ -50,6 +50,26 @@ public class MessageFeedbackGovernanceVO {
     private String kbId;
 
     /**
+     * 文档源类型（file/url等）
+     */
+    private String sourceType;
+
+    /**
+     * 源地址
+     */
+    private String sourceLocation;
+
+    /**
+     * 源内容ID（从文档名解析，如 698272；社区自建档为 900003 等）
+     */
+    private String contentId;
+
+    /**
+     * 是否可定点重采（GameKee 源站内容，非社区自建档）
+     */
+    private Boolean reCrawlable;
+
+    /**
      * 关联点踩反馈数
      */
     private Long dislikeCount;
@@ -69,3 +89,4 @@ public class MessageFeedbackGovernanceVO {
      */
     private List<String> sampleQuestions;
 }
+

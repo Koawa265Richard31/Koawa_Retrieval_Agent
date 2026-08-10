@@ -117,6 +117,13 @@ def load_completed(manifest_path: Path) -> dict[int, dict[str, Any]]:
     return {int(item["contentId"]): item for item in manifest.get("documents") or []}
 
 
+def _manifest_index(item: dict[str, Any]) -> int:
+    """从清单条目文件名解析原序号（{index}-{contentId}-{title}.md），供重采复用保持文件名稳定。"""
+    name = str(item.get("file") or "")
+    match = re.match(r"^(\d+)-", name)
+    return int(match.group(1)) if match else 0
+
+
 def write_manifest(path: Path, fetched_at: str, documents: dict[int, dict[str, Any]], failures: dict[int, str]) -> None:
     path.write_text(json.dumps({
         "schemaVersion": 1,
@@ -132,18 +139,26 @@ def write_manifest(path: Path, fetched_at: str, documents: dict[int, dict[str, A
 def crawl(args: argparse.Namespace) -> None:
     args.output.mkdir(parents=True, exist_ok=True)
     manifest_path = args.output / "manifest.json"
-    completed = load_completed(manifest_path) if args.resume else {}
+    # 常驻读取已有清单：定点重采/全量刷新时可复用原文件序号，保证文档名稳定
+    completed = load_completed(manifest_path)
+    index_by_id = {cid: _manifest_index(item) for cid, item in completed.items()}
     failures: dict[int, str] = {}
     fetched_at = dt.datetime.now(dt.timezone.utc).isoformat()
     client = session()
     content_ids = catalog_content_ids(client)
-    if args.max_documents:
+    if args.ids:
+        requested = sorted({int(token) for token in args.ids.split(",") if token.strip().isdigit()})
+        if not requested:
+            raise SystemExit("--ids requires at least one numeric content ID")
+        content_ids = requested
+    elif args.max_documents:
         content_ids = content_ids[:args.max_documents]
-    print(f"catalog discovered {len(content_ids)} content IDs")
+    print(f"catalog discovered {len(content_ids)} content IDs" if not args.ids else f"targeted re-crawl of {len(content_ids)} content IDs")
 
-    for index, content_id in enumerate(content_ids, 1):
-        if content_id in completed:
+    for position, content_id in enumerate(content_ids, 1):
+        if args.resume and content_id in completed:
             continue
+        index = index_by_id.get(content_id, position)
         try:
             data = fetch_detail(client, content_id)
             html = fetch_html(client, content_id)
@@ -167,6 +182,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--overlap-chars", type=int, default=120)
     parser.add_argument("--delay-seconds", type=float, default=0.6)
     parser.add_argument("--max-documents", type=int, help="Limit a run for a smoke test.")
+    parser.add_argument("--ids", type=str, help="Comma-separated GameKee content IDs to (re)crawl only.")
     parser.add_argument("--resume", action="store_true", help="Reuse documents listed in an existing manifest.")
     return parser.parse_args()
 
