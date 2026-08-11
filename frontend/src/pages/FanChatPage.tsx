@@ -7,6 +7,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
+  Settings,
   Sparkles,
   X
 } from "lucide-react";
@@ -230,6 +231,15 @@ export function FanChatPage() {
           ))}
         </nav>
         <div className="fan-sidebar-bottom">
+          {user?.role === "admin" ? (
+            <Link to="/fan/admin" className="fan-profile" title="粉丝页管理控制台">
+              <Settings aria-hidden="true" />
+              <span>
+                <b>粉丝页控制台</b>
+                <small>管理反馈与数据</small>
+              </span>
+            </Link>
+          ) : null}
           <Link to="/chat" className="fan-profile" title="返回知识工作台">
             <CircleUserRound aria-hidden="true" />
             <span>

@@ -57,7 +57,7 @@ function AuthPage({ mode }: { mode: "login" | "register" }) {
       setError("请输入用户名和密码。");
       return;
     }
-    if (!isRegister && inviteCode.trim().toUpperCase() !== "GAKUMAS-FAN-2026") {
+    if (!isRegister && inviteCode.trim() !== "" && inviteCode.trim().toUpperCase() !== "GAKUMAS-FAN-2026") {
       setError("邀请码无效，请确认后再试。");
       return;
     }
@@ -74,7 +74,7 @@ function AuthPage({ mode }: { mode: "login" | "register" }) {
       if (!isRegister && !remember) {
         // 预留仅会话级登录态能力。
       }
-      navigate(isRegister ? "/chat" : "/fan");
+      navigate(isRegister ? "/chat" : inviteCode.trim() ? "/fan" : "/chat");
     } catch (err) {
       setError((err as Error).message || `${isRegister ? "注册" : "登录"}失败，请稍后重试。`);
     }
@@ -220,6 +220,7 @@ function AuthPage({ mode }: { mode: "login" | "register" }) {
                 <div className="space-y-2">
                   <label htmlFor="inviteCode" className="text-sm font-medium text-slate-700">
                     同好邀请码
+                    <span className="ml-1 text-xs font-normal text-slate-400">（选填，填写后进入粉丝页）</span>
                   </label>
                   <Input
                     id="inviteCode"

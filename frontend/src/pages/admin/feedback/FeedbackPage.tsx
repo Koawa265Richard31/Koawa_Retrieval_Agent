@@ -117,7 +117,8 @@ export function FeedbackPage() {
   const [keyword, setKeyword] = useState("");
   const [voteFilter, setVoteFilter] = useState<number | null>(null);
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
-  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const isFanScope = window.location.pathname.startsWith("/fan/admin");
+  const [sourceFilter, setSourceFilter] = useState<string>(isFanScope ? "fan" : "all");
   const [handledFilter, setHandledFilter] = useState<number | null>(null);
   const [detail, setDetail] = useState<MessageFeedback | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);

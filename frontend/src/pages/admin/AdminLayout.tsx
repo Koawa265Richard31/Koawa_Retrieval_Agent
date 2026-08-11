@@ -204,7 +204,12 @@ export function AdminLayout() {
   const [searchFocused, setSearchFocused] = useState(false);
   const blurTimeoutRef = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const isDashboardRoute = location.pathname.startsWith("/admin/dashboard");
+  const isFanScope = location.pathname.startsWith("/fan/admin");
+  const scopeBase = isFanScope ? "/fan/admin" : "/admin";
+  const scopePath = (path: string) => (isFanScope ? path.replace(/^\/admin/, "/fan/admin") : path);
+  const isDashboardRoute =
+    location.pathname.startsWith("/admin/dashboard") ||
+    location.pathname.startsWith("/fan/admin/dashboard");
 
   const handleLogout = async () => {
     await logout();
@@ -251,7 +256,7 @@ export function AdminLayout() {
 
   const breadcrumbs = useMemo(() => {
     const segments = location.pathname.split("/").filter(Boolean);
-    const items: { label: string; to?: string }[] = [{ label: "首页", to: "/admin/dashboard" }];
+    const items: { label: string; to?: string }[] = [{ label: "首页", to: scopeBase + "/dashboard" }];
 
     if (segments[0] !== "admin") return items;
     const section = segments[1];
@@ -259,12 +264,12 @@ export function AdminLayout() {
       if (section === "intent-tree" || section === "intent-list") {
         items.push({
           label: "意图管理",
-          to: "/admin/intent-tree"
+          to: scopePath("/admin/intent-tree")
         });
         if (section === "intent-list" && segments.includes("edit")) {
           items.push({
             label: breadcrumbMap[section] || section,
-            to: "/admin/intent-list"
+            to: scopePath("/admin/intent-list")
           });
           items.push({
             label: "编辑节点"
@@ -277,7 +282,7 @@ export function AdminLayout() {
       } else {
         items.push({
           label: breadcrumbMap[section] || section,
-          to: `/admin/${section}`
+          to: `${scopeBase}/${section}`
         });
       }
     }
@@ -313,7 +318,9 @@ export function AdminLayout() {
   const isIngestionActive = location.pathname.startsWith("/admin/ingestion");
   const isIntentActive =
     location.pathname.startsWith("/admin/intent-tree") ||
-    location.pathname.startsWith("/admin/intent-list");
+    location.pathname.startsWith("/admin/intent-list") ||
+    location.pathname.startsWith("/fan/admin/intent-tree") ||
+    location.pathname.startsWith("/fan/admin/intent-list");
 
   useEffect(() => {
     setOpenGroups((prev) => ({
@@ -441,7 +448,9 @@ export function AdminLayout() {
             {!collapsed && (
               <div className="min-w-0">
                 <h1 className="admin-sidebar__title">学园偶像大师</h1>
-                <p className="admin-sidebar__subtitle">同好知识管理控制台</p>
+                <p className="admin-sidebar__subtitle">
+                  {isFanScope ? "粉丝页管理控制台" : "同好知识管理控制台"}
+                </p>
               </div>
             )}
           </div>
@@ -455,11 +464,11 @@ export function AdminLayout() {
                 {group.items.flatMap((item) => {
                   if (!item.children || item.children.length === 0) {
                     const Icon = item.icon;
-                    const isActive = isLeafActive(item.path, item.search);
+                    const isActive = isLeafActive(scopePath(item.path), item.search);
                     return (
                       <Link
                         key={item.path}
-                        to={item.path}
+                        to={scopePath(item.path)}
                         title={collapsed ? item.label : undefined}
                         className={cn(
                           "admin-sidebar__item",
@@ -481,7 +490,7 @@ export function AdminLayout() {
                   }
 
                   const isGroupActive = item.children.some((child) =>
-                    isLeafActive(child.path, child.search)
+                    isLeafActive(scopePath(child.path), child.search)
                   );
                   const groupId = item.id as string;
                   const isOpen = openGroups[groupId];
@@ -489,11 +498,11 @@ export function AdminLayout() {
                   if (collapsed) {
                     return item.children.map((child) => {
                       const ChildIcon = child.icon;
-                      const isActive = isLeafActive(child.path, child.search);
+                      const isActive = isLeafActive(scopePath(child.path), child.search);
                       return (
                         <Link
                           key={child.label}
-                          to={`${child.path}${child.search || ""}`}
+                          to={`${scopePath(child.path)}${child.search || ""}`}
                           title={child.label}
                           className={cn(
                             "admin-sidebar__item",
@@ -541,11 +550,11 @@ export function AdminLayout() {
                         <div className="ml-6 space-y-1">
                           {item.children.map((child) => {
                             const ChildIcon = child.icon;
-                            const isActive = isLeafActive(child.path, child.search);
+                            const isActive = isLeafActive(scopePath(child.path), child.search);
                             return (
                               <Link
                                 key={child.label}
-                                to={`${child.path}${child.search || ""}`}
+                                to={`${scopePath(child.path)}${child.search || ""}`}
                                 className={cn(
                                   "admin-sidebar__item text-[13px]",
                                   isActive && "admin-sidebar__item--active"
@@ -573,15 +582,17 @@ export function AdminLayout() {
         </nav>
 
         <div className="admin-sidebar__footer space-y-2">
-          <button
-            type="button"
-            onClick={() => setFanInviteOpen(true)}
-            className="admin-sidebar__item w-full text-white/70 hover:text-white"
-            title={collapsed ? "粉丝页入口" : undefined}
-          >
-            <Sparkles className="admin-sidebar__item-icon" />
-            {collapsed ? <span className="sr-only">粉丝页入口</span> : <span>粉丝页入口</span>}
-          </button>
+          {!isFanScope ? (
+            <button
+              type="button"
+              onClick={() => setFanInviteOpen(true)}
+              className="admin-sidebar__item w-full text-white/70 hover:text-white"
+              title={collapsed ? "粉丝页入口" : undefined}
+            >
+              <Sparkles className="admin-sidebar__item-icon" />
+              {collapsed ? <span className="sr-only">粉丝页入口</span> : <span>粉丝页入口</span>}
+            </button>
+          ) : null}
           <button
             type="button"
             className="admin-sidebar__collapse"
@@ -693,13 +704,23 @@ export function AdminLayout() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {isFanScope ? (
+                <Button
+                  variant="outline"
+                  className="hidden items-center gap-2 sm:inline-flex"
+                  onClick={() => navigate("/chat")}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  主聊天页
+                </Button>
+              ) : null}
               <Button
                 variant="outline"
                 className="hidden items-center gap-2 sm:inline-flex"
-                onClick={() => navigate("/chat")}
+                onClick={() => navigate(isFanScope ? "/fan" : "/chat")}
               >
                 <MessageSquare className="h-4 w-4" />
-                返回聊天
+                {isFanScope ? "返回粉丝页" : "返回聊天"}
               </Button>
               <span className="hidden items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 md:inline-flex">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />

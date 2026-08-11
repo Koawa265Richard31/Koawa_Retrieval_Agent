@@ -148,44 +148,10 @@ function HomeRedirect() {
   return <Navigate to={isAuthenticated ? "/chat" : "/login"} replace />;
 }
 
-export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <HomeRedirect />
-  },
-  {
-    path: "/login",
-    element: <RedirectIfAuth>{lazyPage(<LoginPage />)}</RedirectIfAuth>
-  },
-  {
-    path: "/register",
-    element: <RedirectIfAuth>{lazyPage(<RegisterPage />)}</RedirectIfAuth>
-  },
-  {
-    path: "/chat",
-    element: <RequireAuth>{lazyPage(<ChatPage />)}</RequireAuth>
-  },
-  {
-    path: "/chat/:sessionId",
-    element: <RequireAuth>{lazyPage(<ChatPage />)}</RequireAuth>
-  },
-  {
-    path: "/fan",
-    element: <RequireAuth>{lazyPage(<FanChatPage />)}</RequireAuth>
-  },
-  ...(import.meta.env.DEV
-    ? [{
-        path: "/fan-preview",
-        element: lazyPage(<FanChatPage />)
-      }]
-    : []),
-  {
-    path: "/admin",
-    element: <RequireAdmin>{lazyPage(<AdminLayout />)}</RequireAdmin>,
-    children: [
+const adminChildren = [
       {
         index: true,
-        element: <Navigate to="/admin/dashboard" replace />
+        element: <Navigate to="dashboard" replace />
       },
       {
         path: "dashboard",
@@ -247,7 +213,18 @@ export const router = createBrowserRouter([
         path: "feedback",
         element: lazyPage(<FeedbackPage />)
       }
-    ]
+];
+
+export const router = createBrowserRouter([
+  {
+    path: "/admin",
+    element: <RequireAdmin>{lazyPage(<AdminLayout />)}</RequireAdmin>,
+    children: adminChildren
+  },
+  {
+    path: "/fan/admin",
+    element: <RequireAdmin>{lazyPage(<AdminLayout />)}</RequireAdmin>,
+    children: adminChildren
   },
   {
     path: "*",
