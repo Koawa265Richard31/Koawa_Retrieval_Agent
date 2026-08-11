@@ -39,6 +39,7 @@ public class MessageFeedbackVO {
     private String userId;
     private String username;
     private Integer vote;
+    private Integer rating;
     private String reason;
     private String comment;
 

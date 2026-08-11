@@ -10,11 +10,12 @@ export interface FeedbackPayload {
   comment?: string | null;
 }
 
-export async function submitFeedback(messageId: string, vote: number, reason?: string | null, comment?: string | null) {
+export async function submitFeedback(messageId: string, vote: number, reason?: string | null, comment?: string | null, rating?: number | null) {
   return api.post<void>(`/conversations/messages/${messageId}/feedback`, {
     vote,
     reason: reason || undefined,
-    comment: comment || undefined
+    comment: comment || undefined,
+    rating: rating ?? undefined
   });
 }
 

@@ -75,6 +75,7 @@ public class MessageFeedbackAdminServiceImpl implements MessageFeedbackAdminServ
                 page,
                 request.getVote(),
                 request.getHandled(),
+                request.getRating(),
                 StrUtil.trimToNull(request.getReason()),
                 StrUtil.trimToNull(request.getKeyword())
         );
@@ -105,6 +106,32 @@ public class MessageFeedbackAdminServiceImpl implements MessageFeedbackAdminServ
                 Wrappers.lambdaQuery(MessageFeedbackDO.class)
                         .eq(MessageFeedbackDO::getDeleted, 0)
                         .ge(MessageFeedbackDO::getCreateTime, DateUtil.beginOfDay(new Date())));
+
+        // 满意度星级统计
+        List<Map<String, Object>> ratingRows = feedbackMapper.selectMaps(
+                Wrappers.query(MessageFeedbackDO.class)
+                        .select("ROUND(AVG(rating)::numeric, 2) AS avg_rating",
+                                "COUNT(rating) AS rated_count",
+                                "COUNT(*) FILTER (WHERE rating IS NOT NULL AND rating < 4) AS low_rating_count",
+                                "COUNT(*) FILTER (WHERE rating = 1) AS r1",
+                                "COUNT(*) FILTER (WHERE rating = 2) AS r2",
+                                "COUNT(*) FILTER (WHERE rating = 3) AS r3",
+                                "COUNT(*) FILTER (WHERE rating = 4) AS r4",
+                                "COUNT(*) FILTER (WHERE rating = 5) AS r5")
+                        .eq("deleted", 0));
+        if (CollUtil.isNotEmpty(ratingRows)) {
+            Map<String, Object> row = ratingRows.get(0);
+            result.put("avgRating", row.get("avg_rating"));
+            result.put("ratedCount", row.get("rated_count"));
+            result.put("lowRatingCount", row.get("low_rating_count"));
+            Map<String, Object> dist = new LinkedHashMap<>();
+            dist.put("1", row.get("r1"));
+            dist.put("2", row.get("r2"));
+            dist.put("3", row.get("r3"));
+            dist.put("4", row.get("r4"));
+            dist.put("5", row.get("r5"));
+            result.put("ratingDistribution", dist);
+        }
         result.put("total", total);
         result.put("likeCount", likeCount);
         result.put("dislikeCount", dislikeCount);

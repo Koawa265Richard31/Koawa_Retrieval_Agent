@@ -49,7 +49,7 @@ interface ChatState {
   cancelGeneration: () => void;
   appendStreamContent: (delta: string) => void;
   appendThinkingContent: (delta: string) => void;
-  submitFeedback: (messageId: string, feedback: FeedbackValue, reason?: string | null, comment?: string | null) => Promise<void>;
+  submitFeedback: (messageId: string, feedback: FeedbackValue, reason?: string | null, comment?: string | null, rating?: number | null) => Promise<void>;
 }
 
 function mapVoteToFeedback(vote?: number | null): FeedbackValue {
@@ -526,25 +526,27 @@ export const useChatStore = create<ChatState>((set, get) => ({
       )
     }));
   },
-  submitFeedback: async (messageId, feedback, reason?, comment?) => {
+  submitFeedback: async (messageId, feedback, reason?, comment?, rating?) => {
     const vote = feedback === "like" ? 1 : feedback === "dislike" ? -1 : null;
-    const prev = get().messages.find((message) => message.id === messageId)?.feedback ?? null;
+    const prevMsg = get().messages.find((message) => message.id === messageId);
+    const prevFeedback = prevMsg?.feedback ?? null;
+    const prevRating = prevMsg?.rating ?? null;
     set((state) => ({
       messages: state.messages.map((message) =>
-        message.id === messageId ? { ...message, feedback } : message
+        message.id === messageId ? { ...message, feedback, rating: rating ?? null } : message
       )
     }));
     if (vote === null) {
-      toast.success("取消成功");
+      toast.success("已取消反馈");
       return;
     }
     try {
-      await submitFeedback(messageId, vote, reason, comment);
-      toast.success(feedback === "like" ? "点赞成功" : "点踩成功");
+      await submitFeedback(messageId, vote, reason, comment, rating);
+      toast.success(feedback === "like" ? "感谢评价" : "感谢反馈，我们会尽快改进");
     } catch (error) {
       set((state) => ({
         messages: state.messages.map((message) =>
-          message.id === messageId ? { ...message, feedback: prev } : message
+          message.id === messageId ? { ...message, feedback: prevFeedback, rating: prevRating } : message
         )
       }));
       toast.error((error as Error).message || "反馈保存失败");

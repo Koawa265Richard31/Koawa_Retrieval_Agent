@@ -32,6 +32,7 @@ export interface Message {
   isThinking?: boolean;
   createdAt?: string;
   feedback?: FeedbackValue;
+  rating?: number | null;
   status?: MessageStatus;
 }
 

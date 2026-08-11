@@ -32,6 +32,10 @@ public class MessageFeedbackPageRequest extends Page {
      * 反馈值：1=点赞，-1=点踩，为空不过滤
      */
     private Integer vote;
+    /**
+     * 满意度星级：1-5，为空不过滤
+     */
+    private Integer rating;
 
     /**
      * 处理状态：0=未处理，1=已处理，为空不过滤

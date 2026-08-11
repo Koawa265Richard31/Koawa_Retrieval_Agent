@@ -51,6 +51,10 @@ public class MessageFeedbackEvent implements Serializable {
      * 反馈值：1=点赞，-1=点踩
      */
     private Integer vote;
+    /**
+     * 满意度星级：1-5（可选，星级反馈时填写）
+     */
+    private Integer rating;
 
     /**
      * 反馈原因（可选）

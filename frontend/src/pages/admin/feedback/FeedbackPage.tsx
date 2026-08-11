@@ -8,6 +8,7 @@ import {
   MessageSquare,
   RefreshCw,
   RefreshCcw,
+  Star,
   ThumbsDown,
   ThumbsUp,
   TrendingUp,
@@ -84,6 +85,22 @@ function VoteBadge({ vote }: { vote: number }) {
   );
 }
 
+function RatingBadge({ rating }: { rating?: number | null }) {
+  if (rating == null) return null;
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "ml-1 border-amber-200 bg-amber-50 text-amber-600",
+        rating <= 3 && "border-rose-200 bg-rose-50 text-rose-600"
+      )}
+    >
+      <Star className="mr-1 h-3 w-3 fill-amber-400 text-amber-400" />
+      {rating} 星
+    </Badge>
+  );
+}
+
 function HandledBadge({ handled }: { handled: number }) {
   if (handled === 1) {
     return <Badge variant="outline" className="admin-status-success">已处理</Badge>;
@@ -99,6 +116,7 @@ export function FeedbackPage() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [keyword, setKeyword] = useState("");
   const [voteFilter, setVoteFilter] = useState<number | null>(null);
+  const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const [handledFilter, setHandledFilter] = useState<number | null>(null);
   const [detail, setDetail] = useState<MessageFeedback | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -111,7 +129,7 @@ export function FeedbackPage() {
   const [governanceLoading, setGovernanceLoading] = useState(false);
   const navigate = useNavigate();
 
-  const loadData = useCallback(async (current = pageNo, kw = keyword, vote = voteFilter, handled = handledFilter, reason = reasonFilter) => {
+  const loadData = useCallback(async (current = pageNo, kw = keyword, vote = voteFilter, handled = handledFilter, rating = ratingFilter, reason = reasonFilter) => {
     try {
       setLoading(true);
       const data = await getFeedbackPage({
@@ -119,6 +137,7 @@ export function FeedbackPage() {
         size: PAGE_SIZE,
         vote,
         handled,
+        rating,
         reason: reason || undefined,
         keyword: kw || undefined
       });
@@ -129,7 +148,7 @@ export function FeedbackPage() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, pageNo, voteFilter, handledFilter, reasonFilter]);
+  }, [keyword, pageNo, voteFilter, ratingFilter, handledFilter, reasonFilter]);
 
   const loadStats = useCallback(async () => {
     try {
@@ -182,7 +201,7 @@ export function FeedbackPage() {
   };
 
   const handleRefresh = () => {
-    loadData(1, keyword, voteFilter, handledFilter, reasonFilter);
+    loadData(1, keyword, voteFilter, handledFilter, ratingFilter, reasonFilter);
     loadStats();
     loadCategoryStats();
     loadGovernance();
@@ -244,6 +263,12 @@ export function FeedbackPage() {
     setPageNo(1);
   };
 
+  const applyRatingFilter = (value: string) => {
+    const next = value === "" ? null : Number(value);
+    setRatingFilter(next);
+    setPageNo(1);
+  };
+
   const applyHandledFilter = (value: string) => {
     const next = value === "" ? null : Number(value);
     setHandledFilter(next);
@@ -296,6 +321,8 @@ export function FeedbackPage() {
     { label: "全部反馈", value: stats?.total ?? 0, icon: MessageSquare, iconClass: "bg-indigo-50 text-indigo-600" },
     { label: "点赞", value: stats?.likeCount ?? 0, icon: ThumbsUp, iconClass: "bg-emerald-50 text-emerald-600" },
     { label: "点踩", value: stats?.dislikeCount ?? 0, icon: ThumbsDown, iconClass: "bg-rose-50 text-rose-600" },
+    { label: "平均满意度", value: stats?.avgRating != null ? `${Number(stats.avgRating).toFixed(2)} ★` : "—", icon: Star, iconClass: "bg-amber-50 text-amber-600" },
+    { label: "低分反馈(<4星)", value: stats?.lowRatingCount ?? 0, icon: TrendingUp, iconClass: "bg-orange-50 text-orange-600" },
     { label: "未处理", value: stats?.unhandledCount ?? 0, icon: Clock, iconClass: "bg-amber-50 text-amber-600" },
     { label: "已处理", value: stats?.handledCount ?? 0, icon: CheckCircle2, iconClass: "bg-teal-50 text-teal-600" },
     { label: "今日新增", value: stats?.todayCount ?? 0, icon: TrendingUp, iconClass: "bg-orange-50 text-orange-600" }
@@ -306,7 +333,7 @@ export function FeedbackPage() {
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title">用户反馈</h1>
-          <p className="admin-page-subtitle">查看并处理用户对回答的点赞/点踩反馈</p>
+          <p className="admin-page-subtitle">查看并处理用户对回答的点赞/点踩/星级反馈</p>
         </div>
         <div className="admin-page-actions">
           <Input
@@ -515,6 +542,19 @@ export function FeedbackPage() {
                 <SelectItem value="1">已处理</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={ratingFilter === null ? "" : String(ratingFilter)} onValueChange={applyRatingFilter}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="全部星级" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">全部星级</SelectItem>
+                <SelectItem value="1">1 星</SelectItem>
+                <SelectItem value="2">2 星</SelectItem>
+                <SelectItem value="3">3 星</SelectItem>
+                <SelectItem value="4">4 星</SelectItem>
+                <SelectItem value="5">5 星</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {loading ? (
@@ -540,7 +580,10 @@ export function FeedbackPage() {
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.username || item.userId || "-"}</TableCell>
                     <TableCell>
-                      <VoteBadge vote={item.vote} />
+                      <div className="flex flex-wrap items-center gap-1">
+                        <VoteBadge vote={item.vote} />
+                        <RatingBadge rating={item.rating} />
+                      </div>
                     </TableCell>
                     <TableCell className="max-w-[150px]">
                       <span className="line-clamp-2 text-xs text-slate-600" title={[item.reason, item.comment].filter(Boolean).join(" | ") || ""}>
@@ -628,6 +671,7 @@ export function FeedbackPage() {
               {detail ? (
                 <span className="flex items-center gap-2">
                   <VoteBadge vote={detail.vote} />
+                  <RatingBadge rating={detail.rating} />
                   <HandledBadge handled={detail.handled} />
                   <span className="text-slate-400">用户：{detail.username || detail.userId || "-"}</span>
                 </span>

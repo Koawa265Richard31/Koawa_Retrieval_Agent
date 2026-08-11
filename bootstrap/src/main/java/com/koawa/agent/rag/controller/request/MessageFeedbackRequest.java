@@ -29,6 +29,10 @@ public class MessageFeedbackRequest {
      * 反馈值：1=点赞，-1=点踩
      */
     private Integer vote;
+    /**
+     * 满意度星级：1-5（可选；4-5 视为满意，1-3 视为不满意）
+     */
+    private Integer rating;
 
     /**
      * 反馈原因（可选）

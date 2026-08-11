@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Copy, Star, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import type { FeedbackValue } from "@/types";
 interface FeedbackButtonsProps {
   messageId: string;
   feedback: FeedbackValue;
+  rating?: number | null;
   content: string;
   className?: string;
   alwaysVisible?: boolean;
@@ -36,6 +37,7 @@ const DISLIKE_REASONS = [
 export function FeedbackButtons({
   messageId,
   feedback,
+  rating,
   content,
   className,
   alwaysVisible
@@ -44,6 +46,8 @@ export function FeedbackButtons({
   const [dislikeOpen, setDislikeOpen] = useState(false);
   const [dislikeReason, setDislikeReason] = useState("");
   const [dislikeComment, setDislikeComment] = useState("");
+  const [pendingRating, setPendingRating] = useState<number | null>(null);
+  const [hoverRating, setHoverRating] = useState(0);
 
   const resetDislikeForm = () => {
     setDislikeReason("");
@@ -57,7 +61,26 @@ export function FeedbackButtons({
       setDislikeOpen(true);
       return;
     }
-    submitFeedback(messageId, next).catch(() => null);
+    submitFeedback(messageId, next, null, null, rating).catch(() => null);
+  };
+
+  const handleStarClick = (value: number) => {
+    if (value <= 3) {
+      if (rating === value) {
+        submitFeedback(messageId, null, null, null, null).catch(() => null);
+        return;
+      }
+      setPendingRating(value);
+      resetDislikeForm();
+      setDislikeOpen(true);
+      return;
+    }
+    const next = rating === value ? null : value;
+    if (next === null) {
+      submitFeedback(messageId, null, null, null, null).catch(() => null);
+    } else {
+      submitFeedback(messageId, "like", null, null, value).catch(() => null);
+    }
   };
 
   const handleDislikeSubmit = async () => {
@@ -68,7 +91,8 @@ export function FeedbackButtons({
       return;
     }
     setDislikeOpen(false);
-    await submitFeedback(messageId, "dislike", reason, comment).catch(() => null);
+    await submitFeedback(messageId, "dislike", reason, comment, pendingRating).catch(() => null);
+    setPendingRating(null);
   };
 
   const handleCopy = async () => {
@@ -82,6 +106,41 @@ export function FeedbackButtons({
 
   return (
     <>
+      <div
+        className={cn(
+          "flex items-center gap-0.5",
+          alwaysVisible ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+          className
+        )}
+        role="radiogroup"
+        aria-label="回答满意度"
+      >
+        {[1, 2, 3, 4, 5].map((star) => {
+          const filled = (hoverRating || rating || 0) >= star;
+          return (
+            <button
+              key={star}
+              type="button"
+              onClick={() => handleStarClick(star)}
+              onMouseEnter={() => setHoverRating(star)}
+              onMouseLeave={() => setHoverRating(0)}
+              aria-label={`${star} 星${filled ? "（已选）" : ""}`}
+              className="flex h-6 w-6 items-center justify-center rounded hover:bg-amber-50"
+            >
+              <Star
+                className={cn(
+                  "h-4 w-4 transition-colors",
+                  filled ? "fill-amber-400 text-amber-400" : "text-[#cccccc] hover:text-amber-300"
+                )}
+              />
+            </button>
+          );
+        })}
+        <span className="ml-1 text-[11px] text-slate-400">
+          {rating ? `${rating} 星` : "满意度"}
+        </span>
+      </div>
+
       <div
         className={cn(
           "flex items-center gap-1 transition-opacity",
@@ -130,13 +189,18 @@ export function FeedbackButtons({
           setDislikeOpen(open);
           if (!open) {
             resetDislikeForm();
+            setPendingRating(null);
           }
         }}
       >
         <DialogContent className="sm:max-w-[440px]">
           <DialogHeader>
-            <DialogTitle>反馈问题</DialogTitle>
-            <DialogDescription>感谢你的反馈，我们会尽快改进回答质量</DialogDescription>
+            <DialogTitle>{pendingRating ? "满意度反馈" : "反馈问题"}</DialogTitle>
+            <DialogDescription>
+              {pendingRating
+                ? `你为这条回答打了 ${pendingRating} 星，请告诉我们哪里不满意`
+                : "感谢你的反馈，我们会尽快改进回答质量"}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">

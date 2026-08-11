@@ -107,6 +107,7 @@ export const MessageItem = React.memo(function MessageItem({ message, isLast }: 
             <FeedbackButtons
               messageId={message.id}
               feedback={message.feedback ?? null}
+              rating={message.rating ?? null}
               content={message.content}
               alwaysVisible={Boolean(isLast)}
             />

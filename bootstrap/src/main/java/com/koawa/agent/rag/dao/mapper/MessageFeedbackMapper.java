@@ -41,6 +41,7 @@ public interface MessageFeedbackMapper extends BaseMapper<MessageFeedbackDO> {
                    f.user_id,
                    u.username,
                    f.vote,
+                   f.rating,
                    f.reason,
                    f.comment,
                    f.handled,
@@ -77,6 +78,7 @@ public interface MessageFeedbackMapper extends BaseMapper<MessageFeedbackDO> {
             WHERE f.deleted = 0
             <if test="vote != null"> AND f.vote = #{vote}</if>
             <if test="handled != null"> AND f.handled = #{handled}</if>
+            <if test="rating != null"> AND f.rating = #{rating}</if>
             <if test="reason != null and reason != ''"> AND f.reason = #{reason}</if>
             <if test="keyword != null and keyword != ''">
                 AND (f.comment ILIKE CONCAT('%', #{keyword}, '%')
@@ -91,6 +93,7 @@ public interface MessageFeedbackMapper extends BaseMapper<MessageFeedbackDO> {
     IPage<MessageFeedbackVO> pageFeedback(Page<?> page,
                                           @Param("vote") Integer vote,
                                           @Param("handled") Integer handled,
+                                          @Param("rating") Integer rating,
                                           @Param("reason") String reason,
                                           @Param("keyword") String keyword);
 

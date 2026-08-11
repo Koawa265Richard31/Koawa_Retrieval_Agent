@@ -61,11 +61,16 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
         Integer vote = request.getVote();
         Assert.notNull(vote, () -> new ClientException("反馈值不能为空"));
         Assert.isTrue(vote == 1 || vote == -1, () -> new ClientException("反馈值必须为 1 或 -1"));
+        Integer rating = request.getRating();
+        if (rating != null) {
+            Assert.isTrue(rating >= 1 && rating <= 5, () -> new ClientException("满意度星级必须为 1-5"));
+        }
 
         MessageFeedbackEvent event = MessageFeedbackEvent.builder()
                 .messageId(messageId)
                 .userId(userId)
                 .vote(vote)
+                .rating(rating)
                 .reason(request.getReason())
                 .comment(request.getComment())
                 .submitTime(System.currentTimeMillis())
@@ -83,10 +88,14 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
         Integer vote = request.getVote();
         Assert.notNull(vote, () -> new ClientException("反馈值不能为空"));
         Assert.isTrue(vote == 1 || vote == -1, () -> new ClientException("反馈值必须为 1 或 -1"));
+        Integer rating = request.getRating();
+        if (rating != null) {
+            Assert.isTrue(rating >= 1 && rating <= 5, () -> new ClientException("满意度星级必须为 1-5"));
+        }
 
         ConversationMessageDO message = loadAssistantMessage(messageId, userId);
         doUpsertFeedback(messageId, userId, message.getConversationId(),
-                vote, request.getReason(), request.getComment(), System.currentTimeMillis());
+                vote, rating, request.getReason(), request.getComment(), System.currentTimeMillis());
     }
 
     @Override
@@ -124,7 +133,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
     }
 
     private void doUpsertFeedback(String messageId, String userId, String conversationId,
-                                  Integer vote, String reason, String comment, long submitTime) {
+                                  Integer vote, Integer rating, String reason, String comment, long submitTime) {
         MessageFeedbackDO existing = feedbackMapper.selectOne(
                 Wrappers.lambdaQuery(MessageFeedbackDO.class)
                         .eq(MessageFeedbackDO::getMessageId, messageId)
@@ -138,6 +147,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
                     .conversationId(conversationId)
                     .userId(userId)
                     .vote(vote)
+                    .rating(rating)
                     .reason(reason)
                     .comment(comment)
                     .build();
@@ -147,6 +157,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
             feedbackMapper.update(
                     MessageFeedbackDO.builder()
                             .vote(vote)
+                            .rating(rating)
                             .reason(reason)
                             .comment(comment)
                             .build(),
@@ -171,6 +182,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
                 userId,
                 message.getConversationId(),
                 event.getVote(),
+                event.getRating(),
                 event.getReason(),
                 event.getComment(),
                 event.getSubmitTime())
