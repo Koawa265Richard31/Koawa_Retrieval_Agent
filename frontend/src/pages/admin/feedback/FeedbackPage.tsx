@@ -261,13 +261,13 @@ export function FeedbackPage() {
   };
 
   const applyVoteFilter = (value: string) => {
-    const next = value === "" ? null : Number(value);
+    const next = value === "all" ? null : Number(value);
     setVoteFilter(next);
     setPageNo(1);
   };
 
   const applyRatingFilter = (value: string) => {
-    const next = value === "" ? null : Number(value);
+    const next = value === "all" ? null : Number(value);
     setRatingFilter(next);
     setPageNo(1);
   };
@@ -278,7 +278,7 @@ export function FeedbackPage() {
   };
 
   const applyHandledFilter = (value: string) => {
-    const next = value === "" ? null : Number(value);
+    const next = value === "all" ? null : Number(value);
     setHandledFilter(next);
     setPageNo(1);
   };
@@ -462,8 +462,8 @@ export function FeedbackPage() {
                 重采清单
               </Button>
               <Select
-              value={governanceHandled === null ? "" : String(governanceHandled)}
-              onValueChange={(value) => setGovernanceHandled(value === "" ? null : Number(value))}
+              value={governanceHandled === null ? "all" : String(governanceHandled)}
+              onValueChange={(value) => setGovernanceHandled(value === "all" ? null : Number(value))}
             >
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="全部状态" />
@@ -471,7 +471,7 @@ export function FeedbackPage() {
               <SelectContent>
                 <SelectItem value="0">仅未处理</SelectItem>
                 <SelectItem value="1">仅已处理</SelectItem>
-                <SelectItem value="">全部</SelectItem>
+                <SelectItem value="all">全部</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -551,32 +551,32 @@ export function FeedbackPage() {
             ))}
           </div>
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <Select value={voteFilter === null ? "" : String(voteFilter)} onValueChange={applyVoteFilter}>
+            <Select value={voteFilter === null ? "all" : String(voteFilter)} onValueChange={applyVoteFilter}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="全部反馈类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部反馈类型</SelectItem>
+                <SelectItem value="all">全部反馈类型</SelectItem>
                 <SelectItem value="1">点赞</SelectItem>
                 <SelectItem value="-1">点踩</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={handledFilter === null ? "" : String(handledFilter)} onValueChange={applyHandledFilter}>
+            <Select value={handledFilter === null ? "all" : String(handledFilter)} onValueChange={applyHandledFilter}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="全部状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="all">全部状态</SelectItem>
                 <SelectItem value="0">未处理</SelectItem>
                 <SelectItem value="1">已处理</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={ratingFilter === null ? "" : String(ratingFilter)} onValueChange={applyRatingFilter}>
+            <Select value={ratingFilter === null ? "all" : String(ratingFilter)} onValueChange={applyRatingFilter}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="全部星级" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部星级</SelectItem>
+                <SelectItem value="all">全部星级</SelectItem>
                 <SelectItem value="1">1 星</SelectItem>
                 <SelectItem value="2">2 星</SelectItem>
                 <SelectItem value="3">3 星</SelectItem>
