@@ -20,6 +20,7 @@ interface FeedbackButtonsProps {
   messageId: string;
   feedback: FeedbackValue;
   rating?: number | null;
+  source?: "chat" | "fan";
   content: string;
   className?: string;
   alwaysVisible?: boolean;
@@ -38,6 +39,7 @@ export function FeedbackButtons({
   messageId,
   feedback,
   rating,
+  source = "chat",
   content,
   className,
   alwaysVisible
@@ -61,13 +63,13 @@ export function FeedbackButtons({
       setDislikeOpen(true);
       return;
     }
-    submitFeedback(messageId, next, null, null, rating).catch(() => null);
+    submitFeedback(messageId, next, null, null, rating, source).catch(() => null);
   };
 
   const handleStarClick = (value: number) => {
     if (value <= 3) {
       if (rating === value) {
-        submitFeedback(messageId, null, null, null, null).catch(() => null);
+        submitFeedback(messageId, null, null, null, null, source).catch(() => null);
         return;
       }
       setPendingRating(value);
@@ -77,9 +79,9 @@ export function FeedbackButtons({
     }
     const next = rating === value ? null : value;
     if (next === null) {
-      submitFeedback(messageId, null, null, null, null).catch(() => null);
+      submitFeedback(messageId, null, null, null, null, source).catch(() => null);
     } else {
-      submitFeedback(messageId, "like", null, null, value).catch(() => null);
+      submitFeedback(messageId, "like", null, null, value, source).catch(() => null);
     }
   };
 
@@ -91,7 +93,7 @@ export function FeedbackButtons({
       return;
     }
     setDislikeOpen(false);
-    await submitFeedback(messageId, "dislike", reason, comment, pendingRating).catch(() => null);
+    await submitFeedback(messageId, "dislike", reason, comment, pendingRating, source).catch(() => null);
     setPendingRating(null);
   };
 

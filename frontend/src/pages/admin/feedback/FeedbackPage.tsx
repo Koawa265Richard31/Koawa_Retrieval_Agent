@@ -117,6 +117,7 @@ export function FeedbackPage() {
   const [keyword, setKeyword] = useState("");
   const [voteFilter, setVoteFilter] = useState<number | null>(null);
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [handledFilter, setHandledFilter] = useState<number | null>(null);
   const [detail, setDetail] = useState<MessageFeedback | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -129,7 +130,7 @@ export function FeedbackPage() {
   const [governanceLoading, setGovernanceLoading] = useState(false);
   const navigate = useNavigate();
 
-  const loadData = useCallback(async (current = pageNo, kw = keyword, vote = voteFilter, handled = handledFilter, rating = ratingFilter, reason = reasonFilter) => {
+  const loadData = useCallback(async (current = pageNo, kw = keyword, vote = voteFilter, handled = handledFilter, rating = ratingFilter, source = sourceFilter, reason = reasonFilter) => {
     try {
       setLoading(true);
       const data = await getFeedbackPage({
@@ -138,6 +139,7 @@ export function FeedbackPage() {
         vote,
         handled,
         rating,
+        source: source === "all" ? null : source,
         reason: reason || undefined,
         keyword: kw || undefined
       });
@@ -148,7 +150,7 @@ export function FeedbackPage() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, pageNo, voteFilter, ratingFilter, handledFilter, reasonFilter]);
+  }, [keyword, pageNo, voteFilter, ratingFilter, sourceFilter, handledFilter, reasonFilter]);
 
   const loadStats = useCallback(async () => {
     try {
@@ -201,7 +203,7 @@ export function FeedbackPage() {
   };
 
   const handleRefresh = () => {
-    loadData(1, keyword, voteFilter, handledFilter, ratingFilter, reasonFilter);
+    loadData(1, keyword, voteFilter, handledFilter, ratingFilter, sourceFilter, reasonFilter);
     loadStats();
     loadCategoryStats();
     loadGovernance();
@@ -269,6 +271,11 @@ export function FeedbackPage() {
     setPageNo(1);
   };
 
+  const applySourceFilter = (value: string) => {
+    setSourceFilter(value);
+    setPageNo(1);
+  };
+
   const applyHandledFilter = (value: string) => {
     const next = value === "" ? null : Number(value);
     setHandledFilter(next);
@@ -288,7 +295,7 @@ export function FeedbackPage() {
       await handleFeedback(detail.id, handleNote.trim() || undefined);
       toast.success("已标记为处理");
       setDetailOpen(false);
-      await loadData(pageNo, keyword, voteFilter, handledFilter, reasonFilter);
+      await loadData(pageNo, keyword, voteFilter, handledFilter, ratingFilter, sourceFilter, reasonFilter);
       await loadStats();
       await loadCategoryStats();
       await loadGovernance();
@@ -305,7 +312,7 @@ export function FeedbackPage() {
       await unhandleFeedback(item.id);
       toast.success("已取消处理");
       setDetailOpen(false);
-      await loadData(pageNo, keyword, voteFilter, handledFilter, reasonFilter);
+      await loadData(pageNo, keyword, voteFilter, handledFilter, ratingFilter, sourceFilter, reasonFilter);
       await loadStats();
       await loadCategoryStats();
       await loadGovernance();
@@ -521,6 +528,27 @@ export function FeedbackPage() {
         </CardContent>
       </Card>
         <CardContent className="pt-6">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {[
+              { value: "all", label: "全部来源" },
+              { value: "chat", label: "主聊天" },
+              { value: "fan", label: "粉丝页" }
+            ].map((tab) => (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => applySourceFilter(tab.value)}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-sm transition-colors",
+                  sourceFilter === tab.value
+                    ? "border-indigo-300 bg-indigo-50 text-indigo-700"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <Select value={voteFilter === null ? "" : String(voteFilter)} onValueChange={applyVoteFilter}>
               <SelectTrigger className="w-[140px]">

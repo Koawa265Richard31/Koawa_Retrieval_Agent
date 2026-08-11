@@ -76,6 +76,7 @@ public class MessageFeedbackAdminServiceImpl implements MessageFeedbackAdminServ
                 request.getVote(),
                 request.getHandled(),
                 request.getRating(),
+                StrUtil.trimToNull(request.getSource()),
                 StrUtil.trimToNull(request.getReason()),
                 StrUtil.trimToNull(request.getKeyword())
         );

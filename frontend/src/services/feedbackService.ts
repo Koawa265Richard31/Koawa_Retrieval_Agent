@@ -8,6 +8,7 @@ export interface MessageFeedback {
   username?: string | null;
   vote: number;
   rating?: number | null;
+  source?: string | null;
   reason?: string | null;
   comment?: string | null;
   question?: string | null;
@@ -40,6 +41,7 @@ export interface FeedbackPageParams {
   size?: number;
   vote?: number | null;
   rating?: number | null;
+  source?: string | null;
   handled?: number | null;
   reason?: string;
   keyword?: string;
@@ -60,6 +62,7 @@ export async function getFeedbackPage(params: FeedbackPageParams = {}): Promise<
       size: params.size || 10,
       vote: params.vote ?? undefined,
       rating: params.rating ?? undefined,
+      source: params.source ?? undefined,
       handled: params.handled ?? undefined,
       reason: params.reason || undefined,
       keyword: params.keyword || undefined

@@ -42,6 +42,7 @@ public interface MessageFeedbackMapper extends BaseMapper<MessageFeedbackDO> {
                    u.username,
                    f.vote,
                    f.rating,
+                   f.source,
                    f.reason,
                    f.comment,
                    f.handled,
@@ -79,6 +80,7 @@ public interface MessageFeedbackMapper extends BaseMapper<MessageFeedbackDO> {
             <if test="vote != null"> AND f.vote = #{vote}</if>
             <if test="handled != null"> AND f.handled = #{handled}</if>
             <if test="rating != null"> AND f.rating = #{rating}</if>
+            <if test="source != null and source != ''"> AND f.source = #{source}</if>
             <if test="reason != null and reason != ''"> AND f.reason = #{reason}</if>
             <if test="keyword != null and keyword != ''">
                 AND (f.comment ILIKE CONCAT('%', #{keyword}, '%')
@@ -94,6 +96,7 @@ public interface MessageFeedbackMapper extends BaseMapper<MessageFeedbackDO> {
                                           @Param("vote") Integer vote,
                                           @Param("handled") Integer handled,
                                           @Param("rating") Integer rating,
+                                          @Param("source") String source,
                                           @Param("reason") String reason,
                                           @Param("keyword") String keyword);
 

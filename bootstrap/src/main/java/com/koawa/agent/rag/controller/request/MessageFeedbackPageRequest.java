@@ -38,6 +38,11 @@ public class MessageFeedbackPageRequest extends Page {
     private Integer rating;
 
     /**
+     * 反馈来源：chat/fan，为空不过滤
+     */
+    private String source;
+
+    /**
      * 处理状态：0=未处理，1=已处理，为空不过滤
      */
     private Integer handled;

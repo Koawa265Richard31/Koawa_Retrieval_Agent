@@ -15,6 +15,7 @@ import {
   Menu,
   MessageSquare,
   KeyRound,
+  Sparkles,
   Search,
   Settings,
   Upload,
@@ -184,6 +185,8 @@ export function AdminLayout() {
   const { user, logout } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [fanInviteOpen, setFanInviteOpen] = useState(false);
+  const [fanInviteCode, setFanInviteCode] = useState("");
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -343,6 +346,16 @@ export function AdminLayout() {
     } finally {
       setPasswordSubmitting(false);
     }
+  };
+
+  const handleFanInvite = () => {
+    if (fanInviteCode.trim().toUpperCase() !== "GAKUMAS-FAN-2026") {
+      toast.error("邀请码无效，请确认后再试。");
+      return;
+    }
+    setFanInviteOpen(false);
+    setFanInviteCode("");
+    navigate("/fan");
   };
 
   const handleSearchSelect = (kb: KnowledgeBase) => {
@@ -560,6 +573,15 @@ export function AdminLayout() {
         </nav>
 
         <div className="admin-sidebar__footer space-y-2">
+          <button
+            type="button"
+            onClick={() => setFanInviteOpen(true)}
+            className="admin-sidebar__item w-full text-white/70 hover:text-white"
+            title={collapsed ? "粉丝页入口" : undefined}
+          >
+            <Sparkles className="admin-sidebar__item-icon" />
+            {collapsed ? <span className="sr-only">粉丝页入口</span> : <span>粉丝页入口</span>}
+          </button>
           <button
             type="button"
             className="admin-sidebar__collapse"
@@ -803,6 +825,30 @@ export function AdminLayout() {
             <Button onClick={handlePasswordSubmit} disabled={passwordSubmitting}>
               {passwordSubmitting ? "保存中..." : "保存"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={fanInviteOpen} onOpenChange={setFanInviteOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>进入粉丝页聊天</DialogTitle>
+            <DialogDescription>请输入同好邀请码以进入粉丝页聊天</DialogDescription>
+          </DialogHeader>
+          <Input
+            value={fanInviteCode}
+            onChange={(event) => setFanInviteCode(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") handleFanInvite();
+            }}
+            placeholder="请输入邀请码"
+            autoComplete="off"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFanInviteOpen(false)}>
+              取消
+            </Button>
+            <Button onClick={handleFanInvite}>进入粉丝页</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

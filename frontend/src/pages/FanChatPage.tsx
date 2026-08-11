@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { FeedbackButtons } from "@/components/chat/FeedbackButtons";
 import { MarkdownRenderer } from "@/components/chat/MarkdownRenderer";
 import { useAuthStore } from "@/stores/authStore";
 import { useChatStore } from "@/stores/chatStore";
@@ -319,6 +320,18 @@ export function FanChatPage() {
                     <p>{message.content || message.thinking}</p>
                   )}
                   {message.status === "error" ? <p className="fan-message-error">生成已中断，请重试或换一种问法。</p> : null}
+                  {message.role === "assistant" && message.status !== "streaming" && message.id && !message.id.startsWith("assistant-") ? (
+                    <div className="fan-message-feedback">
+                      <FeedbackButtons
+                        messageId={message.id}
+                        feedback={message.feedback ?? null}
+                        rating={message.rating ?? null}
+                        source="fan"
+                        content={message.content}
+                        alwaysVisible
+                      />
+                    </div>
+                  ) : null}
                 </div>
               </article>
             ))}

@@ -72,6 +72,11 @@ public class MessageFeedbackDO {
     private Integer rating;
 
     /**
+     * 反馈来源：chat=主聊天，fan=粉丝页
+     */
+    private String source;
+
+    /**
      * 反馈原因（可选）
      */
     private String reason;
