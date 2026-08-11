@@ -27,6 +27,10 @@ public enum AgentActionType {
      */
     CALL_MCP_TOOL,
     /**
+     * 联网搜索（软要求触发：仅知识库信息不足/时效性需求时使用；不搜索用户指定网址）。
+     */
+    WEB_SEARCH,
+    /**
      * 信息不足，需要用户澄清。
      */
     ASK_CLARIFICATION,

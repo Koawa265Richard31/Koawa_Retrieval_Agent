@@ -167,6 +167,7 @@ public class RagTraceQueryServiceImpl implements RagTraceQueryService {
                 .durationMs(node.getDurationMs())
                 .startTime(node.getStartTime())
                 .endTime(node.getEndTime())
+                .extraData(node.getExtraData())
                 .build();
     }
 }

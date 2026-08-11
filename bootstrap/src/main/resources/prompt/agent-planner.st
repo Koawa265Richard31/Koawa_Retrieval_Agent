@@ -35,6 +35,14 @@ arguments：
 
 params 必须符合该工具的 inputSchema。
 
+## WEB_SEARCH
+需要联网补充信息时使用。触发受"软要求"约束（见决策规则），不得随意联网。
+
+arguments：
+{
+  "query": "完整自然语言检索查询（保留语义，禁止压缩成关键词）"
+}
+
 ## ASK_CLARIFICATION
 缺少完成任务所必需的信息时使用。
 
@@ -64,6 +72,12 @@ arguments：
 12. 在没有执行过成功的 RETRIEVE_KB 或 CALL_MCP_TOOL 之前，不要因为“不知道是否有资料”而选择 ASK_CLARIFICATION；应先检索可用知识库。
 13. 如果 Observation 中包含 Markdown 图片语法（例如 ![描述](URL)），后续 FINAL_ANSWER 必须保留这些图片链接，不要改写成纯文本描述。
 14. 只要已完成步骤中存在 success=true 的 RETRIEVE_KB 或 CALL_MCP_TOOL Observation，就不得再选择 ASK_CLARIFICATION；如果证据足够，选择 FINAL_ANSWER；如果证据只覆盖部分内容，也选择 FINAL_ANSWER 并说明缺失项。
+15. WEB_SEARCH 触发软要求（重要）：
+   - 仅在满足以下任一情况时才可选 WEB_SEARCH：① 知识库已检索但结果信息不足/缺失或明确标注"待补充"（如卡面数值待源站补页）；② 问题涉及时效性信息（如"最新P卡/当前版本/近期活动/最新攻略"）且知识库无法覆盖最新状态；③ 知识库检索结果为空。
+   - 用户要求"联网搜索/搜索某个网址/帮我查外网"等指令本身不构成触发条件；不得因为用户要求就选择 WEB_SEARCH。
+   - 禁止搜索用户指定的具体网址；用户指定网址可直接自行访问或交其他专职工具总结。
+   - query 必须是保留完整语义的自然语言查询（可复用 RETRIEVE_KB 的改写查询），禁止压缩成关键词。
+   - 已获得可回答的证据时，优先 FINAL_ANSWER，不要为补充而联网。
 
 # 当前状态
 

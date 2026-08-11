@@ -15,48 +15,30 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.rag.controller.vo;
+package com.koawa.agent.rag.websearch;
 
-import lombok.Builder;
-import lombok.Data;
-
-import java.util.Date;
+import java.util.List;
 
 /**
- * RAG Trace 节点明细
+ * 联网搜索提供方（可插拔：博查 / Bing / 未来可扩展）
  */
-@Data
-@Builder
-public class RagTraceNodeVO {
-
-    private String traceId;
-
-    private String nodeId;
-
-    private String parentNodeId;
-
-    private Integer depth;
-
-    private String nodeType;
-
-    private String nodeName;
-
-    private String className;
-
-    private String methodName;
-
-    private String status;
-
-    private String errorMessage;
-
-    private Long durationMs;
-
-    private Date startTime;
-
-    private Date endTime;
+public interface SearchProvider {
 
     /**
-     * 节点附加数据（如检索命中文档ID、联网搜索查询与结果）
+     * 提供方标识：bocha / bing
      */
-    private String extraData;
+    String providerName();
+
+    /**
+     * 是否可用（apiKey 已配置）
+     */
+    boolean isAvailable();
+
+    /**
+     * 执行搜索
+     *
+     * @param query      检索查询（整句改写查询，非关键词）
+     * @param maxResults 最多返回条数
+     */
+    List<SearchResult> search(String query, int maxResults);
 }

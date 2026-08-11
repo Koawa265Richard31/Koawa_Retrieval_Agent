@@ -25,6 +25,7 @@ import com.koawa.agent.agent.executor.RoutingAgentActionExecutor;
 import com.koawa.agent.agent.executor.handler.AskClarificationActionHandler;
 import com.koawa.agent.agent.executor.handler.CallMcpToolActionHandler;
 import com.koawa.agent.agent.executor.handler.FinalAnswerActionHandler;
+import com.koawa.agent.agent.executor.handler.WebSearchActionHandler;
 import com.koawa.agent.agent.executor.handler.RetrieveKbActionHandler;
 import com.koawa.agent.agent.executor.policy.AgentExecutionPolicy;
 import com.koawa.agent.agent.executor.policy.AllowListAgentExecutionPolicy;
@@ -46,6 +47,10 @@ import com.koawa.agent.rag.core.intent.IntentResolver;
 import com.koawa.agent.rag.core.mcp.McpToolRegistry;
 import com.koawa.agent.rag.core.prompt.PromptTemplateLoader;
 import com.koawa.agent.rag.core.retrieve.RetrievalEngine;
+import com.koawa.agent.rag.service.RagTraceRecordService;
+import com.koawa.agent.rag.service.WebSearchRecordService;
+import com.koawa.agent.rag.websearch.CompositeSearchProvider;
+import com.koawa.agent.rag.websearch.WebSearchProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,7 +59,7 @@ import java.time.Clock;
 import java.util.List;
 
 @Configuration
-@EnableConfigurationProperties(AgentRuntimeProperties.class)
+@EnableConfigurationProperties({AgentRuntimeProperties.class, WebSearchProperties.class})
 public class AgentConfiguration {
     @Bean
     public Clock agentClock() {
@@ -91,6 +96,21 @@ public class AgentConfiguration {
         return new CallMcpToolActionHandler(
                 mcpToolRegistry,
                 executionPolicy
+        );
+    }
+
+    @Bean
+    public WebSearchActionHandler webSearchActionHandler(
+            CompositeSearchProvider searchProvider,
+            WebSearchProperties webSearchProperties,
+            WebSearchRecordService webSearchRecordService,
+            RagTraceRecordService ragTraceRecordService
+    ) {
+        return new WebSearchActionHandler(
+                searchProvider,
+                webSearchProperties,
+                webSearchRecordService,
+                ragTraceRecordService
         );
     }
 

@@ -305,10 +305,16 @@ function NodeDetailCard({
           )}
           {node.extraData && (
               <div>
-                <p className="text-xs font-medium text-slate-500 mb-1">额外数据</p>
-                <pre className="text-xs bg-slate-50 border border-slate-200 rounded p-2 overflow-x-auto whitespace-pre-wrap break-all text-slate-700">
-                  {tryPrettyJson(node.extraData)}
-                </pre>
+                {String(node.nodeType || "").toUpperCase() === "WEB_SEARCH" ? (
+                    <WebSearchResults extraData={node.extraData} />
+                ) : (
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 mb-1">额外数据</p>
+                      <pre className="text-xs bg-slate-50 border border-slate-200 rounded p-2 overflow-x-auto whitespace-pre-wrap break-all text-slate-700">
+                        {tryPrettyJson(node.extraData)}
+                      </pre>
+                    </div>
+                )}
               </div>
           )}
         </CardContent>
@@ -351,6 +357,74 @@ function DetailField({
         </span>
         {copyable && (
             <Copy className="h-3 w-3 text-slate-300 shrink-0" />
+        )}
+      </div>
+  );
+}
+
+function WebSearchResults({ extraData }: { extraData: string }) {
+  let parsed: {
+    query?: string;
+    results?: Array<{
+      provider?: string;
+      url?: string;
+      title?: string;
+      description?: string;
+      visitTime?: string;
+      resourceCreateTime?: string;
+    }>;
+  } | null = null;
+  try {
+    parsed = JSON.parse(extraData);
+  } catch {
+    return null;
+  }
+  const results = parsed?.results || [];
+  const fmtTime = (value?: string) => {
+    if (!value) return "";
+    try {
+      const t = /^\d+$/.test(value) ? new Date(Number(value)) : new Date(value);
+      return isNaN(t.getTime()) ? "" : formatDateTime(t.toISOString());
+    } catch {
+      return "";
+    }
+  };
+  return (
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-slate-500">联网搜索查询</p>
+        <p className="text-xs bg-fuchsia-50 border border-fuchsia-200 rounded p-2 text-fuchsia-800 break-all">
+          {parsed?.query || "-"}
+        </p>
+        <p className="text-xs font-medium text-slate-500">访问过的网址（{results.length}）</p>
+        {results.length === 0 ? (
+            <p className="text-xs text-slate-400">无结果</p>
+        ) : (
+            <div className="space-y-2">
+              {results.map((r, idx) => (
+                  <div key={idx} className="rounded border border-slate-200 p-2 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <a
+                          href={r.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-medium text-blue-600 hover:underline truncate"
+                          title={r.url}
+                      >
+                        {r.title || r.url}
+                      </a>
+                      <span className="shrink-0 text-slate-400">{r.provider || ""}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 truncate" title={r.url}>{r.url}</div>
+                    {r.description ? (
+                        <p className="mt-1 text-slate-600 line-clamp-3">{r.description}</p>
+                    ) : null}
+                    <div className="mt-1 flex flex-wrap gap-x-4 text-[11px] text-slate-400">
+                      <span>访问时间：{fmtTime(r.visitTime) || "-"}</span>
+                      <span>资源创建时间：{fmtTime(r.resourceCreateTime) || "未知"}</span>
+                    </div>
+                  </div>
+              ))}
+            </div>
         )}
       </div>
   );

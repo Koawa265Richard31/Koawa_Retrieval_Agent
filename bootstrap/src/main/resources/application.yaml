@@ -82,6 +82,18 @@ rag:
     metric-type: COSINE
     sse-timeout-ms: 300000  # SSE 全局超时（毫秒），默认 5 分钟
 
+  # Agent 联网搜索（软要求触发，默认关闭；apiKey 未配置时对应 Provider 禁用）
+  web-search:
+    enabled: false
+    max-results: 8
+    timeout: 15s
+    bocha:
+      api-key: ${BOCHA_API_KEY:}
+      endpoint: https://api.bochaai.com/v1/web-search
+    bing:
+      api-key: ${BING_SEARCH_API_KEY:}
+      endpoint: https://api.bing.microsoft.com/v7.0/search
+
   query-rewrite:
     enabled: true
 

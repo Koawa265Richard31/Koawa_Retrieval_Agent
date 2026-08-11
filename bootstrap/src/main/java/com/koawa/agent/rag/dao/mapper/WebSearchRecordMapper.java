@@ -15,48 +15,12 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.rag.controller.vo;
+package com.koawa.agent.rag.dao.mapper;
 
-import lombok.Builder;
-import lombok.Data;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.koawa.agent.rag.dao.entity.WebSearchRecordDO;
+import org.apache.ibatis.annotations.Mapper;
 
-import java.util.Date;
-
-/**
- * RAG Trace 节点明细
- */
-@Data
-@Builder
-public class RagTraceNodeVO {
-
-    private String traceId;
-
-    private String nodeId;
-
-    private String parentNodeId;
-
-    private Integer depth;
-
-    private String nodeType;
-
-    private String nodeName;
-
-    private String className;
-
-    private String methodName;
-
-    private String status;
-
-    private String errorMessage;
-
-    private Long durationMs;
-
-    private Date startTime;
-
-    private Date endTime;
-
-    /**
-     * 节点附加数据（如检索命中文档ID、联网搜索查询与结果）
-     */
-    private String extraData;
+@Mapper
+public interface WebSearchRecordMapper extends BaseMapper<WebSearchRecordDO> {
 }

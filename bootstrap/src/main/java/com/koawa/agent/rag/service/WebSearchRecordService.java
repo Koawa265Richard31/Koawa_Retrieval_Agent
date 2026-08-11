@@ -15,48 +15,17 @@
  * limitations under the License.
  */
 
-package com.koawa.agent.rag.controller.vo;
+package com.koawa.agent.rag.service;
 
-import lombok.Builder;
-import lombok.Data;
-
-import java.util.Date;
+import com.koawa.agent.rag.dao.entity.WebSearchRecordDO;
 
 /**
- * RAG Trace 节点明细
+ * 联网搜索访问记录服务
  */
-@Data
-@Builder
-public class RagTraceNodeVO {
-
-    private String traceId;
-
-    private String nodeId;
-
-    private String parentNodeId;
-
-    private Integer depth;
-
-    private String nodeType;
-
-    private String nodeName;
-
-    private String className;
-
-    private String methodName;
-
-    private String status;
-
-    private String errorMessage;
-
-    private Long durationMs;
-
-    private Date startTime;
-
-    private Date endTime;
+public interface WebSearchRecordService {
 
     /**
-     * 节点附加数据（如检索命中文档ID、联网搜索查询与结果）
+     * 记录一条网址访问（与原始问题绑定）
      */
-    private String extraData;
+    void record(WebSearchRecordDO record);
 }
