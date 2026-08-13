@@ -36,6 +36,8 @@ agent:
       - ticket_query
 
 rag:
+  web-search:
+    enabled: ${RAG_WEB_SEARCH_ENABLED:false}
   agentic-retrieval:
     mode: ${RAG_AGENTIC_RETRIEVAL_MODE:off}
     rollout-percentage: ${RAG_AGENTIC_RETRIEVAL_ROLLOUT_PERCENTAGE:0}
