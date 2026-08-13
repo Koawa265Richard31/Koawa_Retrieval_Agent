@@ -140,6 +140,11 @@ const menuGroups: MenuGroup[] = [
         path: "/admin/feedback",
         label: "用户反馈",
         icon: MessageSquare
+      },
+      {
+        path: "/admin/web-search-records",
+        label: "联网检索记录",
+        icon: Search
       }
     ]
   },
@@ -175,6 +180,7 @@ const breadcrumbMap: Record<string, string> = {
   "sample-questions": "示例问题",
   mappings: "关键词映射",
   feedback: "用户反馈",
+  "web-search-records": "联网检索记录",
   settings: "系统设置",
   users: "用户管理"
 };

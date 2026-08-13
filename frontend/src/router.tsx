@@ -98,6 +98,12 @@ const FeedbackPage = React.lazy(() =>
   }))
 );
 
+const WebSearchRecordsPage = React.lazy(() =>
+  import("@/pages/admin/web-search-records/WebSearchRecordsPage").then((module) => ({
+    default: module.WebSearchRecordsPage
+  }))
+);
+
 function lazyPage(element: React.ReactNode) {
   return (
     <React.Suspense
@@ -212,6 +218,10 @@ const adminChildren = [
       {
         path: "feedback",
         element: lazyPage(<FeedbackPage />)
+      },
+      {
+        path: "web-search-records",
+        element: lazyPage(<WebSearchRecordsPage />)
       }
 
 ];
